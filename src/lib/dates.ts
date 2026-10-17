@@ -66,6 +66,21 @@ export function formatEventTime(date: Date, timeZone: string, locale = "en"): st
   }).format(date);
 }
 
+/** { day: "23", month: "Oct", weekday: "Friday" } in the event's zone, for big date displays. */
+export function formatDateParts(
+  date: Date,
+  timeZone: string,
+  locale = "en",
+): { day: string; month: string; weekday: string } {
+  const format = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, { ...options, timeZone }).format(date);
+  return {
+    day: format({ day: "numeric" }),
+    month: format({ month: "short" }),
+    weekday: format({ weekday: "long" }),
+  };
+}
+
 /** Short zone label such as "GMT+3" or "EST". */
 export function formatTimeZoneLabel(date: Date, timeZone: string, locale = "en"): string {
   const part = new Intl.DateTimeFormat(locale, { timeZone, timeZoneName: "short" })

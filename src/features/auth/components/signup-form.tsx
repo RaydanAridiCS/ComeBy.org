@@ -1,13 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MailCheck } from "lucide-react";
+import { Check, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { PasswordInput } from "@/components/forms/password-input";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -56,10 +57,20 @@ export function SignupForm() {
 
   if (sentTo) {
     return (
-      <div className="flex flex-col items-center gap-3 text-center">
-        <MailCheck className="size-10 text-brand" aria-hidden="true" />
-        <h2 className="font-semibold text-xl">{t("checkEmailTitle")}</h2>
-        <p className="text-muted-foreground">{t("checkEmailBody", { email: sentTo })}</p>
+      <div className="flex animate-pop flex-col items-center gap-5 text-center">
+        <span className="relative flex size-20 items-center justify-center rounded-[1.75rem] bg-brand-gradient text-white shadow-brand">
+          <MailCheck className="size-9" aria-hidden="true" />
+          <span className="absolute -end-1.5 -top-1.5 flex size-7 items-center justify-center rounded-full bg-success text-white ring-4 ring-background">
+            <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+          </span>
+        </span>
+        <div className="flex flex-col gap-2">
+          <h2 className="heading text-headline">{t("checkEmailTitle")}</h2>
+          <p className="text-muted-foreground">{t("checkEmailBody", { email: sentTo })}</p>
+        </div>
+        <p className="rounded-2xl bg-muted px-4 py-3 text-muted-foreground text-sm">
+          {t("checkEmailHint")}
+        </p>
       </div>
     );
   }
@@ -100,9 +111,8 @@ export function SignupForm() {
         </Field>
         <Field data-invalid={Boolean(errors.password)}>
           <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             aria-invalid={Boolean(errors.password)}
             {...form.register("password")}
@@ -114,7 +124,7 @@ export function SignupForm() {
           )}
         </Field>
       </FieldGroup>
-      <Button type="submit" disabled={isSubmitting} className="w-full">
+      <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner /> : null}
         {t("signUpButton")}
       </Button>
@@ -134,7 +144,7 @@ export function SignupForm() {
       </p>
       <p className="text-center text-muted-foreground text-sm">
         {t("haveAccount")}{" "}
-        <Link href="/login" className="font-medium text-foreground hover:underline">
+        <Link href="/login" className="font-semibold text-brand-700 hover:underline">
           {t("signInButton")}
         </Link>
       </p>

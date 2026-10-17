@@ -1,44 +1,66 @@
 /**
- * Generates the PNG app icons in /public from the Comeby mark.
+ * Generates the PNG app icons in /public and src/app/icon.svg from the Comeby mark.
  * Run with: npx tsx scripts/generate-icons.ts
  */
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-const CORAL = "#e85d3a";
+// Keep in sync with LOGO_PATH in src/components/brand/logo.tsx.
+const LOGO_PATH = "M37.83 13.62 A18.5 18.5 0 0 0 20.1 45.58 L28 51.74 L50.96 18.98";
+// Comeby Cobalt (brand-500 → brand-600 → brand-800).
+const GRADIENT = ["#426ED2", "#224BB2", "#102D78"] as const;
 
-function mark(size: number, padding: number, background: string | null): string {
-  const inner = size - padding * 2;
-  const scale = inner / 32;
+type Shape = "tile" | "square" | "none";
+
+/** `markScale` is the share of the icon the 64-unit mark artboard covers. */
+function icon(size: number, shape: Shape, markScale: number, color = "#ffffff"): string {
+  const mark = size * markScale;
+  const offset = (size - mark) / 2;
+  const radius = shape === "tile" ? size * 0.225 : 0;
+  const background =
+    shape === "none"
+      ? ""
+      : `<defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="${size}" y2="${size}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="${GRADIENT[0]}"/>
+      <stop offset="0.5" stop-color="${GRADIENT[1]}"/>
+      <stop offset="1" stop-color="${GRADIENT[2]}"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.2" cy="0" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${size}" height="${size}" rx="${radius}" fill="url(#bg)"/>
+  <rect width="${size}" height="${size}" rx="${radius}" fill="url(#shine)"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  ${background ? `<rect width="${size}" height="${size}" rx="${background === CORAL ? 0 : size * 0.22}" fill="${background}"/>` : ""}
-  <g transform="translate(${padding} ${padding}) scale(${scale})">
-    <rect x="2" y="3" width="28" height="22" rx="9" fill="${background === CORAL ? "#ffffff" : CORAL}"/>
-    <path d="M10 25 L8 30 L15 25 Z" fill="${background === CORAL ? "#ffffff" : CORAL}"/>
-    <path d="M10.5 14.5 L14.5 18.5 L22 10.5" fill="none" stroke="${background === CORAL ? CORAL : "#ffffff"}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  ${background}
+  <g transform="translate(${offset} ${offset}) scale(${mark / 64})">
+    <path d="${LOGO_PATH}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>`;
 }
 
-const outputs: { file: string; size: number; padding: number; background: string | null }[] = [
-  { file: "icon-192.png", size: 192, padding: 24, background: "#ffffff" },
-  { file: "icon-512.png", size: 512, padding: 64, background: "#ffffff" },
-  { file: "icon-maskable-512.png", size: 512, padding: 112, background: CORAL },
-  { file: "apple-touch-icon.png", size: 180, padding: 22, background: "#ffffff" },
-  { file: "badge-72.png", size: 72, padding: 6, background: null },
+const outputs: { file: string; svg: string }[] = [
+  { file: "icon-192.png", svg: icon(192, "tile", 0.66) },
+  { file: "icon-512.png", svg: icon(512, "tile", 0.66) },
+  // Maskable icons get cropped to a circle or squircle: keep the mark inside the 80% safe zone.
+  { file: "icon-maskable-512.png", svg: icon(512, "square", 0.56) },
+  // iOS rounds the corners itself, so the tile is a full square.
+  { file: "apple-touch-icon.png", svg: icon(180, "square", 0.66) },
+  // Android notification badge: white on transparent (only the alpha channel is used).
+  { file: "badge-72.png", svg: icon(72, "none", 0.98) },
 ];
 
 async function main(): Promise<void> {
   const publicDir = path.join(process.cwd(), "public");
   for (const output of outputs) {
-    const png = await sharp(Buffer.from(mark(output.size, output.padding, output.background)))
-      .png()
-      .toBuffer();
+    const png = await sharp(Buffer.from(output.svg)).png().toBuffer();
     await writeFile(path.join(publicDir, output.file), png);
     console.log(`✓ public/${output.file}`);
   }
-  await writeFile(path.join(process.cwd(), "src", "app", "icon.svg"), mark(64, 4, null));
+  await writeFile(path.join(process.cwd(), "src", "app", "icon.svg"), icon(64, "tile", 0.72));
   console.log("✓ src/app/icon.svg");
 }
 

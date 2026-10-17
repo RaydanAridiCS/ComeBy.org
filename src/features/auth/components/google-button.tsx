@@ -42,6 +42,7 @@ export function GoogleButton({ next }: { next: string }) {
       <Button
         type="button"
         variant="outline"
+        size="lg"
         className="w-full"
         disabled={pending}
         onClick={async () => {

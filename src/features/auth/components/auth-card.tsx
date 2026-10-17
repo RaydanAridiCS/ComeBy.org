@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Centered heading + content used by every sign-in related page. */
+/** Heading + content used by every sign-in related page. */
 export function AuthCard({
   title,
   subtitle,
@@ -11,9 +11,9 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1 text-center">
-        <h1 className="font-bold text-2xl tracking-tight">{title}</h1>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="heading text-[2rem] leading-tight">{title}</h1>
         {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
       </div>
       {children}

@@ -52,8 +52,12 @@ function ChoicesEditor({
         // Choices have no identity besides their position; inputs are controlled, so this is safe.
         // biome-ignore lint/suspicious/noArrayIndexKey: see comment above
         <div key={choiceIndex} className="flex items-center gap-2">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-muted-foreground text-xs">
+            {choiceIndex + 1}
+          </span>
           <Input
             value={choice}
+            aria-label={t("choicePlaceholder", { number: choiceIndex + 1 })}
             placeholder={t("choicePlaceholder", { number: choiceIndex + 1 })}
             onChange={(event) =>
               update(choices.map((value, i) => (i === choiceIndex ? event.target.value : value)))
@@ -63,7 +67,7 @@ function ChoicesEditor({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label={t("removeQuestion")}
+            aria-label={t("removeChoice", { number: choiceIndex + 1 })}
             onClick={() => update(choices.filter((_, i) => i !== choiceIndex))}
           >
             <X />
@@ -109,7 +113,13 @@ export function CustomQuestionsField({
         const type = questions[index]?.type ?? "text";
         const error = errors?.[index];
         return (
-          <div key={field.id} className="flex flex-col gap-3 rounded-xl border p-4">
+          <div
+            key={field.id}
+            className="flex animate-pop flex-col gap-4 rounded-2xl border bg-background p-4 shadow-xs"
+          >
+            <p className="font-semibold text-muted-foreground text-xs uppercase tracking-[0.1em]">
+              {t("questionNumber", { number: index + 1 })}
+            </p>
             <div className="flex items-start gap-2">
               <Field data-invalid={Boolean(error?.label)} className="flex-1">
                 <FieldLabel htmlFor={`q-${field.id}`}>{t("questionLabel")}</FieldLabel>

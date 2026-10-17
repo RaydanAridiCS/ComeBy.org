@@ -43,9 +43,11 @@ export function UserMenuClient({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full" aria-label={name}>
-          <Avatar className="size-8">
+          <Avatar className="size-9">
             {image ? <AvatarImage src={image} alt="" /> : null}
-            <AvatarFallback>{initials(name)}</AvatarFallback>
+            <AvatarFallback className="bg-brand-100 font-semibold text-brand-800">
+              {initials(name)}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { z } from "zod";
+import { PageTransition } from "@/components/motion/page-transition";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LIMITS } from "@/config/limits";
 import { EventForm } from "@/features/events/components/event-form";
@@ -41,21 +42,30 @@ async function EditEventForm({ params }: { params: Promise<{ id: string }> }) {
 export default async function EditEventPage({ params }: PageProps<"/dashboard/events/[id]/edit">) {
   const t = await getTranslations();
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <Suspense fallback={null}>
-        {params.then(({ id }) => (
-          <Link
-            href={`/dashboard/events/${id}`}
-            className="inline-flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" /> {t("common.back")}
-          </Link>
-        ))}
-      </Suspense>
-      <h1 className="font-bold text-2xl tracking-tight">{t("eventForm.editTitle")}</h1>
-      <Suspense fallback={<Skeleton className="h-[80vh] rounded-2xl" />}>
-        <EditEventForm params={params} />
-      </Suspense>
-    </div>
+    <PageTransition>
+      <div className="flex flex-col gap-6">
+        <Suspense fallback={null}>
+          {params.then(({ id }) => (
+            <Link
+              href={`/dashboard/events/${id}`}
+              className="inline-flex items-center gap-1.5 self-start rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" /> {t("common.back")}
+            </Link>
+          ))}
+        </Suspense>
+        <h1 className="heading animate-rise text-title">{t("eventForm.editTitle")}</h1>
+        <Suspense
+          fallback={
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
+              <Skeleton className="h-[70vh] rounded-3xl" />
+              <Skeleton className="hidden h-[36rem] rounded-[2rem] lg:block" />
+            </div>
+          }
+        >
+          <EditEventForm params={params} />
+        </Suspense>
+      </div>
+    </PageTransition>
   );
 }

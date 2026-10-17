@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { PasswordInput } from "@/components/forms/password-input";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -74,13 +75,15 @@ export function LoginForm() {
         <Field data-invalid={Boolean(errors.password)}>
           <div className="flex items-center justify-between">
             <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
-            <Link href="/forgot-password" className="text-muted-foreground text-sm hover:underline">
+            <Link
+              href="/forgot-password"
+              className="font-medium text-brand-700 text-sm hover:underline"
+            >
               {t("forgotPassword")}
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             aria-invalid={Boolean(errors.password)}
             {...form.register("password")}
@@ -88,7 +91,7 @@ export function LoginForm() {
           <FieldError>{translateError(errors.password?.message)}</FieldError>
         </Field>
       </FieldGroup>
-      <Button type="submit" disabled={isSubmitting} className="w-full">
+      <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner /> : null}
         {t("signInButton")}
       </Button>
@@ -96,7 +99,7 @@ export function LoginForm() {
         {t("noAccount")}{" "}
         <Link
           href={`/signup${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`}
-          className="font-medium text-foreground hover:underline"
+          className="font-semibold text-brand-700 hover:underline"
         >
           {t("signUpButton")}
         </Link>

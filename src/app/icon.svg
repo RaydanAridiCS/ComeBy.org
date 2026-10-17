@@ -1,8 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  
-  <g transform="translate(4 4) scale(1.75)">
-    <rect x="2" y="3" width="28" height="22" rx="9" fill="#e85d3a"/>
-    <path d="M10 25 L8 30 L15 25 Z" fill="#e85d3a"/>
-    <path d="M10.5 14.5 L14.5 18.5 L22 10.5" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#426ED2"/>
+      <stop offset="0.5" stop-color="#224BB2"/>
+      <stop offset="1" stop-color="#102D78"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.2" cy="0" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14.4" fill="url(#bg)"/>
+  <rect width="64" height="64" rx="14.4" fill="url(#shine)"/>
+  <g transform="translate(8.96 8.96) scale(0.72)">
+    <path d="M37.83 13.62 A18.5 18.5 0 0 0 20.1 45.58 L28 51.74 L50.96 18.98" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>

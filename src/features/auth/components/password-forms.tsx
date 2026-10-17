@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { PasswordInput } from "@/components/forms/password-input";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -107,9 +108,8 @@ export function ResetPasswordForm() {
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
       <Field data-invalid={Boolean(errors.password)}>
         <FieldLabel htmlFor="password">{t("newPassword")}</FieldLabel>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="new-password"
           aria-invalid={Boolean(errors.password)}
           {...form.register("password")}
