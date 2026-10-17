@@ -7,9 +7,18 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-geist-sans);
+  --font-invite: var(--invite-font, var(--font-geist-sans));
+  --color-invite-card: var(--invite-card);
+  --color-invite-card-border: var(--invite-card-border);
+  --color-invite-fg: var(--invite-fg);
+  --color-invite-muted: var(--invite-muted);
+  --color-invite-accent: var(--invite-accent);
+  --color-invite-accent-fg: var(--invite-accent-fg);
+  --color-invite-accent-soft: var(--invite-accent-soft);
+  --color-brand: var(--brand);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,14 +58,16 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  /* Comeby coral, also used in emails (#e85d3a). */
+  --brand: oklch(0.65 0.18 38);
+  --background: oklch(0.993 0.004 80);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.62 0.19 36);
+  --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -66,7 +77,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.7 0.15 38);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -84,14 +95,15 @@
 }
 
 .dark {
+  --brand: oklch(0.7 0.17 38);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.7 0.17 38);
+  --primary-foreground: oklch(0.15 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -124,10 +136,53 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
     @apply font-sans;
+  }
+}
+/* ---------------------------------------------------------------------------
+ * Invite pages: colours come from the event's theme (src/themes/index.ts),
+ * applied as CSS variables on the page wrapper.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  .invite-page {
+    background: var(--invite-bg);
+    background-color: var(--invite-bg-solid);
+    color: var(--invite-fg);
+  }
+  .invite-card {
+    background: var(--invite-card);
+    border: 1px solid var(--invite-card-border);
+    color: var(--invite-fg);
+    backdrop-filter: blur(12px);
+  }
+  .invite-heading {
+    font-family: var(--invite-font);
+  }
+  /* Form controls that adapt to light and dark themes. */
+  .invite-input {
+    border-color: color-mix(in oklab, var(--invite-fg) 18%, transparent);
+    background: color-mix(in oklab, var(--invite-card) 85%, var(--invite-fg) 4%);
+    color: var(--invite-fg);
+  }
+  .invite-input::placeholder {
+    color: var(--invite-muted);
+  }
+  .invite-input:focus-visible {
+    outline: 2px solid var(--invite-accent);
+    outline-offset: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
