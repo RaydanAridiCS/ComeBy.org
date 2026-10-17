@@ -1,0 +1,181 @@
+import "server-only";
+
+import { LIMITS } from "@/config/limits";
+import { eventCancelled, eventUpdated, hostDigest, hostRsvpAlert } from "@/emails/templates";
+import { getServerTranslator } from "@/i18n/config";
+import { formatEventWhen } from "@/lib/dates";
+import { logger } from "@/lib/logger";
+import { absoluteUrl, eventUrl } from "@/lib/share";
+import { sendPush } from "../adapters/push";
+import type { JobPayloads } from "../jobs/types";
+import type { EventRecord } from "../repositories/types";
+import { DAY_MS, type ServiceDeps } from "./deps";
+import { queueEmail } from "./email.service";
+
+const ALERT_EMAIL_KEY = (hostId: string) => `alert-email:${hostId}`;
+
+function locationLabel(event: EventRecord): string | null {
+  const t = getServerTranslator();
+  if (event.locationType === "online") return t("eventPage.online");
+  if (event.locationType === "tbd") return t("eventPage.locationTbd");
+  return [event.locationName, event.locationAddress].filter(Boolean).join(", ") || null;
+}
+
+function statusLabel(status: string): string {
+  const t = getServerTranslator();
+  if (status === "going" || status === "maybe" || status === "not_going") {
+    return t(`status.${status}`);
+  }
+  return status;
+}
+
+/** Background-job handlers that notify hosts and guests. */
+export function createNotificationService(deps: ServiceDeps) {
+  const { repos, jobs, now } = deps;
+
+  return {
+    /** A guest responded: push the host and email them (respecting their settings and quota). */
+    async handleRsvpAlert(payload: JobPayloads["host.rsvp-alert"]): Promise<void> {
+      const event = await repos.events.findById(payload.eventId);
+      const rsvp = await repos.rsvps.findById(payload.rsvpId);
+      if (!event || !rsvp) return;
+      const [host, settings, stats] = await Promise.all([
+        repos.users.findById(event.hostId),
+        repos.userSettings.get(event.hostId),
+        repos.rsvps.statsByEvent(event.id),
+      ]);
+      if (!host) return;
+      const t = getServerTranslator();
+      const status = statusLabel(rsvp.status);
+      const dashboardPath = `/dashboard/events/${event.id}`;
+
+      if (settings.pushAlerts) {
+        const subscriptions = await repos.pushSubscriptions.listByUser(host.id);
+        const title =
+          payload.kind === "updated"
+            ? t("push.changedRsvpTitle", { name: rsvp.name, status })
+            : t("push.newRsvpTitle", { name: rsvp.name, status });
+        const body = t("push.newRsvpBody", { event: event.title, going: stats.guests });
+        await Promise.all(
+          subscriptions.map(async (subscription) => {
+            const result = await sendPush(subscription, {
+              title,
+              body,
+              url: dashboardPath,
+              tag: `event-${event.id}`,
+            });
+            if (result === "gone")
+              await repos.pushSubscriptions.deleteByEndpoint(subscription.endpoint);
+          }),
+        );
+      }
+
+      if (settings.emailAlerts !== "instant") return;
+      const sentToday = await repos.rateLimits.hit(ALERT_EMAIL_KEY(host.id), DAY_MS, now());
+      if (sentToday > LIMITS.instantAlertEmailsPerHostPerDay) return; // the daily digest covers the rest
+
+      await queueEmail(
+        jobs,
+        host.email,
+        hostRsvpAlert({
+          guestName: rsvp.name,
+          eventTitle: event.title,
+          status,
+          ...(payload.from ? { from: statusLabel(payload.from) } : {}),
+          message: rsvp.message,
+          totals: { going: stats.going, maybe: stats.maybe, notGoing: stats.notGoing },
+          dashboardUrl: absoluteUrl(dashboardPath),
+        }),
+      );
+    },
+
+    /** Daily summary for hosts on "daily" mode and hosts who used up today's instant emails. */
+    async handleDailyDigest(): Promise<void> {
+      const at = now();
+      const since = new Date(at.getTime() - DAY_MS);
+      const hostIds = await repos.users.listIdsWithRsvpActivitySince(since);
+      for (const hostId of hostIds) {
+        const settings = await repos.userSettings.get(hostId);
+        if (settings.emailAlerts === "off") continue;
+        if (settings.emailAlerts === "instant") {
+          const sent = await repos.rateLimits.peek(ALERT_EMAIL_KEY(hostId), DAY_MS, at);
+          if (sent <= LIMITS.instantAlertEmailsPerHostPerDay) continue;
+        }
+        const host = await repos.users.findById(hostId);
+        if (!host) continue;
+        const activity = await repos.activity.listRsvpActivityForHostSince(hostId, since);
+        if (activity.length === 0) continue;
+        const perEvent = new Map<string, number>();
+        for (const item of activity) {
+          perEvent.set(item.eventTitle, (perEvent.get(item.eventTitle) ?? 0) + 1);
+        }
+        await queueEmail(
+          jobs,
+          host.email,
+          hostDigest({
+            total: activity.length,
+            events: [...perEvent].map(([title, count]) => ({ title, count })),
+            dashboardUrl: absoluteUrl("/dashboard"),
+          }),
+        );
+      }
+    },
+
+    /** Emails every opted-in guest that the event changed or was cancelled. */
+    async handleEventUpdate(payload: JobPayloads["guests.event-update"]): Promise<void> {
+      const event = await repos.events.findById(payload.eventId);
+      if (!event) return;
+      const recipients = await repos.rsvps.listEmailRecipients(event.id);
+      const t = getServerTranslator();
+      const changes = payload.changes
+        .map((change) =>
+          change === "time" || change === "location" || change === "title" || change === "details"
+            ? t(`changes.${change}`)
+            : change,
+        )
+        .join(", ");
+      const url = eventUrl(event.slug);
+      for (const recipient of recipients) {
+        if (!recipient.email) continue;
+        const email =
+          payload.kind === "cancelled"
+            ? eventCancelled({
+                guestName: recipient.name,
+                eventTitle: event.title,
+                message: event.cancelMessage,
+                eventUrl: url,
+              })
+            : eventUpdated({
+                guestName: recipient.name,
+                eventTitle: event.title,
+                changes,
+                when: formatEventWhen(event.startsAt, event.endsAt, event.timezone),
+                where: locationLabel(event),
+                eventUrl: url,
+              });
+        await queueEmail(jobs, recipient.email, email);
+      }
+    },
+
+    /** Deletes guests' phone numbers and emails once events are long over. */
+    async handleGuestDataPurge(): Promise<void> {
+      const cutoff = new Date(now().getTime() - LIMITS.guestDataRetentionDays * DAY_MS);
+      for (;;) {
+        const due = await repos.events.listDueForGuestDataPurge(cutoff, 100);
+        if (due.length === 0) break;
+        for (const { id } of due) {
+          await repos.rsvps.purgeContactDetails(id);
+          await repos.events.update(id, { guestDataPurgedAt: now() });
+        }
+        logger.info({ events: due.length }, "Purged guest contact details");
+      }
+    },
+
+    async handleRateLimitCleanup(): Promise<void> {
+      const removed = await repos.rateLimits.deleteExpired(now());
+      if (removed > 0) logger.debug({ removed }, "Removed expired rate-limit counters");
+    },
+  };
+}
+
+export { locationLabel, statusLabel };

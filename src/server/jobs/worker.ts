@@ -1,0 +1,74 @@
+import "server-only";
+
+import { env } from "@/env";
+import { logger } from "@/lib/logger";
+import { getEmailSender } from "../adapters/email";
+import { notificationService } from "../services";
+import { getBoss, setInlineJobHandler } from "./queue";
+import type { JobName, JobPayloads } from "./types";
+
+/** Runs one job. Shared by the pg-boss workers and the inline (jobs disabled) mode. */
+async function runJob<K extends JobName>(name: K, data: JobPayloads[K]): Promise<void> {
+  switch (name) {
+    case "email.send": {
+      const sender = await getEmailSender();
+      await sender.send(data as JobPayloads["email.send"]);
+      return;
+    }
+    case "host.rsvp-alert":
+      return notificationService.handleRsvpAlert(data as JobPayloads["host.rsvp-alert"]);
+    case "guests.event-update":
+      return notificationService.handleEventUpdate(data as JobPayloads["guests.event-update"]);
+    case "hosts.daily-digest":
+      return notificationService.handleDailyDigest();
+    case "privacy.purge-guest-data":
+      return notificationService.handleGuestDataPurge();
+    case "maintenance.cleanup-rate-limits":
+      return notificationService.handleRateLimitCleanup();
+  }
+}
+
+/** Recurring jobs (cron syntax, UTC). */
+const SCHEDULES: { name: JobName; cron: string }[] = [
+  { name: "hosts.daily-digest", cron: "0 18 * * *" },
+  { name: "privacy.purge-guest-data", cron: "30 3 * * *" },
+  { name: "maintenance.cleanup-rate-limits", cron: "15 * * * *" },
+];
+
+const WORKER_NAMES: JobName[] = [
+  "email.send",
+  "host.rsvp-alert",
+  "guests.event-update",
+  "hosts.daily-digest",
+  "privacy.purge-guest-data",
+  "maintenance.cleanup-rate-limits",
+];
+
+/**
+ * Starts the background workers inside the web server process. Called once from
+ * `instrumentation.ts`. One process is plenty for Comeby's single-server setup.
+ */
+export async function startWorkers(): Promise<void> {
+  setInlineJobHandler(runJob);
+  if (!env.JOBS_ENABLED) {
+    logger.warn("Background jobs disabled (JOBS_ENABLED=false); jobs run inline");
+    return;
+  }
+  const boss = await getBoss();
+  for (const name of WORKER_NAMES) {
+    await boss.work<JobPayloads[typeof name]>(name, async (jobs) => {
+      for (const job of jobs) {
+        try {
+          await runJob(name, job.data);
+        } catch (error) {
+          logger.error({ err: error, job: name, jobId: job.id }, "Job failed");
+          throw error;
+        }
+      }
+    });
+  }
+  for (const schedule of SCHEDULES) {
+    await boss.schedule(schedule.name, schedule.cron, {}, { tz: "UTC" });
+  }
+  logger.info({ workers: WORKER_NAMES.length }, "Background workers started");
+}
