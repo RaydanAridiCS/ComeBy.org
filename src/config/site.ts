@@ -1,0 +1,62 @@
+/** Brand and site-wide constants. */
+export const SITE = {
+  name: "Comeby",
+  domain: "comeby.org",
+  tagline: "Free, beautiful invites for every hangout.",
+  description:
+    "Invite anyone in seconds and know exactly who's coming. Free, open source, no ads, no app needed.",
+  repositoryUrl: "https://github.com/comeby/comeby",
+  supportUrl: "https://github.com/sponsors/comeby",
+} as const;
+
+/**
+ * Top-level paths that can never be used as an event link, because the app
+ * uses them (or may use them later). Event links live at `comeby.org/<slug>`.
+ */
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
+  "about",
+  "account",
+  "admin",
+  "api",
+  "app",
+  "auth",
+  "blog",
+  "calendar",
+  "comeby",
+  "contact",
+  "dashboard",
+  "docs",
+  "e",
+  "event",
+  "events",
+  "faq",
+  "forgot-password",
+  "help",
+  "home",
+  "invite",
+  "legal",
+  "login",
+  "logout",
+  "manifest",
+  "new",
+  "pricing",
+  "privacy",
+  "r",
+  "register",
+  "report",
+  "reset-password",
+  "robots",
+  "rsvp",
+  "settings",
+  "signin",
+  "signup",
+  "sitemap",
+  "static",
+  "status",
+  "support",
+  "sw",
+  "terms",
+  "uploads",
+  "verify-email",
+  "www",
+]);
