@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+!.env.example
+
+# local data (uploaded files in development)
+/.data
+
+# generated service worker (built from src/sw)
+/public/sw.js
+
+# playwright
+/playwright-report
+/test-results
+/blob-report
