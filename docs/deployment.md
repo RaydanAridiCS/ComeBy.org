@@ -16,10 +16,10 @@ Target setup: one small VPS running **Coolify**, Cloudflare in front, Cloudflare
 
 **Option A: Dockerfile app + Coolify Postgres (recommended)**
 
-1. In Coolify, create a **PostgreSQL 18** database and copy its internal URL.
-2. Create an **Application** from the GitHub repo using the **Dockerfile** build pack. Port: `3000`. Health check path: `/api/health`.
+1. In Coolify, create a **PostgreSQL 18** database and copy its **Internal Database URL** (e.g. `postgres://comeby:<password>@<container_or_uuid>:5432/comeby`). **Do not use localhost or 127.0.0.1**, as Docker containers cannot reach other containers or the host via localhost.
+2. Create an **Application** from the GitHub repo using the **Dockerfile** build pack. Port: `3000`. Health check path: `/api/health`. Ensure both the application and the database are in the same Coolify project network.
 3. Under **Build variables**, set the `NEXT_PUBLIC_*` values (they're baked in at build time).
-4. Under **Environment variables**, set the rest (see [configuration.md](configuration.md)). At minimum: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `NEXT_PUBLIC_APP_URL=https://comeby.org`, `EMAIL_PROVIDER`, `EMAIL_FROM`, the email credentials, and `STORAGE_PROVIDER=s3` with the `S3_*` values.
+4. Under **Environment variables**, set the rest (see [configuration.md](configuration.md)). At minimum: `DATABASE_URL` (using the internal database URL from step 1), `BETTER_AUTH_SECRET`, `NEXT_PUBLIC_APP_URL=https://comeby.org`, `EMAIL_PROVIDER`, `EMAIL_FROM`, the email credentials, and `STORAGE_PROVIDER=s3` with the `S3_*` values.
 5. Set the domain to `https://comeby.org` and deploy. Migrations run automatically on start.
 
 **Option B: docker compose**
