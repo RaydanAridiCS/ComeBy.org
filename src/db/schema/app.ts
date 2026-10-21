@@ -18,7 +18,18 @@ import { user } from "./auth";
  * Enums
  * ------------------------------------------------------------------------- */
 
-export const themeEnum = pgEnum("theme", ["confetti", "wild", "sunset", "midnight", "clean"]);
+export const themeEnum = pgEnum("theme", [
+  "confetti",
+  "wild",
+  "sunset",
+  "midnight",
+  "clean",
+  "velvet",
+  "cyber",
+  "aura",
+  "oasis",
+  "matcha",
+]);
 export const eventStatusEnum = pgEnum("event_status", ["active", "cancelled"]);
 export const locationTypeEnum = pgEnum("location_type", ["physical", "online", "tbd"]);
 export const guestListVisibilityEnum = pgEnum("guest_list_visibility", [

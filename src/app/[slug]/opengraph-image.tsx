@@ -30,6 +30,11 @@ const DISPLAY_FONT: Record<ThemeTokens["id"], { name: string; weight: 400 | 600 
   sunset: { name: "Instrument Serif", weight: 400 },
   midnight: { name: "Unbounded", weight: 700 },
   clean: { name: "Geist", weight: 600 },
+  velvet: { name: "Instrument Serif", weight: 400 },
+  cyber: { name: "Unbounded", weight: 700 },
+  aura: { name: "Fraunces", weight: 600 },
+  oasis: { name: "Fredoka", weight: 700 },
+  matcha: { name: "Fraunces", weight: 600 },
 };
 
 /** Satori can't blur, so translucent "glass" cards get more opaque to keep text readable. */

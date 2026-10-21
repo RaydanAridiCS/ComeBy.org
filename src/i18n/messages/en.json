@@ -68,7 +68,7 @@
     "step2Message": "You're invited to Lina's 20th 🎉 Tap to RSVP",
     "step3Title": "Watch the replies",
     "step3Body": "See who's going, who's not and what they said, live, with a timestamp on every reply.",
-    "themesEyebrow": "Five looks",
+    "themesEyebrow": "Ten looks",
     "themesTitle": "A look for every kind of plan",
     "themesBody": "Each theme styles the whole invite: colours, fonts, artwork and the preview card people see in WhatsApp.",
     "featuresEyebrow": "Made for hosts",
@@ -545,6 +545,41 @@
       "sampleTitle": "Design club #12",
       "sampleHost": "Maya",
       "samplePlace": "AUB, West Hall"
+    },
+    "velvet": {
+      "name": "Velvet",
+      "tagline": "Dinner parties & wine nights",
+      "sampleTitle": "Wine & vinyl night",
+      "sampleHost": "Sami",
+      "samplePlace": "Le Bistro, Gemmayzeh"
+    },
+    "cyber": {
+      "name": "Cyber",
+      "tagline": "DJ sets, raves & nightlife",
+      "sampleTitle": "Rooftop sessions 004",
+      "sampleHost": "Ziad",
+      "samplePlace": "The Warehouse"
+    },
+    "aura": {
+      "name": "Aura",
+      "tagline": "Art, sound baths & creative meetups",
+      "sampleTitle": "Solstice sound bath",
+      "sampleHost": "Nour",
+      "samplePlace": "Sanctuary Studio"
+    },
+    "oasis": {
+      "name": "Oasis",
+      "tagline": "Pool parties & summer brunches",
+      "sampleTitle": "Poolside spritz & BBQ",
+      "sampleHost": "Tarek",
+      "samplePlace": "Villa Azure"
+    },
+    "matcha": {
+      "name": "Matcha",
+      "tagline": "Coffee dates, brunch & book clubs",
+      "sampleTitle": "Matcha & morning reads",
+      "sampleHost": "Yasmine",
+      "samplePlace": "Papercup Café"
     },
     "pickerLabel": "Invite theme",
     "selected": "Selected"

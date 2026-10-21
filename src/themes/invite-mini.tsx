@@ -13,6 +13,11 @@ const SAMPLE_DATES: Record<ThemeId, string> = {
   sunset: "2026-07-18T15:00:00Z",
   midnight: "2026-11-13T21:00:00Z",
   clean: "2026-11-19T18:00:00Z",
+  velvet: "2026-11-21T20:30:00Z",
+  cyber: "2026-11-27T23:00:00Z",
+  aura: "2026-11-15T16:00:00Z",
+  oasis: "2026-07-25T14:00:00Z",
+  matcha: "2026-11-22T10:30:00Z",
 };
 
 /**

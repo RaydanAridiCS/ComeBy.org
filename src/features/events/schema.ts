@@ -8,7 +8,18 @@ import { validateSlug } from "@/lib/slug";
  * Error messages are translation keys; the form translates them for display.
  */
 
-export const THEMES = ["confetti", "wild", "sunset", "midnight", "clean"] as const;
+export const THEMES = [
+  "confetti",
+  "wild",
+  "sunset",
+  "midnight",
+  "clean",
+  "velvet",
+  "cyber",
+  "aura",
+  "oasis",
+  "matcha",
+] as const;
 export type ThemeId = (typeof THEMES)[number];
 
 export const LOCATION_TYPES = ["physical", "online", "tbd"] as const;

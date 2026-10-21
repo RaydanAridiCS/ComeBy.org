@@ -256,6 +256,361 @@ function CleanArt() {
   );
 }
 
+function VelvetArt() {
+  const next = random(41);
+  const bubbles = Array.from({ length: 32 }, (_, id) => ({
+    id,
+    x: 780 + next() * 400,
+    y: next() * H,
+    r: 4 + next() * 10,
+    opacity: 0.25 + next() * 0.45,
+    color: next() > 0.4 ? "#f5ad78" : "#ffd4b2",
+  }));
+
+  return (
+    <svg aria-hidden="true" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={layer}>
+      <defs>
+        <radialGradient id="og-velvet-glow" cx="0.8" cy="0.45" r="0.5">
+          <stop offset="0%" stopColor="#f5ad78" stopOpacity="0.35" />
+          <stop offset="60%" stopColor="#c83b5e" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#120308" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width={W} height={H} fill="url(#og-velvet-glow)" />
+
+      {/* Art deco concentric arches on the right */}
+      <g fill="none" stroke="#f5ad78" strokeWidth="2" opacity="0.2">
+        <circle cx="980" cy="320" r="280" />
+        <circle cx="980" cy="320" r="220" />
+        <circle cx="980" cy="320" r="160" />
+        <line x1="700" y1="320" x2="1200" y2="320" />
+      </g>
+
+      {/* Floating champagne bokeh */}
+      {bubbles.map((b) => (
+        <circle key={b.id} cx={b.x} cy={b.y} r={b.r} fill={b.color} opacity={b.opacity} />
+      ))}
+
+      {/* Luxury Coupe Wine Glasses Clinking */}
+      <g strokeLinecap="round" strokeLinejoin="round">
+        <g transform="translate(935, 310) rotate(12)">
+          <path d="M-65 -65 C-65 14 65 14 65 -65 Z" fill="#c83b5e" opacity="0.85" />
+          <path
+            d="M-55 -35 C-55 8 55 8 55 -35 C28 -26 -28 -26 -55 -35 Z"
+            fill="#e8965a"
+            opacity="0.9"
+          />
+          <path d="M-65 -65 C-65 18 65 18 65 -65" fill="none" stroke="#ffd8b8" strokeWidth="4.5" />
+          <line x1="-65" y1="-65" x2="65" y2="-65" stroke="#ffe5cf" strokeWidth="3" opacity="0.8" />
+          <line x1="0" y1="18" x2="0" y2="105" stroke="#ffd8b8" strokeWidth="5.5" />
+          <path
+            d="M-42 105 C-24 100 24 100 42 105"
+            stroke="#ffd8b8"
+            strokeWidth="5.5"
+            fill="none"
+          />
+        </g>
+        <g transform="translate(1035, 310) rotate(-12)">
+          <path d="M-65 -65 C-65 14 65 14 65 -65 Z" fill="#c83b5e" opacity="0.85" />
+          <path
+            d="M-55 -35 C-55 8 55 8 55 -35 C28 -26 -28 -26 -55 -35 Z"
+            fill="#e8965a"
+            opacity="0.9"
+          />
+          <path d="M-65 -65 C-65 18 65 18 65 -65" fill="none" stroke="#ffd8b8" strokeWidth="4.5" />
+          <line x1="-65" y1="-65" x2="65" y2="-65" stroke="#ffe5cf" strokeWidth="3" opacity="0.8" />
+          <line x1="0" y1="18" x2="0" y2="105" stroke="#ffd8b8" strokeWidth="5.5" />
+          <path
+            d="M-42 105 C-24 100 24 100 42 105"
+            stroke="#ffd8b8"
+            strokeWidth="5.5"
+            fill="none"
+          />
+        </g>
+        <circle cx="985" cy="235" r="40" fill="#f5ad78" opacity="0.35" />
+        <path
+          d="M985 195 L991 228 L1025 235 L991 242 L985 275 L979 242 L945 235 L979 228 Z"
+          fill="#ffffff"
+        />
+        <circle cx="985" cy="235" r="5" fill="#ffe2c4" />
+      </g>
+    </svg>
+  );
+}
+
+function CyberArt() {
+  const next = random(53);
+  const stars = Array.from({ length: 24 }, (_, id) => ({
+    id,
+    x: 780 + next() * 400,
+    y: 30 + next() * 280,
+    r: 1.5 + next() * 2.5,
+    c: next() > 0.5 ? "#00f0ff" : "#ff007f",
+  }));
+
+  return (
+    <svg aria-hidden="true" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={layer}>
+      <defs>
+        <linearGradient id="og-cyber-sun" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ffe600" />
+          <stop offset="50%" stopColor="#ff007f" />
+          <stop offset="100%" stopColor="#7928ca" />
+        </linearGradient>
+        <linearGradient id="og-cyber-glow" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#00f0ff" stopOpacity="0" />
+          <stop offset="50%" stopColor="#00f0ff" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#00f0ff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {stars.map((s) => (
+        <circle key={s.id} cx={s.x} cy={s.y} r={s.r} fill={s.c} opacity={0.8} />
+      ))}
+
+      <circle cx="980" cy="270" r="95" fill="url(#og-cyber-sun)" />
+      <rect x="880" y="260" width="200" height="5" fill="#06070d" />
+      <rect x="880" y="275" width="200" height="8" fill="#06070d" />
+      <rect x="880" y="293" width="200" height="11" fill="#06070d" />
+      <rect x="880" y="314" width="200" height="15" fill="#06070d" />
+      <rect x="880" y="340" width="200" height="19" fill="#06070d" />
+
+      <rect x="700" y="365" width="500" height="4" fill="url(#og-cyber-glow)" />
+
+      <g stroke="#00f0ff" opacity="0.45" strokeWidth="2">
+        <line x1="980" y1="365" x2="680" y2={H} />
+        <line x1="980" y1="365" x2="760" y2={H} />
+        <line x1="980" y1="365" x2="850" y2={H} />
+        <line x1="980" y1="365" x2="940" y2={H} />
+        <line x1="980" y1="365" x2="1020" y2={H} />
+        <line x1="980" y1="365" x2="1110" y2={H} />
+        <line x1="980" y1="365" x2="1200" y2={H} />
+        <line x1="980" y1="365" x2="1280" y2={H} />
+
+        <line x1="720" y1="385" x2="1200" y2="385" opacity="0.3" strokeWidth="1.5" />
+        <line x1="720" y1="415" x2="1200" y2="415" opacity="0.45" strokeWidth="2" />
+        <line x1="720" y1="460" x2="1200" y2="460" opacity="0.6" strokeWidth="2.5" />
+        <line x1="720" y1="530" x2="1200" y2="530" opacity="0.8" strokeWidth="3" />
+        <line x1="720" y1="620" x2="1200" y2="620" opacity="0.95" strokeWidth="3.5" />
+      </g>
+    </svg>
+  );
+}
+
+function AuraArt() {
+  return (
+    <svg aria-hidden="true" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={layer}>
+      <defs>
+        <radialGradient id="og-peach-aura" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#ffb3ba" stopOpacity="0.9" />
+          <stop offset="60%" stopColor="#ffdfba" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#ffdfba" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="og-violet-aura" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#b388ff" stopOpacity="0.85" />
+          <stop offset="60%" stopColor="#d1c4e9" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#d1c4e9" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="og-mint-aura" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#b2dfdb" stopOpacity="0.8" />
+          <stop offset="70%" stopColor="#e0f2f1" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#e0f2f1" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <circle cx="920" cy="270" r="160" fill="url(#og-peach-aura)" />
+      <circle cx="1060" cy="290" r="170" fill="url(#og-violet-aura)" />
+      <circle cx="980" cy="410" r="140" fill="url(#og-mint-aura)" />
+
+      <ellipse
+        cx="990"
+        cy="310"
+        rx="220"
+        ry="72"
+        fill="none"
+        stroke="#b388ff"
+        strokeWidth="3.5"
+        strokeDasharray="9 7"
+        opacity="0.65"
+        transform="rotate(-15 990 310)"
+      />
+
+      <path
+        d="M1120 120 A 38 38 0 0 0 1162 168 A 31 31 0 0 1 1120 120 Z"
+        fill="#7932c9"
+        opacity="0.75"
+      />
+
+      <g fill="#7932c9">
+        <path d="M990 140 L995 162 L1017 167 L995 172 L990 194 L985 172 L963 167 L985 162 Z" />
+        <circle cx="990" cy="167" r="4" fill="#ffffff" />
+
+        <path
+          d="M840 210 L843 222 L855 225 L843 228 L840 240 L837 228 L825 225 L837 222 Z"
+          fill="#a855f7"
+        />
+        <path
+          d="M1130 380 L1133 392 L1145 395 L1133 398 L1130 410 L1127 398 L1115 395 L1127 392 Z"
+          fill="#ec4899"
+        />
+        <circle cx="890" cy="460" r="6" fill="#b388ff" opacity="0.6" />
+        <circle cx="1110" cy="230" r="5" fill="#7932c9" opacity="0.6" />
+      </g>
+    </svg>
+  );
+}
+
+function OasisArt() {
+  return (
+    <svg aria-hidden="true" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={layer}>
+      <defs>
+        <radialGradient id="og-flower-center" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#ffd166" />
+          <stop offset="100%" stopColor="#f77f00" />
+        </radialGradient>
+      </defs>
+
+      <g fill="none" stroke="#ffffff" strokeWidth="4.5" opacity="0.35" strokeLinecap="round">
+        <path d="M720 120 C800 80 870 170 980 110 C1090 50 1150 140 1240 90" />
+        <path d="M740 240 C840 190 920 280 1020 230 C1120 180 1180 260 1260 210" />
+        <path d="M710 380 C810 330 900 420 1030 360 C1150 300 1190 400 1270 340" />
+        <path d="M750 510 C850 470 940 550 1060 490 C1170 440 1210 520 1280 480" />
+        <path d="M860 60 C840 170 910 240 900 370 C890 420 930 480 940 540" opacity="0.25" />
+        <path d="M1080 40 C1110 160 1050 260 1100 380 C1120 440 1080 500 1100 560" opacity="0.25" />
+      </g>
+
+      <g transform="translate(1010, 320)">
+        <ellipse
+          cx="0"
+          cy="0"
+          rx="90"
+          ry="46"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="3"
+          opacity="0.35"
+        />
+        <ellipse
+          cx="0"
+          cy="0"
+          rx="120"
+          ry="62"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="2"
+          opacity="0.2"
+        />
+
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <path
+            key={angle}
+            d="M0 0 C-24 -46 24 -70 40 -30 C45 -5 20 0 0 0 Z"
+            fill="#ff6b6b"
+            transform={`rotate(${angle})`}
+            opacity="0.95"
+          />
+        ))}
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <path
+            key={`in-${angle}`}
+            d="M0 0 C-10 -22 10 -35 18 -15 C20 -2 10 0 0 0 Z"
+            fill="#ffa07a"
+            transform={`rotate(${angle})`}
+          />
+        ))}
+        <circle cx="0" cy="0" r="15" fill="url(#og-flower-center)" />
+        <circle cx="0" cy="0" r="7" fill="#ffffff" opacity="0.8" />
+      </g>
+
+      <g fill="#0b525b" opacity="0.75">
+        <path d="M1020 -40 Q1120 80 1240 120 Q1180 30 1100 -20 Z" />
+        <path d="M1080 -60 Q1170 40 1260 210 Q1190 120 1130 10 Z" fill="#13676f" opacity="0.85" />
+      </g>
+
+      <g fill="#ffffff">
+        <path
+          d="M880 180 L883 192 L895 195 L883 198 L880 210 L877 198 L865 195 L877 192 Z"
+          opacity="0.85"
+        />
+        <path
+          d="M1140 440 L1142 450 L1152 452 L1142 454 L1140 464 L1138 454 L1128 452 L1138 450 Z"
+          opacity="0.75"
+        />
+      </g>
+    </svg>
+  );
+}
+
+function MatchaArt() {
+  return (
+    <svg aria-hidden="true" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={layer}>
+      <defs>
+        <radialGradient id="og-matcha-cup" cx="0.45" cy="0.45" r="0.5">
+          <stop offset="0%" stopColor="#5a8542" />
+          <stop offset="65%" stopColor="#43682f" />
+          <stop offset="100%" stopColor="#2c471e" />
+        </radialGradient>
+      </defs>
+
+      <g fill="none" stroke="#d5d0bd" strokeWidth="3" opacity="0.4">
+        <circle cx="980" cy="330" r="230" />
+        <circle cx="980" cy="330" r="280" />
+        <circle cx="980" cy="330" r="330" />
+      </g>
+
+      <g transform="translate(980, 330)">
+        <ellipse cx="5" cy="30" rx="155" ry="110" fill="#1a2014" opacity="0.14" />
+        <ellipse
+          cx="0"
+          cy="20"
+          rx="160"
+          ry="110"
+          fill="#f8f6f0"
+          stroke="#d5d0bf"
+          strokeWidth="3.5"
+        />
+        <ellipse cx="0" cy="20" rx="135" ry="90" fill="#ebe6d6" opacity="0.6" />
+
+        <ellipse cx="0" cy="0" rx="115" ry="86" fill="#fcfbf7" stroke="#c9c4b1" strokeWidth="4.5" />
+        <ellipse cx="0" cy="0" rx="102" ry="74" fill="url(#og-matcha-cup)" />
+
+        <g fill="#fbfaf6" opacity="0.95">
+          <path d="M0 -42 C-10 -56 -22 -44 -10 -30 L0 -18 L10 -30 C22 -44 10 -56 0 -42 Z" />
+          <ellipse cx="-16" cy="-16" rx="12" ry="7" transform="rotate(-25 -16 -16)" />
+          <ellipse cx="16" cy="-16" rx="12" ry="7" transform="rotate(25 16 -16)" />
+          <ellipse cx="-20" cy="0" rx="14" ry="8" transform="rotate(-20 -20 0)" />
+          <ellipse cx="20" cy="0" rx="14" ry="8" transform="rotate(20 20 0)" />
+          <ellipse cx="-20" cy="18" rx="16" ry="9" transform="rotate(-15 -20 18)" />
+          <ellipse cx="20" cy="18" rx="16" ry="9" transform="rotate(15 20 18)" />
+          <line
+            x1="0"
+            y1="-24"
+            x2="0"
+            y2="42"
+            stroke="#fbfaf6"
+            strokeWidth="5.5"
+            strokeLinecap="round"
+          />
+          <circle cx="0" cy="42" r="7" fill="#fbfaf6" />
+        </g>
+      </g>
+
+      <g fill="none" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" opacity="0.55">
+        <path d="M940 180 Q915 135 945 95 Q965 65 940 30" />
+        <path d="M1010 170 Q1040 125 1015 85 Q995 50 1025 20" />
+      </g>
+
+      <g transform="translate(800, 390) rotate(-30)">
+        <path d="M0 0 C-18 -32 0 -58 40 -72 C48 -32 30 0 0 0 Z" fill="#588143" />
+        <line x1="0" y1="0" x2="36" y2="-64" stroke="#3b5e29" strokeWidth="2.5" />
+      </g>
+      <g transform="translate(825, 420) rotate(35)">
+        <path d="M0 0 C-14 -24 0 -46 32 -56 C38 -24 24 0 0 0 Z" fill="#6c9b53" opacity="0.9" />
+        <line x1="0" y1="0" x2="28" y2="-48" stroke="#486f34" strokeWidth="2" />
+      </g>
+    </svg>
+  );
+}
+
 export function OgArt({ theme }: { theme: ThemeId }) {
   switch (theme) {
     case "confetti":
@@ -268,5 +623,15 @@ export function OgArt({ theme }: { theme: ThemeId }) {
       return <MidnightArt />;
     case "clean":
       return <CleanArt />;
+    case "velvet":
+      return <VelvetArt />;
+    case "cyber":
+      return <CyberArt />;
+    case "aura":
+      return <AuraArt />;
+    case "oasis":
+      return <OasisArt />;
+    case "matcha":
+      return <MatchaArt />;
   }
 }
