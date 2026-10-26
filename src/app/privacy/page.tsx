@@ -12,7 +12,7 @@ export default function PrivacyPage() {
     <LegalPage
       titleKey="privacyTitle"
       sectionsKey="privacySections"
-      lastUpdated="October 17, 2026"
+      lastUpdated="October 26, 2026"
     />
   );
 }

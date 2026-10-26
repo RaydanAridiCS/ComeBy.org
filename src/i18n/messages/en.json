@@ -30,6 +30,7 @@
     "myEvents": "My events",
     "newEvent": "New event",
     "settings": "Settings",
+    "moderation": "Moderation",
     "signIn": "Sign in",
     "signUp": "Get started",
     "signOut": "Sign out",
@@ -511,6 +512,7 @@
     "deleted": "Your account was deleted."
   },
   "themes": {
+    "showcaseLabel": "Invite themes",
     "confetti": {
       "name": "Confetti",
       "tagline": "Birthdays & parties",
@@ -615,6 +617,11 @@
   },
   "emails": {
     "footer": "Comeby: free, open-source invites. You're getting this because of activity on comeby.org.",
+    "unsubscribe": "Unsubscribe from these emails",
+    "hiddenSubject": "Event hidden after reports: {event}",
+    "hiddenHeading": "An event needs review",
+    "hiddenBody": "\"{event}\" was reported {count, plural, one {# time} other {# times}} and has been hidden until someone reviews it.",
+    "hiddenButton": "Open the moderation queue",
     "verifySubject": "Confirm your email for Comeby",
     "verifyHeading": "Confirm your email",
     "verifyBody": "Hi {name}! Tap the button to confirm your email and start sending invites.",
@@ -673,11 +680,11 @@
       },
       {
         "title": "How we use it",
-        "body": "Only to run Comeby: showing invites, collecting responses, notifying hosts, emailing guests who asked for updates, preventing spam and abuse, and keeping the service secure. We never use your data for advertising and never sell or share it with advertisers."
+        "body": "Only to run Comeby: showing invites, collecting responses, notifying hosts, emailing guests who asked for updates, preventing spam and abuse, and keeping the service secure. If error reporting is switched on, crash reports contain technical details (the error and the page type) but no names, emails or phone numbers. We never use your data for advertising and never sell or share it with advertisers."
       },
       {
         "title": "How long we keep it",
-        "body": "Guests' phone numbers and emails are deleted automatically 90 days after an event ends. Hosts can delete events, responses or their whole account at any time, which deletes the related data. Backups are overwritten within 30 days."
+        "body": "Guests' phone numbers and emails are deleted automatically 90 days after an event ends. Hosts can delete events, responses or their whole account at any time, which deletes the related data. Backups are overwritten within 30 days. If you unsubscribe from our emails, or an address bounces or is reported as spam, we keep that address on a do-not-email list so we never email it again."
       },
       {
         "title": "Cookies",
@@ -730,6 +737,44 @@
         "body": "We may update these terms and will update the date above when we do. You can stop using Comeby and delete your account at any time."
       }
     ]
+  },
+  "admin": {
+    "title": "Moderation",
+    "subtitle": "Events that were reported or hidden. Hidden events show an \"under review\" page to guests.",
+    "backToDashboard": "Back to my events",
+    "menuLink": "Moderation",
+    "queueTitle": "Review queue",
+    "queueEmpty": "Nothing to review right now.",
+    "hidden": "Hidden",
+    "visible": "Visible",
+    "cancelled": "Cancelled",
+    "reportsCount": "{count, plural, one {# report} other {# reports}}",
+    "host": "Host: {name} ({email})",
+    "viewInvite": "View invite",
+    "restore": "Restore",
+    "restoreTitle": "Restore this event?",
+    "restoreBody": "The reports are cleared and the invite page works again. Do this when the reports were a mistake or abuse.",
+    "restored": "Event restored.",
+    "delete": "Delete",
+    "deleteTitle": "Delete this event?",
+    "deleteBody": "The event, its responses and its cover image are deleted for good. This cannot be undone.",
+    "deleted": "Event deleted.",
+    "auditTitle": "Recent actions",
+    "auditEmpty": "No admin actions yet.",
+    "auditRestore": "{admin} restored \"{event}\"",
+    "auditDelete": "{admin} deleted \"{event}\""
+  },
+  "unsubscribe": {
+    "title": "Unsubscribe from Comeby emails",
+    "confirmGuest": "Stop event update emails to {email}? You'll still get emails you ask for directly, like the link to change your response.",
+    "confirmHost": "Turn off response alert and summary emails to {email}? You can turn them back on any time in your notification settings.",
+    "button": "Unsubscribe",
+    "doneTitle": "You're unsubscribed",
+    "doneGuest": "We won't send event update emails to {email} anymore.",
+    "doneHost": "Response alert emails are off for {email}. You can change this in your notification settings.",
+    "invalidTitle": "This link doesn't work",
+    "invalidBody": "The unsubscribe link is invalid or incomplete. Use the link at the bottom of one of our emails.",
+    "home": "Go home"
   },
   "notFound": {
     "title": "Page not found",

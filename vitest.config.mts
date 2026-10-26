@@ -14,6 +14,13 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
+    coverage: {
+      provider: "v8",
+      // Business rules and security code: the parts where a regression costs the most.
+      include: ["src/server/**", "src/lib/**", "src/config/**", "src/features/**/schema.ts"],
+      exclude: ["src/server/repositories/drizzle/**", "src/server/adapters/**"],
+      reporter: ["text-summary", "lcov"],
+    },
     env: {
       SKIP_ENV_VALIDATION: "1",
       NEXT_PUBLIC_APP_URL: "https://comeby.test",

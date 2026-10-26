@@ -85,6 +85,17 @@ describe("event service", () => {
     });
   });
 
+  it(`rate-limits event creation to ${LIMITS.eventCreationsPerHostPerHour} per hour`, async () => {
+    for (let i = 0; i < LIMITS.eventCreationsPerHostPerHour; i++) {
+      await service.create("host-1", values({ slug: `rate-limit-${i}` }));
+    }
+    await expect(service.create("host-1", values({ slug: "one-too-many" }))).rejects.toMatchObject({
+      code: "rate_limited",
+    });
+    // Another host is unaffected.
+    await expect(service.create("host-2", values({ slug: "other-host" }))).resolves.toBeTruthy();
+  });
+
   it("only lets the owner edit an event", async () => {
     const event = await service.create("host-1", values());
     await expect(

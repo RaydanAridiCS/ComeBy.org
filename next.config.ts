@@ -1,11 +1,26 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { buildCsp, originOf } from "./src/config/csp";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const s3PublicUrl = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : null;
 
+// Set CSP_REPORT_ONLY=1 to log violations in the browser console without blocking anything,
+// useful when trying a new third-party service before enforcing it.
+const cspHeaderName =
+  process.env.CSP_REPORT_ONLY === "1"
+    ? "Content-Security-Policy-Report-Only"
+    : "Content-Security-Policy";
+
+const contentSecurityPolicy = buildCsp({
+  isDev: process.env.NODE_ENV === "development",
+  umamiOrigin: originOf(process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL),
+  storageOrigin: originOf(process.env.S3_PUBLIC_URL),
+});
+
 const securityHeaders = [
+  { key: cspHeaderName, value: contentSecurityPolicy },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },

@@ -1,10 +1,13 @@
 import type {
   ActivityRecord,
+  AuditEntryRecord,
   EventPatch,
   EventRecord,
   EventWithStats,
   HostSummary,
+  ModerationItem,
   NewActivityRecord,
+  NewAuditEntryRecord,
   NewEventRecord,
   NewPushSubscriptionRecord,
   NewReportRecord,
@@ -13,6 +16,7 @@ import type {
   RsvpPatch,
   RsvpRecord,
   RsvpStats,
+  SuppressionReason,
   UserSettingsRecord,
 } from "./types";
 
@@ -69,6 +73,7 @@ export interface ActivityRepository {
 
 export interface UserRepository {
   findById(id: string): Promise<HostSummary | null>;
+  findByEmail(email: string): Promise<HostSummary | null>;
   /** Hosts with at least one RSVP change on any of their events since `since`. */
   listIdsWithRsvpActivitySince(since: Date): Promise<string[]>;
 }
@@ -93,6 +98,22 @@ export interface ReportRepository {
   create(input: NewReportRecord): Promise<boolean>;
 }
 
+export interface EmailSuppressionRepository {
+  /** Why an address is suppressed, or `null` when we may email it. */
+  find(email: string): Promise<SuppressionReason | null>;
+  /** Suppresses an address. A bounce or complaint is never downgraded to an unsubscribe. */
+  add(email: string, reason: SuppressionReason): Promise<void>;
+}
+
+export interface AdminRepository {
+  /** Reported or hidden events, hidden ones first, then the most reported. */
+  listModerationQueue(limit: number): Promise<ModerationItem[]>;
+  /** Clears an event's reports and un-hides it. */
+  restoreEvent(eventId: string): Promise<void>;
+  addAudit(entry: NewAuditEntryRecord): Promise<void>;
+  listAudit(limit: number): Promise<AuditEntryRecord[]>;
+}
+
 export interface RateLimitRepository {
   /** Adds one hit to `key` and returns the count in the current window. */
   hit(key: string, windowMs: number, now: Date): Promise<number>;
@@ -111,6 +132,8 @@ export type Repositories = {
   pushSubscriptions: PushSubscriptionRepository;
   reports: ReportRepository;
   rateLimits: RateLimitRepository;
+  emailSuppressions: EmailSuppressionRepository;
+  admin: AdminRepository;
 };
 
 /** Runs `work` inside a database transaction with repositories bound to it. */

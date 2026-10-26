@@ -2,8 +2,10 @@ import "server-only";
 
 import { type Database, type DatabaseOrTransaction, db } from "@/db/client";
 import { createActivityRepository } from "./drizzle/activity.repository";
+import { createAdminRepository } from "./drizzle/admin.repository";
 import { createEventRepository } from "./drizzle/event.repository";
 import {
+  createEmailSuppressionRepository,
   createPushSubscriptionRepository,
   createRateLimitRepository,
   createReportRepository,
@@ -26,6 +28,8 @@ export function createRepositories(handle: DatabaseOrTransaction): Repositories 
     pushSubscriptions: createPushSubscriptionRepository(handle),
     reports: createReportRepository(handle),
     rateLimits: createRateLimitRepository(handle),
+    emailSuppressions: createEmailSuppressionRepository(handle),
+    admin: createAdminRepository(handle),
   };
 }
 

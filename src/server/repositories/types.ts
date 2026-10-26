@@ -1,4 +1,6 @@
 import type {
+  adminAuditLog,
+  emailSuppressions,
   eventActivity,
   events,
   pushSubscriptions,
@@ -28,6 +30,28 @@ export type UserSettingsRecord = typeof userSettings.$inferSelect;
 export type PushSubscriptionRecord = typeof pushSubscriptions.$inferSelect;
 export type NewPushSubscriptionRecord = typeof pushSubscriptions.$inferInsert;
 export type NewReportRecord = typeof reports.$inferInsert;
+export type SuppressionReason = typeof emailSuppressions.$inferSelect.reason;
+
+export type AuditEntryRecord = typeof adminAuditLog.$inferSelect;
+export type NewAuditEntryRecord = typeof adminAuditLog.$inferInsert;
+export type ReportReason = typeof reports.$inferSelect.reason;
+
+/** One event in the moderation queue: reported at least once, or hidden. */
+export type ModerationItem = {
+  id: string;
+  slug: string;
+  title: string;
+  status: EventRecord["status"];
+  hostName: string;
+  hostEmail: string;
+  reportCount: number;
+  hiddenAt: Date | null;
+  createdAt: Date;
+  /** How many reports gave each reason. */
+  reasons: Partial<Record<ReportReason, number>>;
+  /** The most recent reporter comments (free text from the public, so display as plain text). */
+  recentDetails: string[];
+};
 
 export type HostSummary = { id: string; name: string; email: string };
 

@@ -22,7 +22,7 @@ npm install && cp .env.example .env.local && docker compose up -d && npm run dev
 
 1. Fork and create a branch: `feat/short-description` or `fix/short-description`.
 2. Keep changes focused. Follow the conventions in [docs/development.md](docs/development.md#conventions): TypeScript only, strings through next-intl, rules in services, queries in repositories.
-3. Add or update tests for behaviour changes.
+3. Add or update tests for behaviour changes. Database changes need a new migration from `npm run db:generate`; never edit a migration that has already been committed (databases that applied it will not re-run it). CI fails if the schema and `drizzle/` disagree.
 4. Run `npm run check`. CI runs the same checks plus e2e tests and a Docker build.
 5. Use [Conventional Commits](https://www.conventionalcommits.org) for commit messages.
 6. Describe *what* and *why* in the PR, with screenshots for UI changes (mobile first!).

@@ -8,6 +8,8 @@ export type EmailMessage = {
   subject: string;
   html: string;
   text: string;
+  /** Extra headers, such as `List-Unsubscribe`. */
+  headers?: Record<string, string>;
 };
 
 /** Anything that can deliver an email. Pick one with `EMAIL_PROVIDER`. */

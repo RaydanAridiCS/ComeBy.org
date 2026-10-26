@@ -30,6 +30,8 @@ export const LIMITS = {
   instantAlertEmailsPerHostPerDay: 50,
   /** Responses the same device can submit to the same event per hour. */
   responsesPerDevicePerEventPerHour: 5,
+  /** Events one host can create (or duplicate) per hour, on top of the monthly cap. */
+  eventCreationsPerHostPerHour: 5,
   /** New host accounts from the same network per day. */
   signupsPerNetworkPerDay: 3,
   /** Reports before an event is automatically hidden for review. */

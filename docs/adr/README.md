@@ -11,3 +11,6 @@ Short notes explaining *why* a big decision was made, so future contributors don
 | [0005](0005-i18n-single-locale.md) | next-intl with a fixed locale for now |
 | [0006](0006-typescript-service-worker.md) | Service worker written in TypeScript |
 | [0007](0007-agpl-license.md) | AGPL-3.0 license |
+| [0008](0008-error-reporting-without-sdk.md) | Error reporting to a Sentry-compatible server, without an SDK |
+| [0009](0009-csp-without-nonces.md) | Content-Security-Policy without nonces |
+| [0010](0010-operators-by-email-allowlist.md) | Operators identified by an email allowlist |

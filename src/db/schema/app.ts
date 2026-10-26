@@ -50,6 +50,12 @@ export const activityTypeEnum = pgEnum("activity_type", [
 ]);
 export const emailAlertModeEnum = pgEnum("email_alert_mode", ["instant", "daily", "off"]);
 export const reportReasonEnum = pgEnum("report_reason", ["spam", "scam", "inappropriate", "other"]);
+export const adminActionEnum = pgEnum("admin_action", ["restore_event", "delete_event"]);
+export const suppressionReasonEnum = pgEnum("suppression_reason", [
+  "unsubscribed",
+  "bounced",
+  "complained",
+]);
 
 /* ----------------------------------------------------------------------------
  * JSON column shapes
@@ -229,4 +235,34 @@ export const rateLimits = pgTable(
     expiresAt: timestamp({ withTimezone: true }).notNull(),
   },
   (table) => [index("rate_limits_expires_at_idx").on(table.expiresAt)],
+);
+
+/**
+ * Addresses we must not email: people who unsubscribed, hard bounces and spam complaints.
+ * Kept after guest data is purged on purpose, otherwise the opt-out would be forgotten.
+ */
+export const emailSuppressions = pgTable("email_suppressions", {
+  /** Lower-cased address. */
+  email: text().primaryKey(),
+  reason: suppressionReasonEnum().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * What admins did to events, kept after the event is gone. The event title and link are
+ * copied in because the event row may no longer exist.
+ */
+export const adminAuditLog = pgTable(
+  "admin_audit_log",
+  {
+    id: uuid().primaryKey().default(sql`uuidv7()`),
+    adminId: text().references(() => user.id, { onDelete: "set null" }),
+    adminEmail: text().notNull(),
+    action: adminActionEnum().notNull(),
+    eventId: uuid().notNull(),
+    eventTitle: text().notNull(),
+    eventSlug: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("admin_audit_log_created_at_idx").on(table.createdAt)],
 );

@@ -5,10 +5,11 @@ import { Check, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PasswordInput } from "@/components/forms/password-input";
+import { Turnstile } from "@/components/forms/turnstile";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { FIELD_LIMITS } from "@/config/limits";
 import { signUp } from "@/lib/auth-client";
+import { isBotCheckError, TURNSTILE_HEADER } from "@/lib/turnstile-header";
 import { safeNext } from "../safe-next";
 import { GoogleButton } from "./google-button";
 
@@ -31,12 +33,14 @@ const signupSchema = z.object({
 });
 type SignupValues = z.infer<typeof signupSchema>;
 
-export function SignupForm() {
+export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | undefined }) {
   const t = useTranslations("auth");
   const translateError = useTranslateError();
   const next = safeNext(useSearchParams().get("next"));
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const onToken = useCallback((token: string | null) => setTurnstileToken(token), []);
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "" },
@@ -44,12 +48,18 @@ export function SignupForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
-    const { error } = await signUp.email({ ...values, callbackURL: next });
+    const { error } = await signUp.email({
+      ...values,
+      callbackURL: next,
+      fetchOptions: { headers: turnstileToken ? { [TURNSTILE_HEADER]: turnstileToken } : {} },
+    });
     if (!error) {
       setSentTo(values.email);
       return;
     }
     if (error.code?.startsWith("USER_ALREADY_EXISTS")) setFormError(t("emailTaken"));
+    else if (isBotCheckError(error.code))
+      setFormError(translateError("errors.bot_check_failed") ?? null);
     else if (error.code === "TOO_MANY_SIGNUPS") setFormError(t("tooManySignups"));
     else if (error.status === 429) setFormError(translateError("errors.rate_limited") ?? null);
     else setFormError(translateError("errors.generic") ?? null);
@@ -124,6 +134,7 @@ export function SignupForm() {
           )}
         </Field>
       </FieldGroup>
+      <Turnstile siteKey={turnstileSiteKey} onToken={onToken} />
       <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
         {isSubmitting ? <Spinner /> : null}
         {t("signUpButton")}

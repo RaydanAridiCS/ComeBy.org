@@ -47,9 +47,12 @@ const PhoneInput = dynamic(() => import("react-phone-number-input/input"), {
   ssr: false,
   loading: () => <span className={`${inputClass} block`} aria-hidden="true" />,
 });
-const Turnstile = dynamic(() => import("./turnstile").then((module) => module.Turnstile), {
-  ssr: false,
-});
+const Turnstile = dynamic(
+  () => import("@/components/forms/turnstile").then((module) => module.Turnstile),
+  {
+    ssr: false,
+  },
+);
 // The success moment is the only part that needs the animation library.
 const RsvpSuccess = dynamic(() => import("./rsvp-success").then((module) => module.RsvpSuccess), {
   ssr: false,

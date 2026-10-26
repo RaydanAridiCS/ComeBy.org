@@ -3,7 +3,8 @@ import "server-only";
 import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import { getEmailSender } from "../adapters/email";
-import { notificationService } from "../services";
+import { reportError } from "../monitoring/error-reporting";
+import { notificationService, suppressionService } from "../services";
 import { getBoss, setInlineJobHandler } from "./queue";
 import type { JobName, JobPayloads } from "./types";
 
@@ -11,8 +12,19 @@ import type { JobName, JobPayloads } from "./types";
 async function runJob<K extends JobName>(name: K, data: JobPayloads[K]): Promise<void> {
   switch (name) {
     case "email.send": {
+      const message = data as JobPayloads["email.send"];
+      if (!(await suppressionService.canSend(message.to, message.category ?? "transactional"))) {
+        logger.info({ category: message.category }, "Email skipped: address is suppressed");
+        return;
+      }
       const sender = await getEmailSender();
-      await sender.send(data as JobPayloads["email.send"]);
+      await sender.send({
+        to: message.to,
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+        ...(message.headers ? { headers: message.headers } : {}),
+      });
       return;
     }
     case "host.rsvp-alert":
@@ -23,6 +35,8 @@ async function runJob<K extends JobName>(name: K, data: JobPayloads[K]): Promise
       return notificationService.handleDailyDigest();
     case "privacy.purge-guest-data":
       return notificationService.handleGuestDataPurge();
+    case "moderation.event-hidden":
+      return notificationService.handleEventHidden(data as JobPayloads["moderation.event-hidden"]);
     case "maintenance.cleanup-rate-limits":
       return notificationService.handleRateLimitCleanup();
   }
@@ -41,6 +55,7 @@ const WORKER_NAMES: JobName[] = [
   "guests.event-update",
   "hosts.daily-digest",
   "privacy.purge-guest-data",
+  "moderation.event-hidden",
   "maintenance.cleanup-rate-limits",
 ];
 
@@ -62,6 +77,7 @@ export async function startWorkers(): Promise<void> {
           await runJob(name, job.data);
         } catch (error) {
           logger.error({ err: error, job: name, jobId: job.id }, "Job failed");
+          await reportError(error, { source: "job", job: name });
           throw error;
         }
       }

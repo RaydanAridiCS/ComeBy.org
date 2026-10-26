@@ -4,7 +4,7 @@ import { startOfUtcMonth, zonedInputToDate } from "@/lib/dates";
 import { generateSlug } from "@/lib/slug";
 import { AppError, LimitReachedError } from "../errors";
 import type { EventPatch, EventRecord, NewEventRecord } from "../repositories/types";
-import type { ServiceDeps } from "./deps";
+import { HOUR_MS, type ServiceDeps } from "./deps";
 
 /** Changes guests should hear about. Used for the "Updated" banner and update emails. */
 export type NotableChange = "time" | "location" | "title" | "details";
@@ -99,6 +99,9 @@ export function createEventService(deps: ServiceDeps) {
     if (thisMonth >= LIMITS.eventsPerHostPerMonth) {
       throw new LimitReachedError("eventsPerHostPerMonth", LIMITS.eventsPerHostPerMonth);
     }
+    // Counted only after the quota checks, so a host at their cap isn't also locked out later.
+    const recent = await repos.rateLimits.hit(`event-create:${hostId}`, HOUR_MS, at);
+    if (recent > LIMITS.eventCreationsPerHostPerHour) throw new AppError("rate_limited");
   }
 
   async function resolveSlug(

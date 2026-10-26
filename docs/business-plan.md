@@ -220,6 +220,7 @@ These limits keep Comeby free, fast and safe from abuse, so one person or bot ca
 | Update emails ("event changed" or "cancelled") per event | **5** |
 | Instant response alert emails per host per day | **50**, after which alerts switch to a daily summary for the rest of the day |
 | Responses from the same device to the same event | **5 per hour** (stops spam submissions) |
+| New events one host can create per hour | **5** (stops scripted event creation) |
 | New host accounts from the same network per day | **3** |
 | Reports before an event is automatically hidden for review | **3** |
 

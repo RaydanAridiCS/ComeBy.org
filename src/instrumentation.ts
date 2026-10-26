@@ -20,7 +20,7 @@ export async function register(): Promise<void> {
   }
 }
 
-/** Logs every server error with its route, so problems show up in the server logs. */
+/** Logs every server error with its route and forwards it to error reporting when configured. */
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { logger } = await import("@/lib/logger");
@@ -28,4 +28,11 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
     { err: error, path: request.path, method: request.method, route: context.routePath },
     "Request error",
   );
+  // The route pattern (`/[slug]`) is reported, never the real path: invite links can carry secrets.
+  const { reportError } = await import("@/server/monitoring/error-reporting");
+  await reportError(error, {
+    source: "server",
+    route: context.routePath,
+    method: request.method,
+  });
 };

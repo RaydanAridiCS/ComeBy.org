@@ -4,10 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PasswordInput } from "@/components/forms/password-input";
+import { Turnstile } from "@/components/forms/turnstile";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -15,20 +16,31 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
+import { isBotCheckError, TURNSTILE_HEADER } from "@/lib/turnstile-header";
 
 const forgotSchema = z.object({ email: z.email({ message: "rsvp.emailInvalid" }) });
 
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ turnstileSiteKey }: { turnstileSiteKey: string | undefined }) {
   const t = useTranslations("auth");
   const translateError = useTranslateError();
   const [sent, setSent] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const onToken = useCallback((token: string | null) => setTurnstileToken(token), []);
   const form = useForm<z.infer<typeof forgotSchema>>({
     resolver: zodResolver(forgotSchema),
     defaultValues: { email: "" },
   });
 
   const onSubmit = form.handleSubmit(async ({ email }) => {
-    await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
+    const { error } = await authClient.requestPasswordReset({
+      email,
+      redirectTo: "/reset-password",
+      fetchOptions: { headers: turnstileToken ? { [TURNSTILE_HEADER]: turnstileToken } : {} },
+    });
+    if (isBotCheckError(error?.code)) {
+      form.setError("email", { message: "errors.bot_check_failed" });
+      return;
+    }
     // Always show the same message so nobody can probe which emails have accounts.
     setSent(true);
   });
@@ -55,6 +67,7 @@ export function ForgotPasswordForm() {
         />
         <FieldError>{translateError(errors.email?.message)}</FieldError>
       </Field>
+      <Turnstile siteKey={turnstileSiteKey} onToken={onToken} />
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? <Spinner /> : null}
         {t("forgotButton")}

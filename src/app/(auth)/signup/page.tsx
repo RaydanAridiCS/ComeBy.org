@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { env } from "@/env";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignupForm } from "@/features/auth/components/signup-form";
 
@@ -14,7 +15,7 @@ export default async function SignupPage() {
   return (
     <AuthCard title={t("signUpTitle")} subtitle={t("signUpSubtitle")}>
       <Suspense>
-        <SignupForm />
+        <SignupForm turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
       </Suspense>
     </AuthCard>
   );

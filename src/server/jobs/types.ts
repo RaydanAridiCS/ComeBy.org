@@ -1,7 +1,18 @@
+import type { EmailCategory } from "../services/suppression.service";
+
 /** Every background job and the data it carries. */
 export type JobPayloads = {
   /** Deliver one already-rendered email. */
-  "email.send": { to: string; subject: string; html: string; text: string };
+  "email.send": {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    /** Decides which suppressions apply. Jobs queued before this field existed count as transactional. */
+    category?: EmailCategory;
+    /** Extra headers, such as `List-Unsubscribe`. */
+    headers?: Record<string, string>;
+  };
   /** Tell a host (push + email) that someone responded or changed their response. */
   "host.rsvp-alert": {
     eventId: string;
@@ -15,6 +26,8 @@ export type JobPayloads = {
   "hosts.daily-digest": Record<string, never>;
   /** Delete guests' phone numbers and emails some time after events end. */
   "privacy.purge-guest-data": Record<string, never>;
+  /** Tell operators that an event was hidden automatically and needs review. */
+  "moderation.event-hidden": { eventId: string };
   /** Remove expired rate-limit counters. */
   "maintenance.cleanup-rate-limits": Record<string, never>;
 };
@@ -27,6 +40,7 @@ export const JOB_NAMES: readonly JobName[] = [
   "guests.event-update",
   "hosts.daily-digest",
   "privacy.purge-guest-data",
+  "moderation.event-hidden",
   "maintenance.cleanup-rate-limits",
 ];
 

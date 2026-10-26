@@ -22,9 +22,11 @@ Migrations also run automatically whenever the server starts.
 |---|---|
 | Lint + format check | `npm run lint` (`npm run lint:fix` to fix) |
 | Typecheck | `npm run typecheck` |
-| Unit tests | `npm test` / `npm run test:watch` |
-| End-to-end tests | start the app, then `npm run test:e2e` |
-| Change the database | edit `src/db/schema/*`, then `npm run db:generate` and commit the new file in `drizzle/` |
+| Unit tests | `npm test` / `npm run test:watch` (`npm run test:coverage` for a coverage report) |
+| Integration tests (real Postgres) | `docker compose up -d`, then `npm run test:integration`. Creates and drops a throwaway database. |
+| End-to-end tests | `docker compose up -d`, then `npm run test:e2e`. Starts `npm run dev` if the app isn't running; for a production-like run use `npm run build && npm start` first. Set `E2E_ADMIN_EMAIL` (and start the app with `ADMIN_EMAILS` set to the same address) to include the admin tests. |
+| Theme contrast (WCAG) | `npm run check:contrast` (part of `npm run check`) |
+| Change the database | edit `src/db/schema/*`, then `npm run db:generate` and commit the new SQL and snapshot files in `drizzle/`. Never edit a migration that is already committed; add a new one |
 | Browse the database | `npm run db:studio` |
 | Regenerate app icons | `npx tsx scripts/generate-icons.ts` |
 

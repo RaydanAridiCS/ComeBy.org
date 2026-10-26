@@ -1,16 +1,23 @@
 import "server-only";
 
 import { LIMITS } from "@/config/limits";
-import { eventCancelled, eventUpdated, hostDigest, hostRsvpAlert } from "@/emails/templates";
+import {
+  eventCancelled,
+  eventHiddenAlert,
+  eventUpdated,
+  hostDigest,
+  hostRsvpAlert,
+} from "@/emails/templates";
 import { getServerTranslator } from "@/i18n/config";
 import { formatEventWhen } from "@/lib/dates";
 import { logger } from "@/lib/logger";
 import { absoluteUrl, eventUrl } from "@/lib/share";
 import { sendPush } from "../adapters/push";
+import { adminEmails } from "../auth/admin-policy";
 import type { JobPayloads } from "../jobs/types";
 import type { EventRecord } from "../repositories/types";
 import { DAY_MS, type ServiceDeps } from "./deps";
-import { queueEmail } from "./email.service";
+import { queueEmail, unsubscribeLinks } from "./email.service";
 
 const ALERT_EMAIL_KEY = (hostId: string) => `alert-email:${hostId}`;
 
@@ -74,10 +81,12 @@ export function createNotificationService(deps: ServiceDeps) {
       const sentToday = await repos.rateLimits.hit(ALERT_EMAIL_KEY(host.id), DAY_MS, now());
       if (sentToday > LIMITS.instantAlertEmailsPerHostPerDay) return; // the daily digest covers the rest
 
+      const links = unsubscribeLinks("host", host.email);
       await queueEmail(
         jobs,
         host.email,
         hostRsvpAlert({
+          unsubscribeUrl: links.page,
           guestName: rsvp.name,
           eventTitle: event.title,
           status,
@@ -86,6 +95,7 @@ export function createNotificationService(deps: ServiceDeps) {
           totals: { going: stats.going, maybe: stats.maybe, notGoing: stats.notGoing },
           dashboardUrl: absoluteUrl(dashboardPath),
         }),
+        { category: "host-alert", oneClickUnsubscribeUrl: links.oneClick },
       );
     },
 
@@ -109,14 +119,17 @@ export function createNotificationService(deps: ServiceDeps) {
         for (const item of activity) {
           perEvent.set(item.eventTitle, (perEvent.get(item.eventTitle) ?? 0) + 1);
         }
+        const links = unsubscribeLinks("host", host.email);
         await queueEmail(
           jobs,
           host.email,
           hostDigest({
+            unsubscribeUrl: links.page,
             total: activity.length,
             events: [...perEvent].map(([title, count]) => ({ title, count })),
             dashboardUrl: absoluteUrl("/dashboard"),
           }),
+          { category: "host-alert", oneClickUnsubscribeUrl: links.oneClick },
         );
       }
     },
@@ -137,15 +150,18 @@ export function createNotificationService(deps: ServiceDeps) {
       const url = eventUrl(event.slug);
       for (const recipient of recipients) {
         if (!recipient.email) continue;
+        const links = unsubscribeLinks("guest", recipient.email);
         const email =
           payload.kind === "cancelled"
             ? eventCancelled({
+                unsubscribeUrl: links.page,
                 guestName: recipient.name,
                 eventTitle: event.title,
                 message: event.cancelMessage,
                 eventUrl: url,
               })
             : eventUpdated({
+                unsubscribeUrl: links.page,
                 guestName: recipient.name,
                 eventTitle: event.title,
                 changes,
@@ -153,7 +169,27 @@ export function createNotificationService(deps: ServiceDeps) {
                 where: locationLabel(event),
                 eventUrl: url,
               });
-        await queueEmail(jobs, recipient.email, email);
+        await queueEmail(jobs, recipient.email, email, {
+          category: "guest-update",
+          oneClickUnsubscribeUrl: links.oneClick,
+        });
+      }
+    },
+
+    /** Tells every operator that an event was hidden automatically and needs review. */
+    async handleEventHidden(payload: JobPayloads["moderation.event-hidden"]): Promise<void> {
+      const event = await repos.events.findById(payload.eventId);
+      if (!event?.hiddenAt) return;
+      for (const email of adminEmails()) {
+        await queueEmail(
+          jobs,
+          email,
+          eventHiddenAlert({
+            eventTitle: event.title,
+            reportCount: event.reportCount,
+            adminUrl: absoluteUrl("/admin"),
+          }),
+        );
       }
     },
 

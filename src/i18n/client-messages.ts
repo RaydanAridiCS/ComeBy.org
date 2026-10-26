@@ -34,6 +34,8 @@ export const LANDING_NAMESPACES: Namespace[] = [
 ];
 /** Sign in, sign up and password reset. */
 export const AUTH_NAMESPACES: Namespace[] = ["common", "errors", "auth", "nav"];
+/** The operator moderation page. */
+export const ADMIN_NAMESPACES: Namespace[] = ["common", "errors", "admin", "report"];
 /** The host dashboard, event form and settings. */
 export const DASHBOARD_NAMESPACES: Namespace[] = [
   "common",

@@ -6,7 +6,7 @@ import { DAY_MS, type ServiceDeps } from "./deps";
 const REPORTS_PER_NETWORK_PER_DAY = 10;
 
 export function createReportService(deps: ServiceDeps) {
-  const { repos, now } = deps;
+  const { repos, jobs, now } = deps;
 
   return {
     /**
@@ -38,6 +38,7 @@ export function createReportService(deps: ServiceDeps) {
       if (total >= LIMITS.reportsBeforeAutoHide && !event.hiddenAt) {
         await repos.events.update(event.id, { hiddenAt: now() });
         logger.warn({ eventId: event.id }, "Event auto-hidden after reports; needs review");
+        await jobs.enqueue("moderation.event-hidden", { eventId: event.id });
       }
     },
   };

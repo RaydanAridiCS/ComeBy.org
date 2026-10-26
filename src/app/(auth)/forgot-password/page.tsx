@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { env } from "@/env";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { ForgotPasswordForm } from "@/features/auth/components/password-forms";
 
@@ -12,7 +13,7 @@ export default async function ForgotPasswordPage() {
   const t = await getTranslations("auth");
   return (
     <AuthCard title={t("forgotTitle")} subtitle={t("forgotSubtitle")}>
-      <ForgotPasswordForm />
+      <ForgotPasswordForm turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
     </AuthCard>
   );
 }

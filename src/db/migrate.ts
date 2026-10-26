@@ -1,6 +1,7 @@
 import "server-only";
 
 import path from "node:path";
+import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { env } from "@/env";
 import { logger } from "@/lib/logger";
@@ -23,6 +24,16 @@ function isLocalhostDb(): boolean {
 }
 
 /**
+ * Early builds of migration 0001 added a `velvet` theme that was later renamed to
+ * `bloom`. Postgres cannot use an enum value in the transaction that added it, so
+ * the row fix runs here, after the migrations have committed. The `::text` cast
+ * keeps it valid on databases where `velvet` never existed.
+ */
+async function repairLegacyThemes(): Promise<void> {
+  await db.execute(sql`UPDATE events SET theme = 'bloom' WHERE theme::text = 'velvet'`);
+}
+
+/**
  * Applies pending SQL migrations from /drizzle. Runs automatically when the
  * server starts (see instrumentation.ts), so deploys need no extra step.
  * Retries on connection failure to allow the database container time to become ready.
@@ -33,6 +44,7 @@ export async function runMigrations(): Promise<void> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await migrate(db, { migrationsFolder });
+      await repairLegacyThemes();
       logger.info("Database migrations are up to date");
       return;
     } catch (error) {

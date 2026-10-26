@@ -5,7 +5,13 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { auth } from "./auth";
 
-export type CurrentUser = { id: string; name: string; email: string; image: string | null };
+export type CurrentUser = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+};
 
 /**
  * The signed-in host, or null. Reads the request, so call it inside a <Suspense>
@@ -14,8 +20,8 @@ export type CurrentUser = { id: string; name: string; email: string; image: stri
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  const { id, name, email, image } = session.user;
-  return { id, name, email, image: image ?? null };
+  const { id, name, email, emailVerified, image } = session.user;
+  return { id, name, email, emailVerified, image: image ?? null };
 });
 
 /** Like `getCurrentUser`, but sends visitors to the sign-in page. */

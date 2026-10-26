@@ -20,11 +20,17 @@ export const env = createEnv({
     DATABASE_URL: z.url(),
 
     BETTER_AUTH_SECRET: z.string().min(32),
+    /** Comma-separated emails of operators who can open /admin (verified accounts only). */
+    ADMIN_EMAILS: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
 
     EMAIL_PROVIDER: z.enum(["console", "smtp", "resend"]).default("console"),
     EMAIL_FROM: z.string().default("Comeby <hello@comeby.org>"),
+    /** Signing secret (`whsec_...`) for Resend's bounce and complaint webhook. Webhook is off when unset. */
+    RESEND_WEBHOOK_SECRET: z.string().optional(),
+    /** Bearer secret for the generic bounce webhook, for SMTP providers. Webhook is off when unset. */
+    EMAIL_WEBHOOK_SECRET: z.string().min(16).optional(),
     RESEND_API_KEY: z.string().optional(),
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().int().positive().optional(),
@@ -44,6 +50,9 @@ export const env = createEnv({
     VAPID_SUBJECT: z.string().default("mailto:hello@comeby.org"),
 
     TURNSTILE_SECRET_KEY: z.string().optional(),
+
+    /** Sentry-compatible DSN (Sentry or self-hosted GlitchTip). Error reporting is off when unset. */
+    ERROR_REPORTING_DSN: z.url().optional(),
 
     JOBS_ENABLED: booleanString.default(true),
   },

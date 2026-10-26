@@ -682,13 +682,17 @@ export function EventForm(props: EventFormProps) {
           </p>
           <p className="text-muted-foreground text-xs">{t("previewHint")}</p>
         </div>
-        <div
+        {/* Focusable so keyboard users can scroll the preview too (WCAG 2.1.1). */}
+        <section
+          aria-label={t("previewTitle")}
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard-focusable
+          tabIndex={0}
           className={cn(
             "max-h-[calc(100dvh-9rem)] overflow-y-auto rounded-[2rem] shadow-xl ring-1 ring-black/5 [scrollbar-width:none]",
           )}
         >
           {preview}
-        </div>
+        </section>
       </aside>
     </form>
   );

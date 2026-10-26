@@ -1,7 +1,8 @@
 import { eq, lt, sql } from "drizzle-orm";
 import type { DatabaseOrTransaction } from "@/db/client";
-import { pushSubscriptions, rateLimits, reports } from "@/db/schema";
+import { emailSuppressions, pushSubscriptions, rateLimits, reports } from "@/db/schema";
 import type {
+  EmailSuppressionRepository,
   PushSubscriptionRepository,
   RateLimitRepository,
   ReportRepository,
@@ -83,6 +84,33 @@ export function createRateLimitRepository(db: DatabaseOrTransaction): RateLimitR
         .where(lt(rateLimits.expiresAt, now))
         .returning({ key: rateLimits.key });
       return rows.length;
+    },
+  };
+}
+
+export function createEmailSuppressionRepository(
+  db: DatabaseOrTransaction,
+): EmailSuppressionRepository {
+  return {
+    async find(email) {
+      const [row] = await db
+        .select({ reason: emailSuppressions.reason })
+        .from(emailSuppressions)
+        .where(eq(emailSuppressions.email, email))
+        .limit(1);
+      return row?.reason ?? null;
+    },
+
+    async add(email, reason) {
+      await db
+        .insert(emailSuppressions)
+        .values({ email, reason })
+        .onConflictDoUpdate({
+          target: emailSuppressions.email,
+          set: { reason },
+          // A hard bounce or complaint stays; only an unsubscribe can be overwritten.
+          setWhere: sql`${emailSuppressions.reason} = 'unsubscribed'`,
+        });
     },
   };
 }

@@ -15,6 +15,15 @@ export function createUserRepository(db: DatabaseOrTransaction): UserRepository 
       return row ?? null;
     },
 
+    async findByEmail(email) {
+      const [row] = await db
+        .select({ id: user.id, name: user.name, email: user.email })
+        .from(user)
+        .where(eq(user.email, email))
+        .limit(1);
+      return row ?? null;
+    },
+
     async listIdsWithRsvpActivitySince(since) {
       const rows = await db
         .selectDistinct({ hostId: events.hostId })

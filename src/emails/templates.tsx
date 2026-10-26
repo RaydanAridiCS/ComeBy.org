@@ -78,6 +78,7 @@ export function hostRsvpAlert(props: {
   message: string | null;
   totals: { going: number; maybe: number; notGoing: number };
   dashboardUrl: string;
+  unsubscribeUrl?: string;
 }): RenderableEmail {
   const t = getServerTranslator();
   const changed = Boolean(props.from);
@@ -96,6 +97,7 @@ export function hostRsvpAlert(props: {
     subject,
     element: (
       <EmailLayout
+        unsubscribeUrl={props.unsubscribeUrl}
         preview={subject}
         heading={t("emails.hostAlertHeading", { event: props.eventTitle })}
         action={{ label: t("emails.hostAlertButton"), href: props.dashboardUrl }}
@@ -125,6 +127,7 @@ export function hostDigest(props: {
   total: number;
   events: { title: string; count: number }[];
   dashboardUrl: string;
+  unsubscribeUrl?: string;
 }): RenderableEmail {
   const t = getServerTranslator();
   const subject = t("emails.digestSubject", { count: props.total });
@@ -132,6 +135,7 @@ export function hostDigest(props: {
     subject,
     element: (
       <EmailLayout
+        unsubscribeUrl={props.unsubscribeUrl}
         preview={subject}
         heading={t("emails.digestHeading")}
         action={{ label: t("emails.digestButton"), href: props.dashboardUrl }}
@@ -154,12 +158,14 @@ export function eventUpdated(props: {
   when: string;
   where: string | null;
   eventUrl: string;
+  unsubscribeUrl?: string;
 }): RenderableEmail {
   const t = getServerTranslator();
   return {
     subject: t("emails.updateSubject", { event: props.eventTitle }),
     element: (
       <EmailLayout
+        unsubscribeUrl={props.unsubscribeUrl}
         preview={t("emails.updateHeading", { event: props.eventTitle })}
         heading={t("emails.updateHeading", { event: props.eventTitle })}
         action={{ label: t("emails.updateButton"), href: props.eventUrl }}
@@ -178,12 +184,14 @@ export function eventCancelled(props: {
   eventTitle: string;
   message: string | null;
   eventUrl: string;
+  unsubscribeUrl?: string;
 }): RenderableEmail {
   const t = getServerTranslator();
   return {
     subject: t("emails.cancelSubject", { event: props.eventTitle }),
     element: (
       <EmailLayout
+        unsubscribeUrl={props.unsubscribeUrl}
         preview={t("emails.cancelHeading", { event: props.eventTitle })}
         heading={t("emails.cancelHeading", { event: props.eventTitle })}
         action={{ label: t("emails.updateButton"), href: props.eventUrl }}
@@ -196,6 +204,29 @@ export function eventCancelled(props: {
             {t("emails.cancelMessage", { message: props.message })}
           </Text>
         ) : null}
+      </EmailLayout>
+    ),
+  };
+}
+
+/** Sent to operators when an event is hidden automatically after reports. */
+export function eventHiddenAlert(props: {
+  eventTitle: string;
+  reportCount: number;
+  adminUrl: string;
+}): RenderableEmail {
+  const t = getServerTranslator();
+  return {
+    subject: t("emails.hiddenSubject", { event: props.eventTitle }),
+    element: (
+      <EmailLayout
+        preview={t("emails.hiddenHeading")}
+        heading={t("emails.hiddenHeading")}
+        action={{ label: t("emails.hiddenButton"), href: props.adminUrl }}
+      >
+        <Text style={emailStyles.paragraph}>
+          {t("emails.hiddenBody", { event: props.eventTitle, count: props.reportCount })}
+        </Text>
       </EmailLayout>
     ),
   };

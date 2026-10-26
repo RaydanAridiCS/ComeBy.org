@@ -2,9 +2,13 @@ import type { JobName, JobPayloads, JobQueue } from "@/server/jobs/types";
 import type { Repositories } from "@/server/repositories/interfaces";
 import type {
   ActivityRecord,
+  AuditEntryRecord,
   EventRecord,
+  HostSummary,
   RsvpRecord,
   RsvpStats,
+  SuppressionReason,
+  UserSettingsRecord,
 } from "@/server/repositories/types";
 import type { ServiceDeps } from "@/server/services/deps";
 
@@ -63,6 +67,11 @@ export type FakeWorld = {
   activity: ActivityRecord[];
   jobs: { name: JobName; data: unknown }[];
   counters: Map<string, number>;
+  users: Map<string, HostSummary>;
+  settings: Map<string, UserSettingsRecord>;
+  suppressions: Map<string, SuppressionReason>;
+  audit: AuditEntryRecord[];
+  reportRows: { eventId: string }[];
   setNow: (date: Date) => void;
 };
 
@@ -73,6 +82,11 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
   const activity: ActivityRecord[] = [];
   const jobs: { name: JobName; data: unknown }[] = [];
   const counters = new Map<string, number>();
+  const users = new Map<string, HostSummary>();
+  const settings = new Map<string, UserSettingsRecord>();
+  const suppressions = new Map<string, SuppressionReason>();
+  const audit: AuditEntryRecord[] = [];
+  const reportRows: { eventId: string }[] = [];
 
   const stats = (eventId: string): RsvpStats => {
     const list = [...rsvps.values()].filter((r) => r.eventId === eventId);
@@ -84,10 +98,6 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
       total: list.length,
       guests: going.length + going.reduce((sum, r) => sum + r.plusOnes, 0),
     };
-  };
-
-  const notImplemented = (): never => {
-    throw new Error("not implemented in fake");
   };
 
   const repos: Repositories = {
@@ -134,7 +144,14 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
         events.set(id, { ...event, reportCount: event.reportCount + 1 });
         return event.reportCount + 1;
       },
-      listDueForGuestDataPurge: async () => [],
+      listDueForGuestDataPurge: async (endedBefore, limit) =>
+        [...events.values()]
+          .filter(
+            (e) =>
+              !e.guestDataPurgedAt && (e.endsAt ?? e.startsAt).getTime() < endedBefore.getTime(),
+          )
+          .slice(0, limit)
+          .map(({ id }) => ({ id })),
     },
     rsvps: {
       findById: async (id) => rsvps.get(id) ?? null,
@@ -177,7 +194,11 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
         return updated;
       },
       delete: async (id) => void rsvps.delete(id),
-      purgeContactDetails: async () => undefined,
+      purgeContactDetails: async (eventId) => {
+        for (const [id, rsvp] of rsvps) {
+          if (rsvp.eventId === eventId) rsvps.set(id, { ...rsvp, phone: null, email: null });
+        }
+      },
     },
     activity: {
       add: async (input) => {
@@ -197,25 +218,66 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
           .filter((a) => a.eventId === eventId)
           .slice(-limit)
           .reverse(),
-      listRsvpActivityForHostSince: notImplemented,
+      listRsvpActivityForHostSince: async (hostId, since) =>
+        activity
+          .filter((a) => {
+            const event = events.get(a.eventId);
+            return (
+              event?.hostId === hostId &&
+              a.createdAt >= since &&
+              (a.type === "rsvp_created" || a.type === "rsvp_updated")
+            );
+          })
+          .map((a) => {
+            const event = events.get(a.eventId);
+            return { ...a, eventTitle: event?.title ?? "", eventSlug: event?.slug ?? "" };
+          }),
     },
-    users: { findById: async () => null, listIdsWithRsvpActivitySince: async () => [] },
+    users: {
+      findById: async (id) => users.get(id) ?? null,
+      findByEmail: async (email) => [...users.values()].find((u) => u.email === email) ?? null,
+      listIdsWithRsvpActivitySince: async (since) => [
+        ...new Set(
+          activity
+            .filter((a) => a.createdAt >= since && a.type.startsWith("rsvp_"))
+            .map((a) => events.get(a.eventId)?.hostId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ],
+    },
     userSettings: {
-      get: async (userId) => ({
-        userId,
-        emailAlerts: "instant",
-        pushAlerts: true,
-        createdAt: now,
-        updatedAt: now,
-      }),
-      upsert: notImplemented,
+      get: async (userId) =>
+        settings.get(userId) ?? {
+          userId,
+          emailAlerts: "instant",
+          pushAlerts: true,
+          createdAt: now,
+          updatedAt: now,
+        },
+      upsert: async (userId, patch) => {
+        const current = settings.get(userId) ?? {
+          userId,
+          emailAlerts: "instant" as const,
+          pushAlerts: true,
+          createdAt: now,
+          updatedAt: now,
+        };
+        const updated = { ...current, ...patch, updatedAt: now };
+        settings.set(userId, updated);
+        return updated;
+      },
     },
     pushSubscriptions: {
       upsert: async () => undefined,
       listByUser: async () => [],
       deleteByEndpoint: async () => undefined,
     },
-    reports: { create: async () => true },
+    reports: {
+      create: async (input) => {
+        reportRows.push({ eventId: input.eventId });
+        return true;
+      },
+    },
     rateLimits: {
       hit: async (key, windowMs, at) => {
         const fullKey = `${key}@${Math.floor(at.getTime() / windowMs)}`;
@@ -226,6 +288,54 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
       peek: async (key, windowMs, at) =>
         counters.get(`${key}@${Math.floor(at.getTime() / windowMs)}`) ?? 0,
       deleteExpired: async () => 0,
+    },
+    admin: {
+      listModerationQueue: async (limit) =>
+        [...events.values()]
+          .filter((e) => e.reportCount > 0 || e.hiddenAt)
+          .slice(0, limit)
+          .map((e) => ({
+            id: e.id,
+            slug: e.slug,
+            title: e.title,
+            status: e.status,
+            hostName: users.get(e.hostId)?.name ?? "",
+            hostEmail: users.get(e.hostId)?.email ?? "",
+            reportCount: e.reportCount,
+            hiddenAt: e.hiddenAt,
+            createdAt: e.createdAt,
+            reasons: {},
+            recentDetails: [],
+          })),
+      restoreEvent: async (eventId) => {
+        const event = events.get(eventId);
+        if (event) events.set(eventId, { ...event, reportCount: 0, hiddenAt: null });
+        for (let i = reportRows.length - 1; i >= 0; i--) {
+          if (reportRows[i]?.eventId === eventId) reportRows.splice(i, 1);
+        }
+      },
+      addAudit: async (entry) => {
+        audit.push({
+          id: nextId(),
+          adminId: entry.adminId ?? null,
+          adminEmail: entry.adminEmail,
+          action: entry.action,
+          eventId: entry.eventId,
+          eventTitle: entry.eventTitle,
+          eventSlug: entry.eventSlug,
+          createdAt: now,
+        });
+      },
+      listAudit: async (limit) => [...audit].reverse().slice(0, limit),
+    },
+    emailSuppressions: {
+      find: async (email) => suppressions.get(email) ?? null,
+      add: async (email, reason) => {
+        // Mirrors the real repository: a bounce or complaint is never downgraded.
+        if (!suppressions.has(email) || suppressions.get(email) === "unsubscribed") {
+          suppressions.set(email, reason);
+        }
+      },
     },
   };
 
@@ -242,6 +352,11 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
     activity,
     jobs,
     counters,
+    users,
+    settings,
+    suppressions,
+    audit,
+    reportRows,
     setNow: (date) => {
       now = date;
     },

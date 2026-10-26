@@ -6,12 +6,18 @@ import { useTilt } from "@/components/motion/use-tilt";
 import { THEME_LIST } from "@/themes";
 import { InviteMini } from "@/themes/invite-mini";
 
-/** The landing page's "Five looks" gallery: large mini invites with a hover tilt. */
+/** The landing page's themes gallery: large mini invites with a hover tilt. */
 export function ThemeShowcase() {
   const t = useTranslations("themes");
   const tilt = useTilt();
   return (
-    <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pt-2 pb-6 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+    // On phones the list scrolls sideways, so it must be reachable by keyboard (WCAG 2.1.1).
+    <ul
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard-focusable
+      tabIndex={0}
+      aria-label={t("showcaseLabel")}
+      className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pt-2 pb-6 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-5"
+    >
       {THEME_LIST.map((theme, index) => (
         <li
           key={theme.id}

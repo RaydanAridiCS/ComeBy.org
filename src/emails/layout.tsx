@@ -8,6 +8,7 @@ import {
   Hr,
   Html,
   Img,
+  Link,
   Preview,
   Section,
   Text,
@@ -62,10 +63,19 @@ type EmailLayoutProps = {
   children: ReactNode;
   action?: { label: string; href: string };
   footnote?: string;
+  /** Adds an "Unsubscribe" link to the footer. Required on every non-transactional email. */
+  unsubscribeUrl?: string;
 };
 
 /** Shared frame for every Comeby email: logo, heading, body, button, footer. */
-export function EmailLayout({ preview, heading, children, action, footnote }: EmailLayoutProps) {
+export function EmailLayout({
+  preview,
+  heading,
+  children,
+  action,
+  footnote,
+  unsubscribeUrl,
+}: EmailLayoutProps) {
   const t = getServerTranslator();
   return (
     <Html lang="en">
@@ -154,6 +164,16 @@ export function EmailLayout({ preview, heading, children, action, footnote }: Em
           </Section>
           <Hr style={{ borderColor: colors.border, margin: "28px 0 14px" }} />
           <Text style={{ ...emailStyles.muted, textAlign: "center" }}>{t("emails.footer")}</Text>
+          {unsubscribeUrl ? (
+            <Text style={{ ...emailStyles.muted, textAlign: "center" }}>
+              <Link
+                href={unsubscribeUrl}
+                style={{ color: colors.muted, textDecoration: "underline" }}
+              >
+                {t("emails.unsubscribe")}
+              </Link>
+            </Text>
+          ) : null}
         </Container>
       </Body>
     </Html>

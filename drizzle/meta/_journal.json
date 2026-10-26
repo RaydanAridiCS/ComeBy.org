@@ -15,6 +15,27 @@
       "when": 1792600000000,
       "tag": "0001_add_themes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793004775813,
+      "tag": "0002_repair_theme_enum",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793005335475,
+      "tag": "0003_email_suppressions",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793005658508,
+      "tag": "0004_admin_audit_log",
+      "breakpoints": true
     }
   ]
 }

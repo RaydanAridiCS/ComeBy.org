@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, LogOut, Settings } from "lucide-react";
+import { CalendarDays, LogOut, Settings, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -31,10 +31,12 @@ export function UserMenuClient({
   name,
   email,
   image,
+  showAdmin,
 }: {
   name: string;
   email: string;
   image: string | null;
+  showAdmin: boolean;
 }) {
   const t = useTranslations("nav");
   const router = useRouter();
@@ -69,6 +71,14 @@ export function UserMenuClient({
             {t("settings")}
           </Link>
         </DropdownMenuItem>
+        {showAdmin ? (
+          <DropdownMenuItem asChild>
+            <Link href="/admin">
+              <ShieldCheck />
+              {t("moderation")}
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
