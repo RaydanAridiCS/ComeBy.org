@@ -5,6 +5,9 @@ import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import { JOB_NAMES, type JobName, type JobPayloads, type JobQueue } from "./types";
 
+/** How long a finished email job stays in the queue tables (pg-boss keeps jobs 7 days by default). */
+const EMAIL_JOB_KEEP_SECONDS = 24 * 60 * 60;
+
 const globalForBoss = globalThis as unknown as { comebyBoss?: Promise<PgBoss> };
 
 /** Starts (once per process) the pg-boss instance that stores jobs in Postgres. */
@@ -16,6 +19,8 @@ export function getBoss(): Promise<PgBoss> {
     for (const name of JOB_NAMES) {
       await boss.createQueue(name, { retryLimit: 3, retryDelay: 30, retryBackoff: true });
     }
+    // Email jobs carry the recipient's address and the message, so don't keep them long.
+    await boss.updateQueue("email.send", { deleteAfterSeconds: EMAIL_JOB_KEEP_SECONDS });
     return boss;
   })();
   return globalForBoss.comebyBoss;

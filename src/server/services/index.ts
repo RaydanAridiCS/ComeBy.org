@@ -2,6 +2,7 @@ import "server-only";
 
 import { jobQueue } from "../jobs/queue";
 import { repositories, runInTransaction } from "../repositories";
+import { createAccountService } from "./account.service";
 import { createAdminService } from "./admin.service";
 import type { ServiceDeps } from "./deps";
 import { createEventService } from "./event.service";
@@ -18,6 +19,7 @@ const deps: ServiceDeps = {
   now: () => new Date(),
 };
 
+export const accountService = createAccountService(deps);
 export const adminService = createAdminService(deps);
 export const eventService = createEventService(deps);
 export const rsvpService = createRsvpService(deps);

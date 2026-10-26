@@ -39,6 +39,11 @@ export async function writeRsvpCredential(
   });
 }
 
+export async function clearRsvpCredential(eventId: string): Promise<void> {
+  const store = await cookies();
+  store.delete(rsvpCookieName(eventId));
+}
+
 /** A random ID for this browser, used only for rate limiting responses. */
 export async function deviceId(): Promise<string> {
   const store = await cookies();

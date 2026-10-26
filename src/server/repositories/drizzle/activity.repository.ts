@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import type { DatabaseOrTransaction } from "@/db/client";
 import { eventActivity, events } from "@/db/schema";
 import type { ActivityRepository } from "../interfaces";
@@ -11,6 +11,13 @@ export function createActivityRepository(db: DatabaseOrTransaction): ActivityRep
       const [row] = await db.insert(eventActivity).values(input).returning();
       if (!row) throw new Error("Activity insert returned no row");
       return row;
+    },
+
+    async scrubGuestName(rsvpId) {
+      await db
+        .update(eventActivity)
+        .set({ data: sql`${eventActivity.data} - 'guestName'` })
+        .where(eq(eventActivity.rsvpId, rsvpId));
     },
 
     async listByEvent(eventId, limit) {

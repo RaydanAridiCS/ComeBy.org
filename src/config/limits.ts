@@ -32,6 +32,10 @@ export const LIMITS = {
   responsesPerDevicePerEventPerHour: 5,
   /** Events one host can create (or duplicate) per hour, on top of the monthly cap. */
   eventCreationsPerHostPerHour: 5,
+  /** Whole-account data downloads per host per day. */
+  accountExportsPerDay: 5,
+  /** Delete or download requests per guest response per hour. */
+  guestDataRequestsPerHour: 10,
   /** New host accounts from the same network per day. */
   signupsPerNetworkPerDay: 3,
   /** Reports before an event is automatically hidden for review. */

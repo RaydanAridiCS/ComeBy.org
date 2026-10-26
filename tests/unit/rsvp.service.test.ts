@@ -181,4 +181,152 @@ describe("RSVP service", () => {
     expect(await service.publicGuestList(hidden)).toBeNull();
     expect(await service.publicGuestList(names)).toMatchObject({ going: 1, names: ["Omar"] });
   });
+
+  describe("guest privacy", () => {
+    it("lets a guest delete their own response and wipes their name from the timeline", async () => {
+      const event = makeEvent();
+      world.events.set(event.id, event);
+      const first = await service.submit({
+        eventId: event.id,
+        values: answer({ email: "omar@example.com" }),
+        credential: null,
+        deviceKey: "d",
+      });
+      await service.submit({
+        eventId: event.id,
+        values: answer({ status: "maybe", email: "omar@example.com" }),
+        credential: first.credential,
+        deviceKey: "d",
+      });
+
+      const result = await service.deleteByGuest({
+        eventId: event.id,
+        credential: first.credential,
+      });
+
+      expect(result.email).toBe("omar@example.com");
+      expect(world.rsvps.size).toBe(0);
+      expect(await service.findByCredential(event.id, first.credential)).toBeNull();
+      expect(world.activity.some((entry) => "guestName" in entry.data)).toBe(false);
+      expect(world.activity.at(-1)).toMatchObject({ type: "rsvp_removed", data: { bySelf: true } });
+    });
+
+    it("refuses to delete or export with a wrong or missing credential", async () => {
+      const event = makeEvent();
+      world.events.set(event.id, event);
+      const first = await service.submit({
+        eventId: event.id,
+        values: answer(),
+        credential: null,
+        deviceKey: "d",
+      });
+      const forged = { rsvpId: first.rsvp.id, token: "nope" };
+
+      await expect(
+        service.deleteByGuest({ eventId: event.id, credential: forged }),
+      ).rejects.toMatchObject({ code: "not_found" });
+      await expect(
+        service.deleteByGuest({ eventId: event.id, credential: null }),
+      ).rejects.toMatchObject({ code: "not_found" });
+      await expect(
+        service.exportForGuest({ eventId: event.id, credential: forged }),
+      ).rejects.toMatchObject({ code: "not_found" });
+      expect(world.rsvps.size).toBe(1);
+    });
+
+    it("does not let a credential from one event touch another event's response", async () => {
+      const mine = makeEvent();
+      const other = makeEvent();
+      world.events.set(mine.id, mine);
+      world.events.set(other.id, other);
+      const first = await service.submit({
+        eventId: mine.id,
+        values: answer(),
+        credential: null,
+        deviceKey: "d",
+      });
+      await expect(
+        service.deleteByGuest({ eventId: other.id, credential: first.credential }),
+      ).rejects.toMatchObject({ code: "not_found" });
+      expect(world.rsvps.size).toBe(1);
+    });
+
+    it("exports only the guest's own response, with question labels", async () => {
+      const event = makeEvent({
+        customQuestions: [{ id: "diet", label: "Diet?", type: "text", required: false }],
+      });
+      world.events.set(event.id, event);
+      const mine = await service.submit({
+        eventId: event.id,
+        values: answer({ name: "Omar", phone: "+14155550123", answers: { diet: "Vegan" } }),
+        credential: null,
+        deviceKey: "a",
+      });
+      await service.submit({
+        eventId: event.id,
+        values: answer({ name: "Lina", email: "lina@example.com" }),
+        credential: null,
+        deviceKey: "b",
+      });
+
+      const data = await service.exportForGuest({ eventId: event.id, credential: mine.credential });
+
+      expect(data.response).toMatchObject({
+        name: "Omar",
+        phone: "+14155550123",
+        answers: [{ question: "Diet?", answer: "Vegan" }],
+      });
+      const text = JSON.stringify(data);
+      expect(text).not.toContain("Lina");
+      expect(text).not.toContain("lina@example.com");
+      expect(text).not.toContain(mine.rsvp.editTokenHash);
+    });
+
+    it(`limits delete and download requests to ${LIMITS.guestDataRequestsPerHour} per hour`, async () => {
+      const event = makeEvent();
+      world.events.set(event.id, event);
+      const first = await service.submit({
+        eventId: event.id,
+        values: answer(),
+        credential: null,
+        deviceKey: "d",
+      });
+      for (let i = 0; i < LIMITS.guestDataRequestsPerHour; i++) {
+        await service.exportForGuest({ eventId: event.id, credential: first.credential });
+      }
+      await expect(
+        service.exportForGuest({ eventId: event.id, credential: first.credential }),
+      ).rejects.toMatchObject({ code: "rate_limited" });
+    });
+
+    it("still deletes after the event has ended or been cancelled", async () => {
+      const event = makeEvent();
+      world.events.set(event.id, event);
+      const first = await service.submit({
+        eventId: event.id,
+        values: answer(),
+        credential: null,
+        deviceKey: "d",
+      });
+      world.events.set(event.id, { ...event, status: "cancelled", hiddenAt: new Date() });
+      await service.deleteByGuest({ eventId: event.id, credential: first.credential });
+      expect(world.rsvps.size).toBe(0);
+    });
+
+    it("keeps the guest's name in the timeline when the host removes a response", async () => {
+      const event = makeEvent();
+      world.events.set(event.id, event);
+      const first = await service.submit({
+        eventId: event.id,
+        values: answer({ name: "Spammer" }),
+        credential: null,
+        deviceKey: "d",
+      });
+      await service.removeByHost(event.hostId, event.id, first.rsvp.id);
+      expect(world.activity.at(-1)).toMatchObject({
+        type: "rsvp_removed",
+        data: { guestName: "Spammer" },
+      });
+    });
+  });
 });

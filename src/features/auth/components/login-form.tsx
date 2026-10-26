@@ -17,6 +17,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { signIn } from "@/lib/auth-client";
 import { safeNext } from "../safe-next";
 import { GoogleButton } from "./google-button";
+import { ResendVerification } from "./resend-verification";
 
 const loginSchema = z.object({
   email: z.email({ message: "rsvp.emailInvalid" }),
@@ -30,6 +31,7 @@ export function LoginForm() {
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const [formError, setFormError] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -37,14 +39,17 @@ export function LoginForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
+    setUnverifiedEmail(null);
     const { error } = await signIn.email({ ...values, callbackURL: next });
     if (!error) {
       router.replace(next);
       router.refresh();
       return;
     }
-    if (error.code === "EMAIL_NOT_VERIFIED") setFormError(t("emailNotVerified"));
-    else if (error.code === "INVALID_EMAIL_OR_PASSWORD") setFormError(t("invalidCredentials"));
+    if (error.code === "EMAIL_NOT_VERIFIED") {
+      setFormError(t("emailNotVerified"));
+      setUnverifiedEmail(values.email);
+    } else if (error.code === "INVALID_EMAIL_OR_PASSWORD") setFormError(t("invalidCredentials"));
     else if (error.status === 429) setFormError(translateError("errors.rate_limited") ?? null);
     else setFormError(translateError("errors.generic") ?? null);
   });
@@ -52,13 +57,14 @@ export function LoginForm() {
   const { errors, isSubmitting } = form.formState;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
       <GoogleButton next={next} />
       {formError ? (
         <Alert variant="destructive">
           <AlertDescription>{formError}</AlertDescription>
         </Alert>
       ) : null}
+      {unverifiedEmail ? <ResendVerification email={unverifiedEmail} next={next} /> : null}
       <FieldGroup>
         <Field data-invalid={Boolean(errors.email)}>
           <FieldLabel htmlFor="email">{t("email")}</FieldLabel>

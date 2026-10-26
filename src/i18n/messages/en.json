@@ -169,7 +169,12 @@
     "panelBody": "Beautiful invites, one link for everyone, and a live list of who's coming. Free and open source.",
     "backHome": "Back to home",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "resendButton": "Send the email again",
+    "resendWait": "Send again in {seconds}s",
+    "resendSent": "Sent. It can take a minute to arrive.",
+    "resendTooSoon": "Please wait a moment before asking for another email.",
+    "resendFailed": "We couldn't send it just now. Please try again."
   },
   "dashboard": {
     "title": "My events",
@@ -380,6 +385,7 @@
       "rsvp_created": "{name} responded {status}",
       "rsvp_updated": "{name} changed from {from} to {to}",
       "rsvp_removed": "You removed {name}'s response",
+      "rsvp_removed_by_guest": "A guest deleted their response",
       "update_email_sent": "Update email sent to guests"
     },
     "copied": "Copied",
@@ -468,7 +474,16 @@
     "nameRequired": "Please enter your name.",
     "answerRequired": "Please answer this question.",
     "emailInvalid": "Please enter a valid email.",
-    "privacyNote": "Your phone number and message are only visible to the host."
+    "privacyNote": "Your phone number and message are only visible to the host.",
+    "downloadData": "Download my data",
+    "deleteResponse": "Delete my response",
+    "deleteConfirmTitle": "Delete your response?",
+    "deleteConfirmBody": "This removes your name, contact details, message and answers. The host will see that a guest removed their response. You can respond again later.",
+    "deleteConfirm": "Yes, delete it",
+    "deleteCancel": "Keep it",
+    "deletedTitle": "Your response was deleted",
+    "deletedBody": "We removed your details. If you left an email, we sent a short confirmation.",
+    "respondAgain": "Respond again"
   },
   "report": {
     "title": "Report this event",
@@ -509,7 +524,37 @@
     "deleteConfirmTitle": "Delete your account?",
     "deleteConfirmBody": "Type DELETE to confirm. All your events and their responses will be gone forever.",
     "deleteConfirmWord": "DELETE",
-    "deleted": "Your account was deleted."
+    "deleted": "Your account was deleted.",
+    "nameHint": "Shown to guests as the host name when you create a new event.",
+    "saveName": "Save name",
+    "nameSaved": "Name saved",
+    "changeEmail": "Change email",
+    "changeEmailHint": "You sign in with {email}. We'll ask you to approve the change from that address first, then confirm the new one.",
+    "changeEmailButton": "Send approval email",
+    "changeEmailSent": "Check {email}: we sent a link to approve the change. After you approve, we'll email the new address to confirm it.",
+    "emailSame": "That's already your email.",
+    "googleEmailHint": "You sign in with Google, so your email comes from your Google account.",
+    "securityTitle": "Password",
+    "securityBody": "Pick something long that you don't use anywhere else.",
+    "googlePasswordHint": "You sign in with Google, so there's no Comeby password to change.",
+    "currentPassword": "Current password",
+    "currentPasswordWrong": "That isn't your current password.",
+    "signOutOthersOption": "Sign out of my other devices",
+    "changePasswordButton": "Change password",
+    "passwordChanged": "Password changed",
+    "sessionsTitle": "Where you're signed in",
+    "sessionsBody": "If you don't recognize a device, sign it out and change your password.",
+    "unknownDevice": "Unknown device",
+    "thisDevice": "This device",
+    "lastActive": "Last active",
+    "signOut": "Sign out",
+    "signOutDevice": "Sign out {device}",
+    "signOutEverywhereElse": "Sign out everywhere else",
+    "sessionEnded": "Device signed out",
+    "othersEnded": "Signed out everywhere else",
+    "dataTitle": "Your data",
+    "dataBody": "Download your profile, events and the responses to them as a JSON file.",
+    "dataButton": "Download my data"
   },
   "themes": {
     "showcaseLabel": "Invite themes",
@@ -637,6 +682,15 @@
     "rsvpConfirmBody": "You responded {status} to {event}. We'll email you if anything changes.",
     "rsvpConfirmButton": "View invite or change response",
     "rsvpConfirmKeep": "Keep this email: the button lets you change your response from any device.",
+    "changeEmailSubject": "Approve your new Comeby email",
+    "changeEmailHeading": "Approve the email change",
+    "changeEmailBody": "Someone (hopefully you) asked to change your Comeby email to {email}. Approve it with the button below, and we'll then ask {email} to confirm.",
+    "changeEmailButton": "Approve the change",
+    "changeEmailIgnore": "If this wasn't you, ignore this email and your address stays the same. Consider changing your password.",
+    "rsvpDeletedSubject": "Your response to {event} was deleted",
+    "rsvpDeletedHeading": "Your response was deleted",
+    "rsvpDeletedBody": "As you asked, we deleted your response to {event}, including your name, contact details, message and answers.",
+    "rsvpDeletedFootnote": "If this wasn't you, you can ignore this email. Nobody else can delete your response without your private link.",
     "hostAlertSubject": "{name} responded {status} to {event}",
     "hostAlertHeading": "New response for {event}",
     "hostAlertBody": "{name} responded {status}.",
@@ -684,7 +738,7 @@
       },
       {
         "title": "How long we keep it",
-        "body": "Guests' phone numbers and emails are deleted automatically 90 days after an event ends. Hosts can delete events, responses or their whole account at any time, which deletes the related data. Backups are overwritten within 30 days. If you unsubscribe from our emails, or an address bounces or is reported as spam, we keep that address on a do-not-email list so we never email it again."
+        "body": "Guests' phone numbers and emails are deleted automatically 90 days after an event ends. Hosts can delete events, responses or their whole account at any time, which deletes the related data. Guests can delete their own response at any time. Copies of delivered emails are removed from our job queue within a day. Backups are overwritten within 30 days. If you unsubscribe from our emails, or an address bounces or is reported as spam, we keep that address on a do-not-email list so we never email it again."
       },
       {
         "title": "Cookies",
@@ -696,7 +750,7 @@
       },
       {
         "title": "Your rights",
-        "body": "You can see, correct, export or delete your data. Hosts can do most of this from Settings and the event dashboard. Guests can change their response using the private link in their confirmation email, or ask the host. For anything else, contact us and we'll help."
+        "body": "You can see, correct, export or delete your data. Hosts can do most of this from Settings and the event dashboard. Guests can change, download or delete their own response from the invite page on the device they responded from, or from the private link in their confirmation email. Deleting removes the name, phone number, email, message and answers, and takes the guest off the host's list. For anything else, contact us and we'll help."
       },
       {
         "title": "Children",

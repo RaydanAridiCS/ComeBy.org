@@ -9,7 +9,7 @@ import { LIMITS } from "@/config/limits";
 import { SITE } from "@/config/site";
 import { db } from "@/db/client";
 import * as schema from "@/db/schema";
-import { resetPassword, verifyEmail } from "@/emails/templates";
+import { changeEmailConfirm, resetPassword, verifyEmail } from "@/emails/templates";
 import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import { getFileStorage } from "../adapters/storage";
@@ -63,6 +63,14 @@ export const auth = betterAuth({
     accountLinking: { enabled: true, trustedProviders: ["google"] },
   },
   user: {
+    // Two steps, so a stolen session can't quietly move the account: the current address
+    // approves first, then the new address is verified (Better Auth's own verification email).
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+        await queueEmail(jobQueue, user.email, changeEmailConfirm({ newEmail, url }));
+      },
+    },
     deleteUser: {
       enabled: true,
       // Clean up uploaded cover images; database rows cascade automatically.
@@ -82,7 +90,9 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
-    cookieCache: { enabled: true, maxAge: 5 * 60 },
+    // No signed-cookie cache: signing a device out, or changing the password, must take
+    // effect on the very next request rather than up to minutes later. One indexed lookup
+    // per dashboard request is cheap at Comeby's size.
   },
   rateLimit: {
     enabled: true,
@@ -93,6 +103,9 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 60, max: 5 },
       "/forget-password": { window: 60, max: 3 },
       "/request-password-reset": { window: 60, max: 3 },
+      "/send-verification-email": { window: 60, max: 2 },
+      "/change-password": { window: 60, max: 5 },
+      "/change-email": { window: 60, max: 3 },
     },
   },
   hooks: {

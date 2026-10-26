@@ -41,6 +41,8 @@ export const DASHBOARD_NAMESPACES: Namespace[] = [
   "common",
   "errors",
   "nav",
+  // Settings reuses the password field and its messages.
+  "auth",
   "dashboard",
   "eventForm",
   "eventDashboard",

@@ -100,6 +100,27 @@ export function createRsvpService(deps: ServiceDeps) {
     return event;
   }
 
+  async function limitGuestRequests(rsvpId: string): Promise<void> {
+    const hits = await repos.rateLimits.hit(`guest-data:${rsvpId}`, HOUR_MS, now());
+    if (hits > LIMITS.guestDataRequestsPerHour) throw new AppError("rate_limited");
+  }
+
+  /**
+   * The one place a response is deleted. When the guest does it themselves, their name is
+   * also wiped from the host's timeline (the entries survive, nameless).
+   */
+  async function removeResponse(rsvp: RsvpRecord, options: { bySelf: boolean }): Promise<void> {
+    await transaction(async (tx) => {
+      if (options.bySelf) await tx.activity.scrubGuestName(rsvp.id);
+      await tx.activity.add({
+        eventId: rsvp.eventId,
+        type: "rsvp_removed",
+        data: options.bySelf ? { bySelf: true } : { guestName: rsvp.name },
+      });
+      await tx.rsvps.delete(rsvp.id);
+    });
+  }
+
   return {
     findByCredential,
 
@@ -197,14 +218,52 @@ export function createRsvpService(deps: ServiceDeps) {
       if (event.hostId !== hostId) throw new AppError("forbidden");
       const rsvp = await repos.rsvps.findById(rsvpId);
       if (!rsvp || rsvp.eventId !== eventId) throw new AppError("not_found");
-      await transaction(async (tx) => {
-        await tx.activity.add({
-          eventId,
-          type: "rsvp_removed",
-          data: { guestName: rsvp.name },
-        });
-        await tx.rsvps.delete(rsvpId);
-      });
+      await removeResponse(rsvp, { bySelf: false });
+    },
+
+    /**
+     * A guest deletes their own response with their private credential. Works even after
+     * the event has ended, is cancelled or hidden. Returns the address the response left
+     * (if any) so the caller can send the confirmation.
+     */
+    async deleteByGuest(input: {
+      eventId: string;
+      credential: RsvpCredential | null;
+    }): Promise<{ email: string | null }> {
+      const rsvp = await findByCredential(input.eventId, input.credential);
+      if (!rsvp) throw new AppError("not_found");
+      await limitGuestRequests(rsvp.id);
+      await removeResponse(rsvp, { bySelf: true });
+      return { email: rsvp.email };
+    },
+
+    /** Everything stored about one guest's own response, and nothing about anyone else. */
+    async exportForGuest(input: { eventId: string; credential: RsvpCredential | null }) {
+      const rsvp = await findByCredential(input.eventId, input.credential);
+      if (!rsvp) throw new AppError("not_found");
+      await limitGuestRequests(rsvp.id);
+      const event = await repos.events.findById(input.eventId);
+      if (!event) throw new AppError("not_found");
+      return {
+        event: {
+          title: event.title,
+          startsAt: event.startsAt.toISOString(),
+          timezone: event.timezone,
+        },
+        response: {
+          status: rsvp.status,
+          name: rsvp.name,
+          phone: rsvp.phone,
+          email: rsvp.email,
+          message: rsvp.message,
+          plusOnes: rsvp.plusOnes,
+          answers: event.customQuestions
+            .filter((question) => rsvp.answers[question.id])
+            .map((question) => ({ question: question.label, answer: rsvp.answers[question.id] })),
+          submittedAt: rsvp.createdAt.toISOString(),
+          updatedAt: rsvp.updatedAt.toISOString(),
+        },
+      };
     },
 
     /** Everything the host dashboard shows for one event. */

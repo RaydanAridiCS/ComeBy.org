@@ -99,6 +99,50 @@ describe("RSVP service on a real database", () => {
       LIMITS.responsesPerDevicePerEventPerHour,
     );
   });
+
+  it("deletes a guest's own response and leaves no trace of the guest in the database", async () => {
+    const { deps } = createIntegrationDeps();
+    const service = createRsvpService(deps);
+    const host = await createHost();
+    const event = await createEvent(host.id);
+
+    const first = await service.submit({
+      eventId: event.id,
+      values: guest({ name: "Secret Guest", email: "secret@example.com", message: "hi" }),
+      credential: null,
+      deviceKey: "d1",
+    });
+    await service.submit({
+      eventId: event.id,
+      values: guest({ name: "Secret Guest", status: "maybe", email: "secret@example.com" }),
+      credential: first.credential,
+      deviceKey: "d1",
+    });
+    const other = await service.submit({
+      eventId: event.id,
+      values: guest({ name: "Other Guest" }),
+      credential: null,
+      deviceKey: "d2",
+    });
+
+    const { email } = await service.deleteByGuest({
+      eventId: event.id,
+      credential: first.credential,
+    });
+
+    expect(email).toBe("secret@example.com");
+    expect(await repos.rsvps.findById(first.rsvp.id)).toBeNull();
+    expect(await service.findByCredential(event.id, first.credential)).toBeNull();
+    const dashboard = await service.dashboardData(host.id, event.id);
+    expect(dashboard.responses.map((r) => r.name)).toEqual(["Other Guest"]);
+    expect(dashboard.stats.total).toBe(1);
+    const timeline = JSON.stringify(await repos.activity.listByEvent(event.id, 20));
+    expect(timeline).not.toContain("Secret Guest");
+    expect(timeline).not.toContain("secret@example.com");
+    expect(timeline).toContain("Other Guest");
+    // The other guest keeps their own link.
+    expect(await service.findByCredential(event.id, other.credential)).not.toBeNull();
+  });
 });
 
 describe("event service on a real database", () => {

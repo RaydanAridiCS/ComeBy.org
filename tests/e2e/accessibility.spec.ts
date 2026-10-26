@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { createInvite, expect, signUpHost, test } from "./support";
+import { createInvite, expect, respondAsGuest, signUpHost, test } from "./support";
 
 // Entrance animations make colours mid-fade, which axe would misread as low contrast.
 test.use({ reducedMotion: "reduce" });
@@ -50,5 +50,14 @@ test("the invite page and host screens have no serious accessibility violations"
   await guest.goto(inviteHref);
   await guest.waitForLoadState("networkidle");
   await expectNoSeriousViolations(guest, inviteHref);
+
+  // After responding, the invite also offers "download" and "delete my response".
+  await respondAsGuest(guest, inviteHref);
+  await guest.goto(inviteHref);
+  await expect(guest.getByRole("button", { name: "Delete my response" })).toBeVisible();
+  await expectNoSeriousViolations(guest, `${inviteHref} (responded)`);
+  await guest.getByRole("button", { name: "Delete my response" }).click();
+  await expect(guest.getByText("Delete your response?")).toBeVisible();
+  await expectNoSeriousViolations(guest, `${inviteHref} (delete confirmation)`);
   await guestContext.close();
 });

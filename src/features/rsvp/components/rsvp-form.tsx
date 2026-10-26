@@ -14,6 +14,7 @@ import type { CustomQuestion } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { submitRsvpAction } from "../actions";
 import type { RsvpFormInput, RsvpStatusValue } from "../schema";
+import { GuestDataControls } from "./guest-data-controls";
 
 export type RsvpEventSettings = {
   eventId: string;
@@ -123,10 +124,13 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
   const translateError = useTranslateError();
   const plusLabelId = useId();
   const [pending, startTransition] = useTransition();
-  const [view, setView] = useState<"form" | "summary" | "done">(existing ? "summary" : "form");
+  const [view, setView] = useState<"form" | "summary" | "done" | "deleted">(
+    existing ? "summary" : "form",
+  );
   const [submitted, setSubmitted] = useState<{ status: RsvpStatusValue; emailed: boolean } | null>(
     null,
   );
+  const [hasResponse, setHasResponse] = useState(Boolean(existing));
   const [formError, setFormError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [country] = useState(guessCountry);
@@ -179,13 +183,43 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
         return;
       }
       setSubmitted({ status: result.data.status as RsvpStatusValue, emailed: result.data.emailed });
+      setHasResponse(true);
       setView("done");
     });
   });
 
+  const onDeleted = () => {
+    form.reset({
+      status: undefined,
+      name: "",
+      phone: "",
+      email: "",
+      message: "",
+      plusOnes: 0,
+      answers: {},
+    });
+    setSubmitted(null);
+    setHasResponse(false);
+    setView("deleted");
+  };
+
   let content: ReactNode;
 
-  if (view === "done" && submitted) {
+  if (view === "deleted") {
+    content = (
+      <div key="deleted" className="flex animate-pop flex-col items-center gap-4 text-center">
+        <p className="invite-heading text-xl">{t("deletedTitle")}</p>
+        <p className="text-invite-muted text-sm">{t("deletedBody")}</p>
+        <button
+          type="button"
+          className="invite-focus inline-flex h-11 items-center rounded-full bg-invite-accent px-6 font-semibold text-invite-accent-fg text-sm shadow-md transition hover:brightness-105 active:scale-[0.97]"
+          onClick={() => setView("form")}
+        >
+          {t("respondAgain")}
+        </button>
+      </div>
+    );
+  } else if (view === "done" && submitted) {
     content = (
       <RsvpSuccess
         status={submitted.status}
@@ -457,5 +491,12 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
     );
   }
 
-  return content;
+  return (
+    <>
+      {content}
+      {hasResponse && view !== "deleted" ? (
+        <GuestDataControls eventId={settings.eventId} onDeleted={onDeleted} />
+      ) : null}
+    </>
+  );
 }

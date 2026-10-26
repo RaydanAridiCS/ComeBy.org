@@ -26,6 +26,26 @@ export function verifyEmail(props: { name: string; url: string }): RenderableEma
   };
 }
 
+/** Sent to the current address when the account's email is about to change. */
+export function changeEmailConfirm(props: { newEmail: string; url: string }): RenderableEmail {
+  const t = getServerTranslator();
+  return {
+    subject: t("emails.changeEmailSubject"),
+    element: (
+      <EmailLayout
+        preview={t("emails.changeEmailHeading")}
+        heading={t("emails.changeEmailHeading")}
+        action={{ label: t("emails.changeEmailButton"), href: props.url }}
+        footnote={t("emails.changeEmailIgnore")}
+      >
+        <Text style={emailStyles.paragraph}>
+          {t("emails.changeEmailBody", { email: props.newEmail })}
+        </Text>
+      </EmailLayout>
+    ),
+  };
+}
+
 export function resetPassword(props: { url: string }): RenderableEmail {
   const t = getServerTranslator();
   return {
@@ -65,6 +85,25 @@ export function rsvpConfirmation(props: {
           {t("emails.rsvpConfirmBody", { status: props.status, event: props.eventTitle })}
         </Text>
         <EventDetails when={props.when} where={props.where} />
+      </EmailLayout>
+    ),
+  };
+}
+
+/** Sent after a guest deletes their response. Names nothing but the event. */
+export function rsvpDeleted(props: { eventTitle: string }): RenderableEmail {
+  const t = getServerTranslator();
+  return {
+    subject: t("emails.rsvpDeletedSubject", { event: props.eventTitle }),
+    element: (
+      <EmailLayout
+        preview={t("emails.rsvpDeletedHeading")}
+        heading={t("emails.rsvpDeletedHeading")}
+        footnote={t("emails.rsvpDeletedFootnote")}
+      >
+        <Text style={emailStyles.paragraph}>
+          {t("emails.rsvpDeletedBody", { event: props.eventTitle })}
+        </Text>
       </EmailLayout>
     ),
   };

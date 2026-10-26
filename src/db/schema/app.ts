@@ -80,6 +80,8 @@ export type ActivityData = {
   from?: string;
   to?: string;
   changes?: string[];
+  /** Set when the guest removed their own response, so the entry carries no name. */
+  bySelf?: boolean;
 };
 
 /* ----------------------------------------------------------------------------

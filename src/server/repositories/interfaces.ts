@@ -63,6 +63,8 @@ export interface RsvpRepository {
 
 export interface ActivityRepository {
   add(input: NewActivityRecord): Promise<ActivityRecord>;
+  /** Removes the guest's name from every timeline entry about one response. */
+  scrubGuestName(rsvpId: string): Promise<void>;
   listByEvent(eventId: string, limit: number): Promise<ActivityRecord[]>;
   /** RSVP activity across all of a host's events since `since`, for daily summaries. */
   listRsvpActivityForHostSince(

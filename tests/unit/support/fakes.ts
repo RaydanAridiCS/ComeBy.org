@@ -213,6 +213,11 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
         activity.push(record);
         return record;
       },
+      scrubGuestName: async (rsvpId) => {
+        for (const entry of activity) {
+          if (entry.rsvpId === rsvpId) delete entry.data.guestName;
+        }
+      },
       listByEvent: async (eventId, limit) =>
         activity
           .filter((a) => a.eventId === eventId)

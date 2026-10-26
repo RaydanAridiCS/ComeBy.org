@@ -83,5 +83,9 @@ export async function respondAsGuest(
   await guest.getByLabel("Your name").fill(options.name ?? "Omar");
   if (options.email) await guest.getByLabel("Email for updates").fill(options.email);
   await guest.getByRole("button", { name: "Send response" }).click();
-  await expect(guest.getByRole("button", { name: "Send response" })).toBeHidden();
+  // The button's label changes while sending, so wait for the confirmation instead; leaving
+  // earlier would cancel the request before the guest's cookie is saved.
+  await expect(
+    guest.getByText(/You're in!|Got it, maybe!|Thanks for letting them know/),
+  ).toBeVisible();
 }

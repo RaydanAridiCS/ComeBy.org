@@ -55,7 +55,7 @@ export function ForgotPasswordForm({ turnstileSiteKey }: { turnstileSiteKey: str
 
   const { errors, isSubmitting } = form.formState;
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
       <Field data-invalid={Boolean(errors.email)}>
         <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
         <Input
@@ -118,7 +118,7 @@ export function ResetPasswordForm() {
 
   const { errors, isSubmitting } = form.formState;
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
       <Field data-invalid={Boolean(errors.password)}>
         <FieldLabel htmlFor="password">{t("newPassword")}</FieldLabel>
         <PasswordInput

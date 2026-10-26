@@ -51,7 +51,9 @@ export function ActivityFeed({ activity }: { activity: DashboardActivity[] }) {
               to: status(item.data.to),
             });
       case "rsvp_removed":
-        return t("eventDashboard.activity.rsvp_removed", { name });
+        return item.data.bySelf
+          ? t("eventDashboard.activity.rsvp_removed_by_guest")
+          : t("eventDashboard.activity.rsvp_removed", { name });
       case "event_updated": {
         const changes = (item.data.changes ?? [])
           .filter((change) => CHANGES.has(change))

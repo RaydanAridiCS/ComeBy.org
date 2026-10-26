@@ -1,7 +1,8 @@
 "use server";
 
 import { refresh, updateTag } from "next/cache";
-import { rsvpConfirmation } from "@/emails/templates";
+import { z } from "zod";
+import { rsvpConfirmation, rsvpDeleted } from "@/emails/templates";
 import { formatEventWhen } from "@/lib/dates";
 import type { ActionResult } from "@/lib/result";
 import { absoluteUrl } from "@/lib/share";
@@ -16,7 +17,7 @@ import { queueEmail } from "@/server/services/email.service";
 import { locationLabel, statusLabel } from "@/server/services/notification.service";
 import { formatCredential } from "@/server/services/rsvp.service";
 import { eventCacheTag } from "../events/queries";
-import { deviceId, readRsvpCredential, writeRsvpCredential } from "./cookies";
+import { clearRsvpCredential, deviceId, readRsvpCredential, writeRsvpCredential } from "./cookies";
 import { reportSchema, submitRsvpSchema } from "./schema";
 
 export async function submitRsvpAction(
@@ -56,6 +57,24 @@ export async function submitRsvpAction(
 
     refresh();
     return { status: result.rsvp.status, created: result.created, emailed: shouldEmail };
+  });
+}
+
+/** A guest deletes their own response, then gets a short confirmation email if they left one. */
+export async function deleteMyResponseAction(eventId: string): Promise<ActionResult> {
+  return runAction(async () => {
+    const id = z.uuid().parse(eventId);
+    const credential = await readRsvpCredential(id);
+    const { email } = await rsvpService.deleteByGuest({ eventId: id, credential });
+    await clearRsvpCredential(id);
+
+    const event = await repositories.events.findById(id);
+    if (email && event) {
+      await queueEmail(jobQueue, email, rsvpDeleted({ eventTitle: event.title }));
+    }
+    updateTag(eventCacheTag(id));
+    refresh();
+    return undefined;
   });
 }
 

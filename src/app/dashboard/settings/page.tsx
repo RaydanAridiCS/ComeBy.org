@@ -1,13 +1,31 @@
-import { BellRing, type LucideIcon, TriangleAlert, UserRound } from "lucide-react";
+import {
+  BellRing,
+  Download,
+  KeyRound,
+  type LucideIcon,
+  MonitorSmartphone,
+  TriangleAlert,
+  UserRound,
+} from "lucide-react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { PageTransition } from "@/components/motion/page-transition";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteAccount } from "@/features/settings/components/delete-account";
 import { EmailAlertSettings } from "@/features/settings/components/notification-settings";
+import { PasswordSettings } from "@/features/settings/components/password-settings";
+import { ProfileSettings } from "@/features/settings/components/profile-settings";
 import { PushSettings } from "@/features/settings/components/push-settings";
+import {
+  type SessionRow,
+  SessionsSettings,
+} from "@/features/settings/components/sessions-settings";
+import { describeUserAgent } from "@/lib/user-agent";
 import { cn } from "@/lib/utils";
+import { auth } from "@/server/auth/auth";
 import { requireUser } from "@/server/auth/session";
 import { repositories } from "@/server/services";
 
@@ -57,33 +75,57 @@ function Card({
 
 async function SettingsContent() {
   const user = await requireUser("/dashboard/settings");
-  const [settings, t] = await Promise.all([
+  const requestHeaders = await headers();
+  const [settings, t, accounts, activeSessions, current] = await Promise.all([
     repositories.userSettings.get(user.id),
     getTranslations("settings"),
+    auth.api.listUserAccounts({ headers: requestHeaders }),
+    auth.api.listSessions({ headers: requestHeaders }),
+    auth.api.getSession({ headers: requestHeaders }),
   ]);
+  const hasPassword = accounts.some((account) => account.providerId === "credential");
+  const sessions: SessionRow[] = activeSessions
+    .map((session) => {
+      const { browser, os } = describeUserAgent(session.userAgent);
+      return {
+        id: session.id,
+        browser,
+        os,
+        mobile: os === "iOS" || os === "Android",
+        lastActive: session.updatedAt.toISOString(),
+        current: session.token === current?.session.token,
+      };
+    })
+    .sort(
+      (a, b) => Number(b.current) - Number(a.current) || b.lastActive.localeCompare(a.lastActive),
+    );
   return (
     <>
       <Card icon={UserRound} title={t("profileTitle")}>
-        <div className="flex items-center gap-4 rounded-2xl bg-muted/50 p-4">
-          <span
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-800 text-lg"
-            aria-hidden="true"
-          >
-            {user.name.trim().charAt(0).toUpperCase()}
-          </span>
-          <dl className="grid min-w-0 gap-0.5 text-sm">
-            <dt className="sr-only">{t("name")}</dt>
-            <dd className="truncate font-semibold">{user.name}</dd>
-            <dt className="sr-only">{t("email")}</dt>
-            <dd className="truncate text-muted-foreground">{user.email}</dd>
-          </dl>
-        </div>
+        <ProfileSettings name={user.name} email={user.email} canChangeEmail={hasPassword} />
+      </Card>
+      <Card icon={KeyRound} title={t("securityTitle")} body={t("securityBody")}>
+        {hasPassword ? (
+          <PasswordSettings />
+        ) : (
+          <p className="text-muted-foreground text-sm">{t("googlePasswordHint")}</p>
+        )}
+      </Card>
+      <Card icon={MonitorSmartphone} title={t("sessionsTitle")} body={t("sessionsBody")}>
+        <SessionsSettings sessions={sessions} />
       </Card>
       <Card icon={BellRing} title={t("notificationsTitle")} body={t("notificationsBody")}>
         <EmailAlertSettings initial={settings.emailAlerts} />
         <div className="border-t pt-5">
           <PushSettings />
         </div>
+      </Card>
+      <Card icon={Download} title={t("dataTitle")} body={t("dataBody")}>
+        <Button asChild variant="outline" size="sm" className="self-start">
+          <a href="/api/account/export" download>
+            {t("dataButton")}
+          </a>
+        </Button>
       </Card>
       <Card icon={TriangleAlert} title={t("dangerTitle")} body={t("dangerBody")} tone="danger">
         <DeleteAccount />
@@ -101,7 +143,9 @@ export default async function SettingsPage() {
         <Suspense
           fallback={
             <div className="flex flex-col gap-6" aria-hidden="true">
-              <Skeleton className="h-36 rounded-3xl" />
+              <Skeleton className="h-64 rounded-3xl" />
+              <Skeleton className="h-64 rounded-3xl" />
+              <Skeleton className="h-48 rounded-3xl" />
               <Skeleton className="h-80 rounded-3xl" />
               <Skeleton className="h-36 rounded-3xl" />
             </div>

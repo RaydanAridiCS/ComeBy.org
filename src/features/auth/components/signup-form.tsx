@@ -21,6 +21,7 @@ import { signUp } from "@/lib/auth-client";
 import { isBotCheckError, TURNSTILE_HEADER } from "@/lib/turnstile-header";
 import { safeNext } from "../safe-next";
 import { GoogleButton } from "./google-button";
+import { ResendVerification } from "./resend-verification";
 
 const signupSchema = z.object({
   name: z
@@ -81,6 +82,7 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
         <p className="rounded-2xl bg-muted px-4 py-3 text-muted-foreground text-sm">
           {t("checkEmailHint")}
         </p>
+        <ResendVerification email={sentTo} next={next} />
       </div>
     );
   }
@@ -88,7 +90,7 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
   const { errors, isSubmitting } = form.formState;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
       <GoogleButton next={next} />
       {formError ? (
         <Alert variant="destructive">
