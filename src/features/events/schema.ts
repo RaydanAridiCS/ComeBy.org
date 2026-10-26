@@ -14,7 +14,7 @@ export const THEMES = [
   "sunset",
   "midnight",
   "clean",
-  "velvet",
+  "bloom",
   "cyber",
   "aura",
   "oasis",

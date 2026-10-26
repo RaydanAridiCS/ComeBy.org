@@ -24,7 +24,7 @@ export const themeEnum = pgEnum("theme", [
   "sunset",
   "midnight",
   "clean",
-  "velvet",
+  "bloom",
   "cyber",
   "aura",
   "oasis",

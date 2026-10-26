@@ -415,7 +415,7 @@ function CleanHero({ date }: { date?: HeroDate }) {
   );
 }
 
-function VelvetHero() {
+function BloomHero() {
   const id = useSvgId();
   return (
     <>
@@ -426,112 +426,144 @@ function VelvetHero() {
         className="size-full"
       >
         <defs>
-          <linearGradient id={id("bg")} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3d1222" />
-            <stop offset="60%" stopColor="#220712" />
-            <stop offset="100%" stopColor="#120308" />
+          <linearGradient id={id("bg")} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#fff7f9" />
+            <stop offset="50%" stopColor="#feeaf0" />
+            <stop offset="100%" stopColor="#fedae5" />
           </linearGradient>
-          <radialGradient id={id("amber-glow")} cx="0.5" cy="0.45" r="0.55">
-            <stop offset="0%" stopColor="#f5ad78" stopOpacity="0.45" />
-            <stop offset="50%" stopColor="#c83b5e" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#120308" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id={id("star-glow")} cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0%" stopColor="#fff8e7" stopOpacity="1" />
-            <stop offset="40%" stopColor="#f5ad78" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#f5ad78" stopOpacity="0" />
+          <radialGradient id={id("sun-glow")} cx="0.8" cy="0.2" r="0.6">
+            <stop offset="0%" stopColor="#ffe8ec" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#fedae5" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#fedae5" stopOpacity="0" />
           </radialGradient>
         </defs>
         <rect width="400" height="180" fill={`url(#${id("bg")})`} />
-        <rect width="400" height="180" fill={`url(#${id("amber-glow")})`} />
+        <rect width="400" height="180" fill={`url(#${id("sun-glow")})`} />
 
-        {/* Art Deco golden arch filigree in background */}
-        <g fill="none" stroke="#f5ad78" strokeWidth="1" opacity="0.2">
-          <path d="M200 180 C200 80 140 30 50 30" />
-          <path d="M200 180 C200 80 260 30 350 30" />
-          <circle cx="200" cy="180" r="130" />
-          <circle cx="200" cy="180" r="100" />
-        </g>
+        {/* Soft sunlight rays */}
+        <polygon points="260,0 360,0 400,180 200,180" fill="#ffffff" opacity="0.22" />
 
-        {/* Ambient champagne bokeh floating */}
-        <g opacity="0.4" className="invite-anim-drift">
-          <circle cx="90" cy="50" r="8" fill="#f5ad78" />
-          <circle cx="310" cy="40" r="12" fill="#ffd4b2" opacity="0.3" />
-          <circle cx="160" cy="30" r="5" fill="#f5ad78" />
-          <circle cx="270" cy="80" r="6" fill="#ffe2c4" />
-          <circle cx="130" cy="110" r="4" fill="#f5ad78" />
-          <circle cx="330" cy="120" r="7" fill="#ffd4b2" opacity="0.4" />
-        </g>
-
-        {/* Two luxury coupe wine glasses clinking */}
+        {/* Graceful Cherry Blossom Branch */}
         <g strokeLinecap="round" strokeLinejoin="round">
-          {/* Left Coupe Glass */}
-          <g transform="translate(178, 105) rotate(10)">
-            <path d="M-28 -28 C-28 6 28 6 28 -28 Z" fill="#c83b5e" opacity="0.8" />
-            <path
-              d="M-24 -16 C-24 4 24 4 24 -16 C12 -12 -12 -12 -24 -16 Z"
-              fill="#e8965a"
-              opacity="0.85"
-            />
-            <path
-              d="M-28 -28 C-28 8 28 8 28 -28"
-              fill="none"
-              stroke="#ffd8b8"
-              strokeWidth="2"
-              opacity="0.9"
-            />
-            <line
-              x1="-28"
-              y1="-28"
-              x2="28"
-              y2="-28"
-              stroke="#ffe5cf"
-              strokeWidth="1.5"
-              opacity="0.8"
-            />
-            <line x1="0" y1="8" x2="0" y2="44" stroke="#ffd8b8" strokeWidth="2.5" />
-            <path d="M-18 44 C-10 42 10 42 18 44" stroke="#ffd8b8" strokeWidth="2.5" fill="none" />
-          </g>
-
-          {/* Right Coupe Glass */}
-          <g transform="translate(222, 105) rotate(-10)">
-            <path d="M-28 -28 C-28 6 28 6 28 -28 Z" fill="#c83b5e" opacity="0.8" />
-            <path
-              d="M-24 -16 C-24 4 24 4 24 -16 C12 -12 -12 -12 -24 -16 Z"
-              fill="#e8965a"
-              opacity="0.85"
-            />
-            <path
-              d="M-28 -28 C-28 8 28 8 28 -28"
-              fill="none"
-              stroke="#ffd8b8"
-              strokeWidth="2"
-              opacity="0.9"
-            />
-            <line
-              x1="-28"
-              y1="-28"
-              x2="28"
-              y2="-28"
-              stroke="#ffe5cf"
-              strokeWidth="1.5"
-              opacity="0.8"
-            />
-            <line x1="0" y1="8" x2="0" y2="44" stroke="#ffd8b8" strokeWidth="2.5" />
-            <path d="M-18 44 C-10 42 10 42 18 44" stroke="#ffd8b8" strokeWidth="2.5" fill="none" />
-          </g>
-
-          {/* Clinking sparkle burst in the center */}
-          <circle cx="200" cy="74" r="18" fill={`url(#${id("star-glow")})`} />
           <path
-            d="M200 60 L202 72 L214 74 L202 76 L200 88 L198 76 L186 74 L198 72 Z"
-            fill="#ffffff"
+            d="M410 25 C350 35 290 15 230 45 C190 65 160 50 130 65"
+            fill="none"
+            stroke="#5c3a28"
+            strokeWidth="5"
           />
-          <circle cx="206" cy="66" r="1.5" fill="#ffd4b2" />
-          <circle cx="193" cy="82" r="1.5" fill="#ffd4b2" />
+          <path d="M320 28 C300 55 260 70 240 95" fill="none" stroke="#6d4632" strokeWidth="3.2" />
+          <path d="M210 52 C185 80 155 90 140 115" fill="none" stroke="#6d4632" strokeWidth="2.5" />
+          <path d="M260 30 C250 15 220 18 205 10" fill="none" stroke="#6d4632" strokeWidth="2.2" />
+        </g>
+
+        {/* Green bud leaves */}
+        <g fill="#88ad6f">
+          <ellipse cx="232" cy="40" rx="5" ry="2.5" transform="rotate(-30 232 40)" />
+          <ellipse cx="242" cy="92" rx="4.5" ry="2.2" transform="rotate(45 242 92)" />
+          <ellipse cx="132" cy="62" rx="5" ry="2.5" transform="rotate(-20 132 62)" />
+          <ellipse cx="142" cy="112" rx="4.5" ry="2" transform="rotate(60 142 112)" />
+        </g>
+
+        {/* Clustered Sakura Blossoms */}
+        <g transform="translate(310, 42)">
+          {[0, 72, 144, 216, 288].map((angle) => (
+            <path
+              key={angle}
+              d="M0 0 C-6 -14 6 -20 12 -10 C14 -2 6 0 0 0 Z"
+              fill="#ff9ebb"
+              transform={`rotate(${angle})`}
+              opacity="0.95"
+            />
+          ))}
+          <circle cx="0" cy="0" r="4" fill="#c2295a" />
+          <circle cx="0" cy="0" r="2" fill="#ffd166" />
+        </g>
+
+        <g transform="translate(255, 68)">
+          {[0, 72, 144, 216, 288].map((angle) => (
+            <path
+              key={angle}
+              d="M0 0 C-8 -16 8 -24 14 -12 C16 -2 8 0 0 0 Z"
+              fill="#ffaec5"
+              transform={`rotate(${angle})`}
+              opacity="0.95"
+            />
+          ))}
+          <circle cx="0" cy="0" r="4.5" fill="#c2295a" />
+          <circle cx="0" cy="0" r="2.2" fill="#ffd166" />
+        </g>
+
+        <g transform="translate(200, 38)">
+          {[0, 72, 144, 216, 288].map((angle) => (
+            <path
+              key={angle}
+              d="M0 0 C-6 -13 6 -18 10 -9 C12 -2 5 0 0 0 Z"
+              fill="#ff9ebb"
+              transform={`rotate(${angle})`}
+              opacity="0.9"
+            />
+          ))}
+          <circle cx="0" cy="0" r="3.5" fill="#c2295a" />
+          <circle cx="0" cy="0" r="1.8" fill="#ffd166" />
+        </g>
+
+        <g transform="translate(155, 82)">
+          {[0, 72, 144, 216, 288].map((angle) => (
+            <path
+              key={angle}
+              d="M0 0 C-7 -15 7 -21 12 -10 C14 -2 6 0 0 0 Z"
+              fill="#ffb3c7"
+              transform={`rotate(${angle})`}
+              opacity="0.95"
+            />
+          ))}
+          <circle cx="0" cy="0" r="4" fill="#c2295a" />
+          <circle cx="0" cy="0" r="2" fill="#ffd166" />
+        </g>
+
+        {/* Drifting wind-blown petals */}
+        <g className="invite-anim-drift" opacity="0.85">
+          <path
+            d="M220 115 C212 105 220 95 232 98 C236 110 228 118 220 115 Z"
+            fill="#ff85a1"
+            transform="rotate(25 220 115)"
+          />
+          <path
+            d="M175 140 C168 132 174 124 184 126 C188 135 182 142 175 140 Z"
+            fill="#ffa3ba"
+            transform="rotate(-15 175 140)"
+          />
+          <path
+            d="M110 110 C102 100 110 90 122 93 C126 104 118 112 110 110 Z"
+            fill="#ff85a1"
+            transform="rotate(40 110 110)"
+          />
+          <path
+            d="M70 145 C64 138 68 130 76 132 C79 140 75 146 70 145 Z"
+            fill="#ffa3ba"
+            transform="rotate(-30 70 145)"
+          />
+          <path
+            d="M40 85 C32 75 40 65 52 68 C56 79 48 87 40 85 Z"
+            fill="#ff85a1"
+            transform="rotate(15 40 85)"
+          />
+          <path
+            d="M130 30 C124 23 128 16 136 18 C139 25 135 31 130 30 Z"
+            fill="#ffa3ba"
+            transform="rotate(-45 130 30)"
+          />
+        </g>
+
+        {/* Dewdrop sparkle glints */}
+        <g fill="#ffffff" opacity="0.75" className="invite-anim-twinkle-a">
+          <path d="M290 85 L291 88 L294 89 L291 90 L290 93 L289 90 L286 89 L289 88 Z" />
+          <path d="M185 65 L186 68 L189 69 L186 70 L185 73 L184 70 L181 69 L184 68 Z" />
+          <circle cx="215" cy="130" r="1.5" />
+          <circle cx="95" cy="70" r="1.5" />
         </g>
       </svg>
-      <span className="invite-anim-sheen absolute inset-y-0 -start-1/2 w-1/2 bg-[linear-gradient(100deg,transparent_20%,rgb(245_173_120/0.25)_50%,transparent_80%)] mix-blend-screen" />
+      <span className="invite-anim-sheen absolute inset-y-0 -start-1/2 w-1/2 bg-[linear-gradient(100deg,transparent_20%,rgb(255_255_255/0.55)_50%,transparent_80%)] mix-blend-soft-light" />
     </>
   );
 }
@@ -901,7 +933,7 @@ export function ThemeHeroArt({
       {theme === "sunset" ? <SunsetHero /> : null}
       {theme === "midnight" ? <MidnightHero /> : null}
       {theme === "clean" ? <CleanHero date={date} /> : null}
-      {theme === "velvet" ? <VelvetHero /> : null}
+      {theme === "bloom" ? <BloomHero /> : null}
       {theme === "cyber" ? <CyberHero /> : null}
       {theme === "aura" ? <AuraHero /> : null}
       {theme === "oasis" ? <OasisHero /> : null}
@@ -1058,24 +1090,32 @@ function MidnightBackdrop() {
   );
 }
 
-function VelvetBackdrop() {
+function BloomBackdrop() {
   return (
     <>
-      <span className="invite-anim-glow absolute inset-0 bg-[radial-gradient(70%_50%_at_50%_15%,rgb(232_150_90/0.14),transparent_70%)]" />
-      <span className="absolute -top-28 start-1/4 size-[28rem] rounded-full bg-[radial-gradient(circle,rgb(140_30_60/0.28)_0%,transparent_65%)]" />
-      <span className="absolute -bottom-24 end-1/4 size-[32rem] rounded-full bg-[radial-gradient(circle,rgb(245_173_120/0.08)_0%,transparent_65%)]" />
+      <span className="invite-anim-glow absolute -top-24 end-1/4 size-[32rem] rounded-full bg-[radial-gradient(circle,rgb(255_214_224/0.6)_0%,transparent_70%)]" />
+      <span className="absolute -bottom-24 -start-16 size-[28rem] rounded-full bg-[radial-gradient(circle,rgb(255_232_214/0.5)_0%,transparent_70%)]" />
       <svg
         aria-hidden="true"
         viewBox="0 0 1600 1000"
         preserveAspectRatio="none"
-        className="invite-anim-drift absolute inset-0 size-full opacity-30 pointer-events-none"
+        className="invite-anim-drift absolute inset-0 size-full opacity-45 pointer-events-none"
       >
-        <circle cx="200" cy="180" r="4" fill="#f5ad78" />
-        <circle cx="450" cy="320" r="6" fill="#ffd4b2" opacity="0.6" />
-        <circle cx="1250" cy="220" r="5" fill="#f5ad78" />
-        <circle cx="1400" cy="480" r="7" fill="#ffd4b2" opacity="0.5" />
-        <circle cx="300" cy="780" r="5" fill="#f5ad78" />
-        <circle cx="1300" cy="850" r="6" fill="#ffd4b2" opacity="0.7" />
+        <path d="M320 180 C310 165 320 150 340 155 C345 175 335 190 320 180 Z" fill="#ff9ebb" />
+        <path
+          d="M1250 240 C1240 225 1250 210 1270 215 C1275 235 1265 250 1250 240 Z"
+          fill="#ffaec5"
+        />
+        <path
+          d="M1420 520 C1410 505 1420 490 1440 495 C1445 515 1435 530 1420 520 Z"
+          fill="#ff9ebb"
+        />
+        <path d="M220 680 C210 665 220 650 240 655 C245 675 235 690 220 680 Z" fill="#ffaec5" />
+        <path d="M850 820 C840 805 850 790 870 795 C875 815 865 830 850 820 Z" fill="#ff9ebb" />
+        <path
+          d="M1100 880 C1090 865 1100 850 1120 855 C1125 875 1115 890 1100 880 Z"
+          fill="#ffaec5"
+        />
       </svg>
     </>
   );
@@ -1233,7 +1273,7 @@ export function ThemeBackdrop({
       {theme === "clean" ? (
         <span className="absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_0%,rgb(34_75_178/0.08),transparent_70%)]" />
       ) : null}
-      {theme === "velvet" ? <VelvetBackdrop /> : null}
+      {theme === "bloom" ? <BloomBackdrop /> : null}
       {theme === "cyber" ? <CyberBackdrop /> : null}
       {theme === "aura" ? <AuraBackdrop /> : null}
       {theme === "oasis" ? <OasisBackdrop /> : null}

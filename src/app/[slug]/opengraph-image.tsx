@@ -30,7 +30,7 @@ const DISPLAY_FONT: Record<ThemeTokens["id"], { name: string; weight: 400 | 600 
   sunset: { name: "Instrument Serif", weight: 400 },
   midnight: { name: "Unbounded", weight: 700 },
   clean: { name: "Geist", weight: 600 },
-  velvet: { name: "Instrument Serif", weight: 400 },
+  bloom: { name: "Instrument Serif", weight: 400 },
   cyber: { name: "Unbounded", weight: 700 },
   aura: { name: "Fraunces", weight: 600 },
   oasis: { name: "Fredoka", weight: 700 },

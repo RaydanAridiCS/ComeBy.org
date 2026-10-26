@@ -256,83 +256,104 @@ function CleanArt() {
   );
 }
 
-function VelvetArt() {
-  const next = random(41);
-  const bubbles = Array.from({ length: 32 }, (_, id) => ({
+function BloomArt() {
+  const next = random(61);
+  const petals = Array.from({ length: 28 }, (_, id) => ({
     id,
-    x: 780 + next() * 400,
+    x: 740 + next() * 450,
     y: next() * H,
-    r: 4 + next() * 10,
-    opacity: 0.25 + next() * 0.45,
-    color: next() > 0.4 ? "#f5ad78" : "#ffd4b2",
+    rotate: next() * 360,
+    scale: 0.7 + next() * 0.9,
+    opacity: 0.65 + next() * 0.35,
+    c: next() > 0.4 ? "#ff9ebb" : "#ffaec5",
   }));
 
   return (
     <svg aria-hidden="true" width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={layer}>
       <defs>
-        <radialGradient id="og-velvet-glow" cx="0.8" cy="0.45" r="0.5">
-          <stop offset="0%" stopColor="#f5ad78" stopOpacity="0.35" />
-          <stop offset="60%" stopColor="#c83b5e" stopOpacity="0.15" />
-          <stop offset="100%" stopColor="#120308" stopOpacity="0" />
+        <radialGradient id="og-bloom-glow" cx="0.85" cy="0.15" r="0.6">
+          <stop offset="0%" stopColor="#ffd6e0" stopOpacity="0.75" />
+          <stop offset="60%" stopColor="#feeaf0" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#fedae5" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect width={W} height={H} fill="url(#og-velvet-glow)" />
+      <rect width={W} height={H} fill="url(#og-bloom-glow)" />
 
-      {/* Art deco concentric arches on the right */}
-      <g fill="none" stroke="#f5ad78" strokeWidth="2" opacity="0.2">
-        <circle cx="980" cy="320" r="280" />
-        <circle cx="980" cy="320" r="220" />
-        <circle cx="980" cy="320" r="160" />
-        <line x1="700" y1="320" x2="1200" y2="320" />
+      <polygon points="850,0 1150,0 1200,630 650,630" fill="#ffffff" opacity="0.2" />
+
+      <g strokeLinecap="round" strokeLinejoin="round">
+        <path
+          d="M1230 60 C1080 90 940 40 820 120 C760 160 720 150 680 180"
+          fill="none"
+          stroke="#5c3a28"
+          strokeWidth="12"
+        />
+        <path d="M1020 70 C960 145 880 180 830 250" fill="none" stroke="#6d4632" strokeWidth="8" />
+        <path d="M870 125 C820 200 760 220 720 280" fill="none" stroke="#6d4632" strokeWidth="6" />
+        <path d="M1100 80 C1060 40 990 45 950 20" fill="none" stroke="#6d4632" strokeWidth="5" />
       </g>
 
-      {/* Floating champagne bokeh */}
-      {bubbles.map((b) => (
-        <circle key={b.id} cx={b.x} cy={b.y} r={b.r} fill={b.color} opacity={b.opacity} />
+      <g fill="#88ad6f">
+        <ellipse cx="830" cy="115" rx="12" ry="6" transform="rotate(-30 830 115)" />
+        <ellipse cx="835" cy="245" rx="11" ry="5.5" transform="rotate(45 835 245)" />
+        <ellipse cx="725" cy="275" rx="10" ry="5" transform="rotate(60 725 275)" />
+      </g>
+
+      <g transform="translate(1050, 110)">
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <path
+            key={angle}
+            d="M0 0 C-15 -35 15 -50 30 -25 C35 -5 15 0 0 0 Z"
+            fill="#ff9ebb"
+            transform={`rotate(${angle})`}
+            opacity="0.95"
+          />
+        ))}
+        <circle cx="0" cy="0" r="10" fill="#c2295a" />
+        <circle cx="0" cy="0" r="5" fill="#ffd166" />
+      </g>
+
+      <g transform="translate(930, 180)">
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <path
+            key={angle}
+            d="M0 0 C-18 -42 18 -60 36 -30 C42 -6 18 0 0 0 Z"
+            fill="#ffaec5"
+            transform={`rotate(${angle})`}
+            opacity="0.95"
+          />
+        ))}
+        <circle cx="0" cy="0" r="12" fill="#c2295a" />
+        <circle cx="0" cy="0" r="6" fill="#ffd166" />
+      </g>
+
+      <g transform="translate(810, 220)">
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <path
+            key={angle}
+            d="M0 0 C-14 -32 14 -46 28 -23 C32 -4 14 0 0 0 Z"
+            fill="#ff9ebb"
+            transform={`rotate(${angle})`}
+            opacity="0.9"
+          />
+        ))}
+        <circle cx="0" cy="0" r="9" fill="#c2295a" />
+        <circle cx="0" cy="0" r="4.5" fill="#ffd166" />
+      </g>
+
+      {petals.map((p) => (
+        <path
+          key={p.id}
+          d="M0 0 C-10 -18 10 -26 18 -12 C20 -2 10 0 0 0 Z"
+          fill={p.c}
+          opacity={p.opacity}
+          transform={`translate(${p.x} ${p.y}) rotate(${p.rotate}) scale(${p.scale})`}
+        />
       ))}
 
-      {/* Luxury Coupe Wine Glasses Clinking */}
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <g transform="translate(935, 310) rotate(12)">
-          <path d="M-65 -65 C-65 14 65 14 65 -65 Z" fill="#c83b5e" opacity="0.85" />
-          <path
-            d="M-55 -35 C-55 8 55 8 55 -35 C28 -26 -28 -26 -55 -35 Z"
-            fill="#e8965a"
-            opacity="0.9"
-          />
-          <path d="M-65 -65 C-65 18 65 18 65 -65" fill="none" stroke="#ffd8b8" strokeWidth="4.5" />
-          <line x1="-65" y1="-65" x2="65" y2="-65" stroke="#ffe5cf" strokeWidth="3" opacity="0.8" />
-          <line x1="0" y1="18" x2="0" y2="105" stroke="#ffd8b8" strokeWidth="5.5" />
-          <path
-            d="M-42 105 C-24 100 24 100 42 105"
-            stroke="#ffd8b8"
-            strokeWidth="5.5"
-            fill="none"
-          />
-        </g>
-        <g transform="translate(1035, 310) rotate(-12)">
-          <path d="M-65 -65 C-65 14 65 14 65 -65 Z" fill="#c83b5e" opacity="0.85" />
-          <path
-            d="M-55 -35 C-55 8 55 8 55 -35 C28 -26 -28 -26 -55 -35 Z"
-            fill="#e8965a"
-            opacity="0.9"
-          />
-          <path d="M-65 -65 C-65 18 65 18 65 -65" fill="none" stroke="#ffd8b8" strokeWidth="4.5" />
-          <line x1="-65" y1="-65" x2="65" y2="-65" stroke="#ffe5cf" strokeWidth="3" opacity="0.8" />
-          <line x1="0" y1="18" x2="0" y2="105" stroke="#ffd8b8" strokeWidth="5.5" />
-          <path
-            d="M-42 105 C-24 100 24 100 42 105"
-            stroke="#ffd8b8"
-            strokeWidth="5.5"
-            fill="none"
-          />
-        </g>
-        <circle cx="985" cy="235" r="40" fill="#f5ad78" opacity="0.35" />
-        <path
-          d="M985 195 L991 228 L1025 235 L991 242 L985 275 L979 242 L945 235 L979 228 Z"
-          fill="#ffffff"
-        />
-        <circle cx="985" cy="235" r="5" fill="#ffe2c4" />
+      <g fill="#ffffff" opacity="0.85">
+        <path d="M1020 220 L1023 232 L1035 235 L1023 238 L1020 250 L1017 238 L1005 235 L1017 232 Z" />
+        <path d="M880 130 L882 140 L892 142 L882 144 L880 154 L878 144 L868 142 L878 140 Z" />
       </g>
     </svg>
   );
@@ -623,8 +644,8 @@ export function OgArt({ theme }: { theme: ThemeId }) {
       return <MidnightArt />;
     case "clean":
       return <CleanArt />;
-    case "velvet":
-      return <VelvetArt />;
+    case "bloom":
+      return <BloomArt />;
     case "cyber":
       return <CyberArt />;
     case "aura":

@@ -546,12 +546,12 @@
       "sampleHost": "Maya",
       "samplePlace": "AUB, West Hall"
     },
-    "velvet": {
-      "name": "Velvet",
-      "tagline": "Dinner parties & wine nights",
-      "sampleTitle": "Wine & vinyl night",
-      "sampleHost": "Sami",
-      "samplePlace": "Le Bistro, Gemmayzeh"
+    "bloom": {
+      "name": "Bloom",
+      "tagline": "Garden parties, showers & tea",
+      "sampleTitle": "Spring garden party",
+      "sampleHost": "Noor",
+      "samplePlace": "The Glasshouse Garden"
     },
     "cyber": {
       "name": "Cyber",
