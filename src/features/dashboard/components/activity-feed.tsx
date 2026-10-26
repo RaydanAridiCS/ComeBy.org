@@ -2,6 +2,7 @@
 
 import {
   Ban,
+  BellRing,
   type LucideIcon,
   Mail,
   Pencil,
@@ -28,6 +29,7 @@ const ICONS: Record<string, { icon: LucideIcon; tone: string }> = {
   event_updated: { icon: Pencil, tone: "bg-brand-50 text-brand-700" },
   event_cancelled: { icon: Ban, tone: "bg-danger-soft text-danger-ink" },
   update_email_sent: { icon: Mail, tone: "bg-brand-50 text-brand-700" },
+  nudge_sent: { icon: BellRing, tone: "bg-brand-50 text-brand-700" },
 };
 
 /** Timeline of everything that happened on the event, newest first. */
@@ -54,6 +56,8 @@ export function ActivityFeed({ activity }: { activity: DashboardActivity[] }) {
         return item.data.bySelf
           ? t("eventDashboard.activity.rsvp_removed_by_guest")
           : t("eventDashboard.activity.rsvp_removed", { name });
+      case "nudge_sent":
+        return t("eventDashboard.activity.nudge_sent", { count: item.data.recipients ?? 0 });
       case "event_updated": {
         const changes = (item.data.changes ?? [])
           .filter((change) => CHANGES.has(change))

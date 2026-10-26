@@ -218,6 +218,8 @@ These limits keep Comeby free, fast and safe from abuse, so one person or bot ca
 | Event description length | **2,000 characters** |
 | Guest message length | **300 characters** |
 | Update emails ("event changed" or "cancelled") per event | **5** |
+| Pasted invitee addresses to nudge per event | **100** |
+| Nudge emails per event | **1** (to guests who answered "maybe" and the pasted addresses) |
 | Instant response alert emails per host per day | **50**, after which alerts switch to a daily summary for the rest of the day |
 | Responses from the same device to the same event | **5 per hour** (stops spam submissions) |
 | New events one host can create per hour | **5** (stops scripted event creation) |

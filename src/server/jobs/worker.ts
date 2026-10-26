@@ -31,6 +31,10 @@ async function runJob<K extends JobName>(name: K, data: JobPayloads[K]): Promise
       return notificationService.handleRsvpAlert(data as JobPayloads["host.rsvp-alert"]);
     case "guests.event-update":
       return notificationService.handleEventUpdate(data as JobPayloads["guests.event-update"]);
+    case "guests.reminders-due":
+      return notificationService.handleRemindersDue();
+    case "guests.nudge":
+      return notificationService.handleNudge(data as JobPayloads["guests.nudge"]);
     case "hosts.daily-digest":
       return notificationService.handleDailyDigest();
     case "privacy.purge-guest-data":
@@ -44,6 +48,7 @@ async function runJob<K extends JobName>(name: K, data: JobPayloads[K]): Promise
 
 /** Recurring jobs (cron syntax, UTC). */
 const SCHEDULES: { name: JobName; cron: string }[] = [
+  { name: "guests.reminders-due", cron: "*/15 * * * *" },
   { name: "hosts.daily-digest", cron: "0 18 * * *" },
   { name: "privacy.purge-guest-data", cron: "30 3 * * *" },
   { name: "maintenance.cleanup-rate-limits", cron: "15 * * * *" },
@@ -53,6 +58,8 @@ const WORKER_NAMES: JobName[] = [
   "email.send",
   "host.rsvp-alert",
   "guests.event-update",
+  "guests.reminders-due",
+  "guests.nudge",
   "hosts.daily-digest",
   "privacy.purge-guest-data",
   "moderation.event-hidden",

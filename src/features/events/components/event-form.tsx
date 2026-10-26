@@ -210,6 +210,7 @@ export function EventForm(props: EventFormProps) {
       ? t("summaryPlusOnesOn", { count: watched.maxPlusOnes ?? 1 })
       : t("summaryPlusOnesOff"),
     t("summaryQuestions", { count: watched.customQuestions?.length ?? 0 }),
+    ...(watched.reminderEnabled === false ? [t("summaryReminderOff")] : []),
   ].join(" · ");
   const linkSummary = [
     watched.slug ? `${SITE.domain}/${watched.slug}` : t("summaryAutoLink"),
@@ -539,6 +540,16 @@ export function EventForm(props: EventFormProps) {
                 )}
               />
             ) : null}
+            <Controller
+              control={control}
+              name="reminderEnabled"
+              render={({ field }) => (
+                <label className="flex min-h-14 cursor-pointer items-center justify-between gap-4 px-4 py-2 text-sm">
+                  {t("reminderEnabled")}
+                  <Switch checked={field.value ?? true} onCheckedChange={field.onChange} />
+                </label>
+              )}
+            />
           </div>
           <Field>
             <FieldLabel>{t("customQuestions")}</FieldLabel>

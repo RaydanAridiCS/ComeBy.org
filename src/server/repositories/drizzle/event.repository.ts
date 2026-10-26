@@ -1,4 +1,19 @@
-import { and, asc, count, desc, eq, gte, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  exists,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { DatabaseOrTransaction } from "@/db/client";
 import { events, rsvps } from "@/db/schema";
 import type { EventRepository } from "../interfaces";
@@ -134,6 +149,47 @@ export function createEventRepository(db: DatabaseOrTransaction): EventRepositor
         )
         .orderBy(asc(events.startsAt))
         .limit(limit);
+    },
+
+    async listDueForReminder(now, windowEnd, guestsRespondedBefore, limit) {
+      return db
+        .select()
+        .from(events)
+        .where(
+          and(
+            eq(events.status, "active"),
+            eq(events.reminderEnabled, true),
+            isNull(events.hiddenAt),
+            isNull(events.guestDataPurgedAt),
+            sql`${events.startsAt} > ${now.toISOString()}::timestamptz`,
+            lte(events.startsAt, windowEnd),
+            exists(
+              db
+                .select({ one: sql`1` })
+                .from(rsvps)
+                .where(
+                  and(
+                    eq(rsvps.eventId, events.id),
+                    inArray(rsvps.status, ["going", "maybe"]),
+                    isNotNull(rsvps.email),
+                    isNull(rsvps.reminderSentAt),
+                    lte(rsvps.createdAt, guestsRespondedBefore),
+                  ),
+                ),
+            ),
+          ),
+        )
+        .orderBy(asc(events.startsAt))
+        .limit(limit);
+    },
+
+    async claimNudge(id, now) {
+      const rows = await db
+        .update(events)
+        .set({ nudgeSentAt: now })
+        .where(and(eq(events.id, id), isNull(events.nudgeSentAt)))
+        .returning({ id: events.id });
+      return rows.length > 0;
     },
   };
 }

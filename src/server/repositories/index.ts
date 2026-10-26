@@ -6,6 +6,7 @@ import { createAdminRepository } from "./drizzle/admin.repository";
 import { createEventRepository } from "./drizzle/event.repository";
 import {
   createEmailSuppressionRepository,
+  createInviteeRepository,
   createPushSubscriptionRepository,
   createRateLimitRepository,
   createReportRepository,
@@ -22,6 +23,7 @@ export function createRepositories(handle: DatabaseOrTransaction): Repositories 
   return {
     events: createEventRepository(handle),
     rsvps: createRsvpRepository(handle),
+    invitees: createInviteeRepository(handle),
     activity: createActivityRepository(handle),
     users: createUserRepository(handle),
     userSettings: createUserSettingsRepository(handle),

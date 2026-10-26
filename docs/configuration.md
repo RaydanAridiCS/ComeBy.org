@@ -10,7 +10,7 @@ All settings are environment variables, validated at startup by `src/env.ts`. If
 |---|---|---|---|
 | `NEXT_PUBLIC_APP_URL` | yes (prod) | `http://localhost:3000` | Public URL, e.g. `https://comeby.org`. Used in links, emails and cookies. |
 | `LOG_LEVEL` | | `info` | `fatal` … `trace` |
-| `JOBS_ENABLED` | | `true` | `false` runs jobs inline (debugging only) |
+| `JOBS_ENABLED` | | `true` | `false` runs jobs inline (debugging only). Scheduled jobs never run in this mode, so guest reminders, the daily digest and the data purge are not sent. |
 | `SKIP_ENV_VALIDATION` | | | `1` only for builds that don't need real values |
 | `SKIP_STARTUP_TASKS` | | | `1` skips migrations and workers at startup |
 

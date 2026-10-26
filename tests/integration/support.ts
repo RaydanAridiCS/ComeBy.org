@@ -39,7 +39,7 @@ export function createIntegrationDeps(start = new Date()) {
 /** Empties every table between tests. */
 export async function resetDatabase(): Promise<void> {
   await db.execute(
-    sql`TRUNCATE "user", events, rsvps, event_activity, push_subscriptions, reports, rate_limits, email_suppressions, admin_audit_log, user_settings CASCADE`,
+    sql`TRUNCATE "user", events, rsvps, event_invitees, event_activity, push_subscriptions, reports, rate_limits, email_suppressions, admin_audit_log, user_settings CASCADE`,
   );
 }
 

@@ -1,8 +1,15 @@
 import { eq, lt, sql } from "drizzle-orm";
 import type { DatabaseOrTransaction } from "@/db/client";
-import { emailSuppressions, pushSubscriptions, rateLimits, reports } from "@/db/schema";
+import {
+  emailSuppressions,
+  eventInvitees,
+  pushSubscriptions,
+  rateLimits,
+  reports,
+} from "@/db/schema";
 import type {
   EmailSuppressionRepository,
+  InviteeRepository,
   PushSubscriptionRepository,
   RateLimitRepository,
   ReportRepository,
@@ -28,6 +35,30 @@ export function createPushSubscriptionRepository(
 
     async deleteByEndpoint(endpoint) {
       await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+    },
+  };
+}
+
+export function createInviteeRepository(db: DatabaseOrTransaction): InviteeRepository {
+  return {
+    async addMany(eventId, emails) {
+      if (emails.length === 0) return;
+      await db
+        .insert(eventInvitees)
+        .values(emails.map((email) => ({ eventId, email: email.toLowerCase() })))
+        .onConflictDoNothing({ target: [eventInvitees.eventId, eventInvitees.email] });
+    },
+
+    async listEmails(eventId) {
+      const rows = await db
+        .select({ email: eventInvitees.email })
+        .from(eventInvitees)
+        .where(eq(eventInvitees.eventId, eventId));
+      return rows.map((row) => row.email);
+    },
+
+    async deleteByEvent(eventId) {
+      await db.delete(eventInvitees).where(eq(eventInvitees.eventId, eventId));
     },
   };
 }

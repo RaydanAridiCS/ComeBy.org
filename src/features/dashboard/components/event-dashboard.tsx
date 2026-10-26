@@ -14,6 +14,7 @@ import { ThemeBackdrop } from "@/themes/decorations";
 import type { DashboardData } from "../dto";
 import { ActivityFeed } from "./activity-feed";
 import { EventActions } from "./event-actions";
+import { NudgeCard } from "./nudge-card";
 import { ResponsesTable } from "./responses-table";
 import { ShareCard } from "./share-card";
 import { StatsCards } from "./stats-cards";
@@ -126,6 +127,7 @@ export function EventDashboard({
             </div>
             <div className="flex min-w-0 flex-col gap-6">
               <ShareCard event={event} />
+              {live ? <NudgeCard event={event} maybe={data.stats.maybe} /> : null}
               <ActivityFeed activity={data.activity} />
             </div>
           </div>

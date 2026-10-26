@@ -90,6 +90,7 @@ export const eventFormSchema = z
     maxPlusOnes: z.number().int().min(0).max(LIMITS.maxPlusOnesPerGuest),
     customQuestions: z.array(customQuestionSchema).max(LIMITS.customQuestionsPerEvent),
     guestListVisibility: z.enum(GUEST_LIST_VISIBILITIES),
+    reminderEnabled: z.boolean().default(true),
     slug: z
       .string()
       .trim()
@@ -135,6 +136,36 @@ export const updateEventSchema = z.object({
   eventId: z.uuid(),
   values: eventFormSchema,
   notifyGuests: z.boolean().default(true),
+});
+
+/** Longest pasted list we parse. Anything over `LIMITS.inviteesPerEvent` addresses is refused later. */
+const INVITEE_TEXT_MAX_LENGTH = 20_000;
+
+/**
+ * Turns pasted text (commas, semicolons, spaces or new lines between addresses, optionally
+ * `Name <a@b.com>`) into unique lower-cased addresses. Any entry that isn't an address fails.
+ */
+const inviteeList = z
+  .string()
+  .max(INVITEE_TEXT_MAX_LENGTH, { message: "eventDashboard.nudgeErrorEmails" })
+  .default("")
+  .transform((text, ctx) => {
+    const emails = new Set<string>();
+    for (const token of text.split(/[\s,;]+/)) {
+      const entry = token.replace(/^["'<(]+|[>)"']+$/g, "");
+      if (!entry) continue;
+      if (!z.email().safeParse(entry).success) {
+        ctx.addIssue({ code: "custom", message: "eventDashboard.nudgeErrorEmails" });
+        return z.NEVER;
+      }
+      emails.add(entry.toLowerCase());
+    }
+    return [...emails];
+  });
+
+export const nudgeSchema = z.object({
+  eventId: z.uuid(),
+  invitees: inviteeList,
 });
 
 export const cancelEventSchema = z.object({

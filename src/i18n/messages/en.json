@@ -249,6 +249,7 @@
     "phoneOptional": "Optional",
     "phoneHidden": "Don't ask",
     "allowMessage": "Let guests leave a message",
+    "reminderEnabled": "Email a reminder the day before to guests who left an email",
     "allowPlusOnes": "Let guests bring others (+1s)",
     "maxPlusOnes": "Max extra guests per person",
     "customQuestions": "Custom questions",
@@ -303,6 +304,7 @@
     "summaryPlusOnesOn": "+1s up to {count}",
     "summaryPlusOnesOff": "No +1s",
     "summaryQuestions": "{count, plural, =0 {No questions} one {# question} other {# questions}}",
+    "summaryReminderOff": "No reminder email",
     "summaryAutoLink": "Automatic link",
     "summaryNoDeadline": "No deadline",
     "summaryDeadline": "Deadline set",
@@ -350,6 +352,22 @@
     "updateMessageBody": "Changed something? Paste this in your group so everyone sees it.",
     "updateMessage": "📢 Update for {title}: {summary}\nDetails & RSVP: {url}",
     "cancelShareMessage": "😔 {title} is cancelled.{message}\n{url}",
+    "nudgeTitle": "Email a reminder",
+    "nudgeBody": "Send one email to guests who answered “maybe” and to anyone whose address you add below. You can do this once per event.",
+    "nudgeMaybeCount": "{count, plural, =0 {No one has answered maybe yet.} one {# guest answered maybe.} other {# guests answered maybe.}}",
+    "nudgeInviteesLabel": "Other people to remind (optional)",
+    "nudgeInviteesPlaceholder": "mia@example.com, omar@example.com",
+    "nudgeInviteesHint": "Separate addresses with commas or new lines, up to {max}. We delete them with guests' contact details after the event.",
+    "nudgeSend": "Send reminder",
+    "nudgeConfirmTitle": "Send the reminder now?",
+    "nudgeConfirmBody": "It goes out once and can't be sent again for this event.",
+    "nudgeConfirm": "Send it",
+    "nudgeBack": "Not yet",
+    "nudgeSent": "Reminder on its way",
+    "nudgeAlreadySent": "You've already sent the reminder for this event.",
+    "nudgeErrorEmails": "One of those doesn't look like an email address. Check the list and try again.",
+    "nudgeErrorStarted": "This event has already started.",
+    "nudgeErrorNobody": "There's no one to remind yet. Add some addresses, or wait for a “maybe”.",
     "nudgeMessage": "Still waiting on your RSVP for {title}! Takes 10 seconds: {url}",
     "copyUpdateMessage": "Copy update message",
     "copyNudgeMessage": "Copy reminder for non-responders",
@@ -386,7 +404,8 @@
       "rsvp_updated": "{name} changed from {from} to {to}",
       "rsvp_removed": "You removed {name}'s response",
       "rsvp_removed_by_guest": "A guest deleted their response",
-      "update_email_sent": "Update email sent to guests"
+      "update_email_sent": "Update email sent to guests",
+      "nudge_sent": "Reminder emailed to {count, plural, one {# person} other {# people}}"
     },
     "copied": "Copied",
     "qrAlt": "QR code for this invite",
@@ -648,6 +667,8 @@
       "eventsPerHostPerMonth": "You've created {max} events this month, the free limit. You can create more next month.",
       "responsesPerEvent": "This event has reached its limit of {max} responses.",
       "updateEmailsPerEvent": "You've sent the maximum of {max} update emails for this event.",
+      "inviteesPerEvent": "You can nudge up to {max} addresses per event.",
+      "nudgesPerEvent": "You've already sent the reminder nudge for this event.",
       "responsesPerDevicePerEventPerHour": "Too many responses from this device. Please try again in an hour.",
       "coverImageMaxBytes": "That image is too big. The limit is {max} MB.",
       "default": "You've reached a free-tier limit."
@@ -708,6 +729,14 @@
     "updateHeading": "{event} has changed",
     "updateBody": "Hi {name}, the host updated the {changes}. Here are the latest details:",
     "updateButton": "View invite",
+    "reminderSubject": "Reminder: {event} is coming up",
+    "reminderHeading": "{event} is coming up",
+    "reminderBody": "Hi {name}, a quick reminder about the event. Here are the details:",
+    "reminderButton": "View invite",
+    "nudgeSubject": "Can you make it to {event}?",
+    "nudgeHeading": "Can you make it to {event}?",
+    "nudgeBody": "{host} would love to know if you can make it. It only takes a few seconds to answer.",
+    "nudgeButton": "Answer now",
     "cancelSubject": "Cancelled: {event}",
     "cancelHeading": "{event} is cancelled",
     "cancelBody": "Hi {name}, sorry! The host cancelled this event.",
@@ -726,7 +755,7 @@
       },
       {
         "title": "What hosts give us",
-        "body": "To create an account you give us your name, email and a password (stored as a secure hash), or you sign in with Google. You create events with details you choose, such as a title, time, place and an optional cover image."
+        "body": "To create an account you give us your name, email and a password (stored as a secure hash), or you sign in with Google. You create events with details you choose, such as a title, time, place and an optional cover image. If you use the reminder option you can also paste email addresses of people you would like to remind, and we keep those only for that one email."
       },
       {
         "title": "What guests give us",
@@ -734,11 +763,11 @@
       },
       {
         "title": "How we use it",
-        "body": "Only to run Comeby: showing invites, collecting responses, notifying hosts, emailing guests who asked for updates, preventing spam and abuse, and keeping the service secure. If error reporting is switched on, crash reports contain technical details (the error and the page type) but no names, emails or phone numbers. We never use your data for advertising and never sell or share it with advertisers."
+        "body": "Only to run Comeby: showing invites, collecting responses, notifying hosts, emailing guests who asked for updates (including one reminder shortly before the event, which the host can switch off), sending the one-time reminder a host asks us to send, preventing spam and abuse, and keeping the service secure. If error reporting is switched on, crash reports contain technical details (the error and the page type) but no names, emails or phone numbers. We never use your data for advertising and never sell or share it with advertisers."
       },
       {
         "title": "How long we keep it",
-        "body": "Guests' phone numbers and emails are deleted automatically 90 days after an event ends. Hosts can delete events, responses or their whole account at any time, which deletes the related data. Guests can delete their own response at any time. Copies of delivered emails are removed from our job queue within a day. Backups are overwritten within 30 days. If you unsubscribe from our emails, or an address bounces or is reported as spam, we keep that address on a do-not-email list so we never email it again."
+        "body": "Guests' phone numbers and emails, and any addresses a host pasted to be reminded, are deleted automatically 90 days after an event ends. Hosts can delete events, responses or their whole account at any time, which deletes the related data. Guests can delete their own response at any time. Copies of delivered emails are removed from our job queue within a day. Backups are overwritten within 30 days. If you unsubscribe from our emails, or an address bounces or is reported as spam, we keep that address on a do-not-email list so we never email it again."
       },
       {
         "title": "Cookies",

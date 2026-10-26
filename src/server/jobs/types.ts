@@ -22,6 +22,10 @@ export type JobPayloads = {
   };
   /** Email opted-in guests that an event changed or was cancelled. */
   "guests.event-update": { eventId: string; kind: "updated" | "cancelled"; changes: string[] };
+  /** Sweep (every 15 minutes) that sends the one pre-event reminder to going and maybe guests. */
+  "guests.reminders-due": Record<string, never>;
+  /** The host's one-time nudge to maybe guests and pasted invitees who haven't answered. */
+  "guests.nudge": { eventId: string };
   /** Daily summary for hosts on "daily" mode, or who went over the instant-email quota. */
   "hosts.daily-digest": Record<string, never>;
   /** Delete guests' phone numbers and emails some time after events end. */
@@ -38,6 +42,8 @@ export const JOB_NAMES: readonly JobName[] = [
   "email.send",
   "host.rsvp-alert",
   "guests.event-update",
+  "guests.reminders-due",
+  "guests.nudge",
   "hosts.daily-digest",
   "privacy.purge-guest-data",
   "moderation.event-hidden",

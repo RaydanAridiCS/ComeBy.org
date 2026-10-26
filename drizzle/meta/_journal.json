@@ -36,6 +36,13 @@
       "when": 1793005658508,
       "tag": "0004_admin_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793036712094,
+      "tag": "0005_reminders_and_nudges",
+      "breakpoints": true
     }
   ]
 }

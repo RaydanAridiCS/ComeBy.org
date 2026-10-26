@@ -5,6 +5,7 @@ import { generateSlug } from "@/lib/slug";
 import { AppError, LimitReachedError } from "../errors";
 import type { EventPatch, EventRecord, NewEventRecord } from "../repositories/types";
 import { HOUR_MS, type ServiceDeps } from "./deps";
+import { collectNudgeRecipients } from "./nudge-recipients";
 
 /** Changes guests should hear about. Used for the "Updated" banner and update emails. */
 export type NotableChange = "time" | "location" | "title" | "details";
@@ -49,6 +50,7 @@ export function formValuesToColumns(values: EventFormValues) {
       ...(question.type === "choice" ? { choices: question.choices.filter(Boolean) } : {}),
     })),
     guestListVisibility: values.guestListVisibility,
+    reminderEnabled: values.reminderEnabled,
     rsvpDeadline,
   } satisfies EventPatch;
 }
@@ -241,6 +243,44 @@ export function createEventService(deps: ServiceDeps) {
       return repos.events.update(eventId, { rsvpClosed: closed });
     },
 
+    /**
+     * The host's one-time nudge: "maybe" guests plus the pasted `invitees` (already validated
+     * and lower-cased) who haven't responded. The addresses are stored, then a job sends the
+     * emails.
+     */
+    async nudge(
+      hostId: string,
+      eventId: string,
+      invitees: string[],
+    ): Promise<{ recipients: number }> {
+      const event = await getOwned(hostId, eventId);
+      if (event.status === "cancelled") throw new AppError("event_cancelled");
+      if (event.startsAt.getTime() <= now().getTime()) {
+        throw new AppError("validation", {
+          fieldErrors: { invitees: "eventDashboard.nudgeErrorStarted" },
+        });
+      }
+      if (event.nudgeSentAt) throw new LimitReachedError("nudgesPerEvent", LIMITS.nudgesPerEvent);
+      if (invitees.length > LIMITS.inviteesPerEvent) {
+        throw new LimitReachedError("inviteesPerEvent", LIMITS.inviteesPerEvent);
+      }
+      const recipients = await collectNudgeRecipients(repos, event.id, invitees);
+      if (recipients.length === 0) {
+        throw new AppError("validation", {
+          fieldErrors: { invitees: "eventDashboard.nudgeErrorNobody" },
+        });
+      }
+      await transaction(async (tx) => {
+        // Only one request can win this claim, so a double click can't send two nudges.
+        if (!(await tx.events.claimNudge(event.id, now()))) {
+          throw new LimitReachedError("nudgesPerEvent", LIMITS.nudgesPerEvent);
+        }
+        await tx.invitees.addMany(event.id, invitees);
+      });
+      await jobs.enqueue("guests.nudge", { eventId: event.id });
+      return { recipients: recipients.length };
+    },
+
     /** Copies an event's settings into a new event with a fresh link. Limits apply. */
     async duplicate(hostId: string, eventId: string): Promise<EventRecord> {
       const source = await getOwned(hostId, eventId);
@@ -268,6 +308,7 @@ export function createEventService(deps: ServiceDeps) {
           allowPlusOnes: source.allowPlusOnes,
           maxPlusOnes: source.maxPlusOnes,
           customQuestions: source.customQuestions,
+          reminderEnabled: source.reminderEnabled,
           rsvpDeadline: null,
         });
         await tx.activity.add({ eventId: copy.id, type: "event_created" });

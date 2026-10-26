@@ -25,7 +25,10 @@ export function createAccountService(deps: ServiceDeps) {
 
       const withResponses = await Promise.all(
         events.map(async (event) => {
-          const responses = await repos.rsvps.listByEvent(event.id);
+          const [responses, invitees] = await Promise.all([
+            repos.rsvps.listByEvent(event.id),
+            repos.invitees.listEmails(event.id),
+          ]);
           return {
             title: event.title,
             link: event.slug,
@@ -44,6 +47,10 @@ export function createAccountService(deps: ServiceDeps) {
             theme: event.theme,
             customQuestions: event.customQuestions,
             createdAt: event.createdAt.toISOString(),
+            reminderEmails: event.reminderEnabled,
+            nudgeSentAt: event.nudgeSentAt?.toISOString() ?? null,
+            /** Addresses pasted for the one-time nudge. */
+            invitees,
             responses: responses.map((response) => ({
               name: response.name,
               status: response.status,

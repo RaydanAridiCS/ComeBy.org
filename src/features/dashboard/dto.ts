@@ -55,6 +55,8 @@ export type DashboardData = {
     lastNotableUpdateSummary: string | null;
     hasQuestions: boolean;
     phoneMode: EventRecord["phoneMode"];
+    /** Whether the host already used the one-time nudge. */
+    nudgeSent: boolean;
   };
   stats: RsvpStats;
   capacity: { used: number; max: number };
@@ -92,6 +94,7 @@ export function toDashboardData(
       lastNotableUpdateSummary: event.lastNotableUpdateSummary,
       hasQuestions: event.customQuestions.length > 0,
       phoneMode: event.phoneMode,
+      nudgeSent: Boolean(event.nudgeSentAt),
     },
     stats: input.stats,
     capacity: { used: input.responses.length, max: LIMITS.responsesPerEvent },

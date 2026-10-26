@@ -22,6 +22,7 @@ export function newEventDefaults(hostName: string): EventFormInput {
     maxPlusOnes: 0,
     customQuestions: [],
     guestListVisibility: "count",
+    reminderEnabled: true,
     slug: "",
     rsvpDeadline: "",
   };
@@ -53,6 +54,7 @@ export function eventToFormValues(event: EventRecord): EventFormInput {
       choices: question.choices ?? [],
     })),
     guestListVisibility: event.guestListVisibility,
+    reminderEnabled: event.reminderEnabled,
     slug: event.slug,
     rsvpDeadline: event.rsvpDeadline ? dateToZonedInput(event.rsvpDeadline, event.timezone) : "",
   };

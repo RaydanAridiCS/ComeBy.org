@@ -42,6 +42,14 @@ export const LIMITS = {
   reportsBeforeAutoHide: 3,
   /** Days after an event ends before guests' phone numbers and emails are deleted. */
   guestDataRetentionDays: 90,
+  /** How long before an event starts its reminder email goes out. */
+  reminderHoursBefore: 24,
+  /** Guests who responded more recently than this don't get a reminder yet (they just heard from us). */
+  reminderMinGuestAgeHours: 2,
+  /** Pasted addresses a host can nudge per event, besides guests who answered "maybe". */
+  inviteesPerEvent: 100,
+  /** Nudges per event. Fixed at one: it is tracked by `events.nudge_sent_at`. */
+  nudgesPerEvent: 1,
 } as const;
 
 /** Field length limits that aren't part of the published free-tier table. */

@@ -49,6 +49,8 @@ export function makeEvent(overrides: Partial<EventRecord> = {}): EventRecord {
     rsvpDeadline: null,
     rsvpClosed: false,
     updateEmailsSent: 0,
+    reminderEnabled: true,
+    nudgeSentAt: null,
     lastNotableUpdateAt: null,
     lastNotableUpdateSummary: null,
     hiddenAt: null,
@@ -72,6 +74,7 @@ export type FakeWorld = {
   suppressions: Map<string, SuppressionReason>;
   audit: AuditEntryRecord[];
   reportRows: { eventId: string }[];
+  inviteeEmails: Map<string, string[]>;
   setNow: (date: Date) => void;
 };
 
@@ -87,6 +90,15 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
   const suppressions = new Map<string, SuppressionReason>();
   const audit: AuditEntryRecord[] = [];
   const reportRows: { eventId: string }[] = [];
+  const inviteeEmails = new Map<string, string[]>();
+
+  /** Mirrors the real reminder query: going or maybe, has an email, not yet reminded, not brand new. */
+  const isOwedReminder = (rsvp: RsvpRecord, eventId: string, respondedBefore: Date) =>
+    rsvp.eventId === eventId &&
+    (rsvp.status === "going" || rsvp.status === "maybe") &&
+    Boolean(rsvp.email) &&
+    !rsvp.reminderSentAt &&
+    rsvp.createdAt <= respondedBefore;
 
   const stats = (eventId: string): RsvpStats => {
     const list = [...rsvps.values()].filter((r) => r.eventId === eventId);
@@ -152,6 +164,26 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
           )
           .slice(0, limit)
           .map(({ id }) => ({ id })),
+      listDueForReminder: async (at, windowEnd, respondedBefore, limit) =>
+        [...events.values()]
+          .filter(
+            (e) =>
+              e.status === "active" &&
+              e.reminderEnabled &&
+              !e.hiddenAt &&
+              !e.guestDataPurgedAt &&
+              e.startsAt > at &&
+              e.startsAt <= windowEnd &&
+              [...rsvps.values()].some((r) => isOwedReminder(r, e.id, respondedBefore)),
+          )
+          .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+          .slice(0, limit),
+      claimNudge: async (id, at) => {
+        const event = events.get(id);
+        if (!event || event.nudgeSentAt) return false;
+        events.set(id, { ...event, nudgeSentAt: at });
+        return true;
+      },
     },
     rsvps: {
       findById: async (id) => rsvps.get(id) ?? null,
@@ -168,6 +200,19 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
         [...rsvps.values()]
           .filter((r) => r.eventId === eventId && r.email)
           .map(({ id, name, email }) => ({ id, name, email })),
+      listMaybeRecipients: async (eventId) =>
+        [...rsvps.values()]
+          .filter((r) => r.eventId === eventId && r.status === "maybe" && r.email)
+          .map(({ id, name, email }) => ({ id, name, email })),
+      claimReminderRecipients: async (eventId, at, respondedBefore) => {
+        const claimed: Pick<RsvpRecord, "id" | "name" | "email">[] = [];
+        for (const [id, rsvp] of rsvps) {
+          if (!isOwedReminder(rsvp, eventId, respondedBefore)) continue;
+          rsvps.set(id, { ...rsvp, reminderSentAt: at });
+          claimed.push({ id, name: rsvp.name, email: rsvp.email });
+        }
+        return claimed;
+      },
       create: async (input) => {
         const rsvp: RsvpRecord = {
           id: nextId(),
@@ -180,6 +225,7 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
           plusOnes: input.plusOnes ?? 0,
           answers: input.answers ?? {},
           editTokenHash: input.editTokenHash,
+          reminderSentAt: null,
           createdAt: now,
           updatedAt: now,
         };
@@ -199,6 +245,17 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
           if (rsvp.eventId === eventId) rsvps.set(id, { ...rsvp, phone: null, email: null });
         }
       },
+    },
+    invitees: {
+      addMany: async (eventId, emails) => {
+        const list = inviteeEmails.get(eventId) ?? [];
+        for (const email of emails) {
+          if (!list.includes(email.toLowerCase())) list.push(email.toLowerCase());
+        }
+        inviteeEmails.set(eventId, list);
+      },
+      listEmails: async (eventId) => [...(inviteeEmails.get(eventId) ?? [])],
+      deleteByEvent: async (eventId) => void inviteeEmails.delete(eventId),
     },
     activity: {
       add: async (input) => {
@@ -362,6 +419,7 @@ export function createFakeWorld(start = new Date("2026-10-17T12:00:00Z")): FakeW
     suppressions,
     audit,
     reportRows,
+    inviteeEmails,
     setNow: (date) => {
       now = date;
     },

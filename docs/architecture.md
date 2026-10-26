@@ -78,8 +78,10 @@ When a guest responds, the server creates a random secret and stores only its SH
 | `email.send` | Every email (retried 3× with backoff) |
 | `host.rsvp-alert` | After each response: push + email, respecting settings and the 50/day quota |
 | `guests.event-update` | When a host changes the time, place or details, or cancels |
+| `guests.reminders-due` | Every 15 minutes: one reminder to going and maybe guests in the 24 hours before an event ([ADR 0011](adr/0011-reminders-by-sweep.md)) |
+| `guests.nudge` | When a host sends the one-time nudge to "maybe" guests and pasted addresses |
 | `hosts.daily-digest` | Daily at 18:00 UTC |
-| `privacy.purge-guest-data` | Daily: deletes guests' phone and email 90 days after events end |
+| `privacy.purge-guest-data` | Daily: deletes guests' phone and email, and pasted invitee addresses, 90 days after events end |
 | `maintenance.cleanup-rate-limits` | Hourly |
 
 With `JOBS_ENABLED=false`, jobs run inline in the request instead (useful for debugging).

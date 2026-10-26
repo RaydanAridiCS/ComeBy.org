@@ -47,6 +47,7 @@ export const activityTypeEnum = pgEnum("activity_type", [
   "rsvp_updated",
   "rsvp_removed",
   "update_email_sent",
+  "nudge_sent",
 ]);
 export const emailAlertModeEnum = pgEnum("email_alert_mode", ["instant", "daily", "off"]);
 export const reportReasonEnum = pgEnum("report_reason", ["spam", "scam", "inappropriate", "other"]);
@@ -82,6 +83,8 @@ export type ActivityData = {
   changes?: string[];
   /** Set when the guest removed their own response, so the entry carries no name. */
   bySelf?: boolean;
+  /** How many people a nudge went to (never their addresses). */
+  recipients?: number;
 };
 
 /* ----------------------------------------------------------------------------
@@ -134,6 +137,10 @@ export const events = pgTable(
     rsvpDeadline: timestamp({ withTimezone: true }),
     rsvpClosed: boolean().notNull().default(false),
     updateEmailsSent: smallint().notNull().default(0),
+    /** Whether going and maybe guests get one reminder shortly before the event. */
+    reminderEnabled: boolean().notNull().default(true),
+    /** When the host nudged people who haven't responded. A nudge goes out once per event. */
+    nudgeSentAt: timestamp({ withTimezone: true }),
     /** When the time, place or details last changed in a way guests should notice. */
     lastNotableUpdateAt: timestamp({ withTimezone: true }),
     lastNotableUpdateSummary: text(),
@@ -151,6 +158,7 @@ export const events = pgTable(
     uniqueIndex("events_slug_idx").on(table.slug),
     index("events_host_id_starts_at_idx").on(table.hostId, table.startsAt),
     index("events_ends_purge_idx").on(table.startsAt, table.guestDataPurgedAt),
+    index("events_starts_at_idx").on(table.startsAt),
   ],
 );
 
@@ -170,6 +178,8 @@ export const rsvps = pgTable(
     answers: jsonb().$type<CustomAnswers>().notNull().default({}),
     /** SHA-256 of the secret that lets the guest edit this response later. */
     editTokenHash: text().notNull(),
+    /** Set when the pre-event reminder went out, so a guest never gets two. */
+    reminderSentAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true })
       .notNull()
@@ -177,6 +187,23 @@ export const rsvps = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [index("rsvps_event_id_created_at_idx").on(table.eventId, table.createdAt)],
+);
+
+/**
+ * Addresses the host pasted to be nudged, for people who haven't RSVPed. Lower-cased.
+ * Contact details like any other: deleted with the guests' data after the event.
+ */
+export const eventInvitees = pgTable(
+  "event_invitees",
+  {
+    id: uuid().primaryKey().default(sql`uuidv7()`),
+    eventId: uuid()
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    email: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("event_invitees_event_email_idx").on(table.eventId, table.email)],
 );
 
 export const eventActivity = pgTable(

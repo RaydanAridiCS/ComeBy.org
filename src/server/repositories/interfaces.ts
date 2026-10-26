@@ -43,6 +43,18 @@ export interface EventRepository {
   incrementReportCount(id: string): Promise<number>;
   /** Events whose guest contact details are due for deletion. */
   listDueForGuestDataPurge(endedBefore: Date, limit: number): Promise<Pick<EventRecord, "id">[]>;
+  /**
+   * Active, visible events starting between `now` and `windowEnd` that have at least one guest
+   * still owed a reminder (going or maybe, with an email, who responded before `guestsRespondedBefore`).
+   */
+  listDueForReminder(
+    now: Date,
+    windowEnd: Date,
+    guestsRespondedBefore: Date,
+    limit: number,
+  ): Promise<EventRecord[]>;
+  /** Marks the event as nudged. Returns `false` when it already was (so only one caller wins). */
+  claimNudge(id: string, now: Date): Promise<boolean>;
 }
 
 export interface RsvpRepository {
@@ -54,11 +66,29 @@ export interface RsvpRepository {
   listGoingNames(eventId: string, limit: number): Promise<string[]>;
   /** Guests who left an email for updates. */
   listEmailRecipients(eventId: string): Promise<Pick<RsvpRecord, "id" | "name" | "email">[]>;
+  /** Guests who said "maybe" and left an email. */
+  listMaybeRecipients(eventId: string): Promise<Pick<RsvpRecord, "id" | "name" | "email">[]>;
+  /**
+   * Marks every guest still owed a reminder as reminded and returns them. Atomic, so two
+   * overlapping sweeps never hand out the same guest twice.
+   */
+  claimReminderRecipients(
+    eventId: string,
+    now: Date,
+    respondedBefore: Date,
+  ): Promise<Pick<RsvpRecord, "id" | "name" | "email">[]>;
   create(input: NewRsvpRecord): Promise<RsvpRecord>;
   update(id: string, patch: RsvpPatch): Promise<RsvpRecord>;
   delete(id: string): Promise<void>;
   /** Removes phone numbers, emails and edit links for every guest of an event. */
   purgeContactDetails(eventId: string): Promise<void>;
+}
+
+export interface InviteeRepository {
+  /** Stores lower-cased addresses, ignoring ones already on the event's list. */
+  addMany(eventId: string, emails: string[]): Promise<void>;
+  listEmails(eventId: string): Promise<string[]>;
+  deleteByEvent(eventId: string): Promise<void>;
 }
 
 export interface ActivityRepository {
@@ -128,6 +158,7 @@ export interface RateLimitRepository {
 export type Repositories = {
   events: EventRepository;
   rsvps: RsvpRepository;
+  invitees: InviteeRepository;
   activity: ActivityRepository;
   users: UserRepository;
   userSettings: UserSettingsRepository;

@@ -10,7 +10,7 @@ import { AppError } from "@/server/errors";
 import { eventService, rsvpService } from "@/server/services";
 import { processCoverImage } from "@/server/services/image.service";
 import { eventCacheTag, slugCacheTag } from "./queries";
-import { cancelEventSchema, eventFormSchema, updateEventSchema } from "./schema";
+import { cancelEventSchema, eventFormSchema, nudgeSchema, updateEventSchema } from "./schema";
 
 const eventIdSchema = z.uuid();
 
@@ -61,6 +61,18 @@ export async function setRsvpClosedAction(eventId: string, closed: boolean): Pro
     const event = await eventService.setRsvpClosed(user.id, eventIdSchema.parse(eventId), closed);
     invalidate(event.id, event.slug);
     return undefined;
+  });
+}
+
+export async function nudgeGuestsAction(
+  input: unknown,
+): Promise<ActionResult<{ recipients: number }>> {
+  return runAction(async () => {
+    const user = await requireUser();
+    const { eventId, invitees } = nudgeSchema.parse(input);
+    const result = await eventService.nudge(user.id, eventId, invitees);
+    refresh();
+    return result;
   });
 }
 

@@ -5,6 +5,8 @@ import {
   eventCancelled,
   eventHiddenAlert,
   eventUpdated,
+  guestNudge,
+  guestReminder,
   hostDigest,
   hostRsvpAlert,
 } from "@/emails/templates";
@@ -16,8 +18,12 @@ import { sendPush } from "../adapters/push";
 import { adminEmails } from "../auth/admin-policy";
 import type { JobPayloads } from "../jobs/types";
 import type { EventRecord } from "../repositories/types";
-import { DAY_MS, type ServiceDeps } from "./deps";
+import { DAY_MS, HOUR_MS, type ServiceDeps } from "./deps";
 import { queueEmail, unsubscribeLinks } from "./email.service";
+import { collectNudgeRecipients } from "./nudge-recipients";
+
+/** Events checked per reminder sweep. The sweep runs every few minutes, so a backlog drains fast. */
+const REMINDER_EVENTS_PER_SWEEP = 200;
 
 const ALERT_EMAIL_KEY = (hostId: string) => `alert-email:${hostId}`;
 
@@ -176,6 +182,81 @@ export function createNotificationService(deps: ServiceDeps) {
       }
     },
 
+    /**
+     * Sweep that sends the one reminder each going/maybe guest gets. It reads the event time
+     * live, so editing the time moves the reminder and cancelling or hiding stops it. Each guest
+     * is claimed (marked reminded) before the email is queued, so overlapping sweeps never
+     * double-send.
+     */
+    async handleRemindersDue(): Promise<void> {
+      const at = now();
+      const windowEnd = new Date(at.getTime() + LIMITS.reminderHoursBefore * HOUR_MS);
+      const respondedBefore = new Date(at.getTime() - LIMITS.reminderMinGuestAgeHours * HOUR_MS);
+      const due = await repos.events.listDueForReminder(
+        at,
+        windowEnd,
+        respondedBefore,
+        REMINDER_EVENTS_PER_SWEEP,
+      );
+      let reminded = 0;
+      for (const event of due) {
+        const recipients = await repos.rsvps.claimReminderRecipients(event.id, at, respondedBefore);
+        const when = formatEventWhen(event.startsAt, event.endsAt, event.timezone);
+        const where = locationLabel(event);
+        const url = eventUrl(event.slug);
+        for (const recipient of recipients) {
+          if (!recipient.email) continue;
+          const links = unsubscribeLinks("guest", recipient.email);
+          await queueEmail(
+            jobs,
+            recipient.email,
+            guestReminder({
+              unsubscribeUrl: links.page,
+              guestName: recipient.name,
+              eventTitle: event.title,
+              when,
+              where,
+              eventUrl: url,
+            }),
+            { category: "guest-update", oneClickUnsubscribeUrl: links.oneClick },
+          );
+          reminded += 1;
+        }
+      }
+      if (reminded > 0) logger.info({ reminded, events: due.length }, "Queued guest reminders");
+    },
+
+    /** The host's one-time nudge to "maybe" guests and pasted invitees who haven't answered. */
+    async handleNudge(payload: JobPayloads["guests.nudge"]): Promise<void> {
+      const event = await repos.events.findById(payload.eventId);
+      if (!event || event.status !== "active" || event.hiddenAt || event.guestDataPurgedAt) return;
+      const recipients = await collectNudgeRecipients(repos, event.id);
+      const when = formatEventWhen(event.startsAt, event.endsAt, event.timezone);
+      const where = locationLabel(event);
+      const url = eventUrl(event.slug);
+      for (const recipient of recipients) {
+        const links = unsubscribeLinks("guest", recipient.email);
+        await queueEmail(
+          jobs,
+          recipient.email,
+          guestNudge({
+            unsubscribeUrl: links.page,
+            eventTitle: event.title,
+            hostName: event.hostName,
+            when,
+            where,
+            eventUrl: url,
+          }),
+          { category: "guest-update", oneClickUnsubscribeUrl: links.oneClick },
+        );
+      }
+      await repos.activity.add({
+        eventId: event.id,
+        type: "nudge_sent",
+        data: { recipients: recipients.length },
+      });
+    },
+
     /** Tells every operator that an event was hidden automatically and needs review. */
     async handleEventHidden(payload: JobPayloads["moderation.event-hidden"]): Promise<void> {
       const event = await repos.events.findById(payload.eventId);
@@ -201,6 +282,7 @@ export function createNotificationService(deps: ServiceDeps) {
         if (due.length === 0) break;
         for (const { id } of due) {
           await repos.rsvps.purgeContactDetails(id);
+          await repos.invitees.deleteByEvent(id);
           await repos.events.update(id, { guestDataPurgedAt: now() });
         }
         logger.info({ events: due.length }, "Purged guest contact details");

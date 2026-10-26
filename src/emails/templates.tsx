@@ -218,6 +218,60 @@ export function eventUpdated(props: {
   };
 }
 
+/** The "it's almost here" email, sent once to going and maybe guests. */
+export function guestReminder(props: {
+  guestName: string;
+  eventTitle: string;
+  when: string;
+  where: string | null;
+  eventUrl: string;
+  unsubscribeUrl?: string;
+}): RenderableEmail {
+  const t = getServerTranslator();
+  return {
+    subject: t("emails.reminderSubject", { event: props.eventTitle }),
+    element: (
+      <EmailLayout
+        unsubscribeUrl={props.unsubscribeUrl}
+        preview={t("emails.reminderHeading", { event: props.eventTitle })}
+        heading={t("emails.reminderHeading", { event: props.eventTitle })}
+        action={{ label: t("emails.reminderButton"), href: props.eventUrl }}
+      >
+        <Text style={emailStyles.paragraph}>
+          {t("emails.reminderBody", { name: props.guestName })}
+        </Text>
+        <EventDetails when={props.when} where={props.where} />
+      </EmailLayout>
+    ),
+  };
+}
+
+/** The host's one-time "still waiting on your answer" email. */
+export function guestNudge(props: {
+  eventTitle: string;
+  hostName: string;
+  when: string;
+  where: string | null;
+  eventUrl: string;
+  unsubscribeUrl?: string;
+}): RenderableEmail {
+  const t = getServerTranslator();
+  return {
+    subject: t("emails.nudgeSubject", { event: props.eventTitle }),
+    element: (
+      <EmailLayout
+        unsubscribeUrl={props.unsubscribeUrl}
+        preview={t("emails.nudgeSubject", { event: props.eventTitle })}
+        heading={t("emails.nudgeHeading", { event: props.eventTitle })}
+        action={{ label: t("emails.nudgeButton"), href: props.eventUrl }}
+      >
+        <Text style={emailStyles.paragraph}>{t("emails.nudgeBody", { host: props.hostName })}</Text>
+        <EventDetails when={props.when} where={props.where} />
+      </EmailLayout>
+    ),
+  };
+}
+
 export function eventCancelled(props: {
   guestName: string;
   eventTitle: string;

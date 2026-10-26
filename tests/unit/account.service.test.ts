@@ -28,6 +28,7 @@ describe("account export", () => {
       plusOnes: 1,
       answers: {},
       editTokenHash: `secret-hash-${name}`,
+      reminderSentAt: null,
       createdAt: new Date("2026-10-18T10:00:00Z"),
       updatedAt: new Date("2026-10-18T10:00:00Z"),
     });

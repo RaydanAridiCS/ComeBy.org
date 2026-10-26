@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import type { DatabaseOrTransaction } from "@/db/client";
 import { rsvps } from "@/db/schema";
 import type { RsvpRepository } from "../interfaces";
@@ -68,6 +68,29 @@ export function createRsvpRepository(db: DatabaseOrTransaction): RsvpRepository 
         .select({ id: rsvps.id, name: rsvps.name, email: rsvps.email })
         .from(rsvps)
         .where(and(eq(rsvps.eventId, eventId), isNotNull(rsvps.email)));
+    },
+
+    async listMaybeRecipients(eventId) {
+      return db
+        .select({ id: rsvps.id, name: rsvps.name, email: rsvps.email })
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "maybe"), isNotNull(rsvps.email)));
+    },
+
+    async claimReminderRecipients(eventId, now, respondedBefore) {
+      return db
+        .update(rsvps)
+        .set({ reminderSentAt: now })
+        .where(
+          and(
+            eq(rsvps.eventId, eventId),
+            inArray(rsvps.status, ["going", "maybe"]),
+            isNotNull(rsvps.email),
+            isNull(rsvps.reminderSentAt),
+            lte(rsvps.createdAt, respondedBefore),
+          ),
+        )
+        .returning({ id: rsvps.id, name: rsvps.name, email: rsvps.email });
     },
 
     async create(input) {
