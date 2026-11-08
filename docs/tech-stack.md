@@ -51,7 +51,6 @@ Every choice below serves the [product principles](business-plan.md#5-product-pr
 | Lint + format | **Biome** |
 | Unit tests | **Vitest** (services run against in-memory repositories) |
 | End-to-end tests | **Playwright** (desktop + mobile) |
-| Git hooks | **Lefthook**: Biome + typecheck on commit, **commitlint** (Conventional Commits) on messages |
 | CI | **GitHub Actions**: lint, typecheck, unit, build, e2e with Postgres + Mailpit, Docker build |
 | Local services | **docker compose**: PostgreSQL 18 + Mailpit |
 

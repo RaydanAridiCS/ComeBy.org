@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-pnpm install                 # also installs git hooks (Lefthook)
+pnpm install
 cp .env.example .env.local  # set BETTER_AUTH_SECRET; optionally VAPID keys
 docker compose up -d        # PostgreSQL 18 on :5432, Mailpit on :1025 / :8025
 pnpm run db:migrate
