@@ -3,16 +3,16 @@
 ## Setup
 
 ```bash
-npm install                 # also installs git hooks (Lefthook)
+pnpm install                 # also installs git hooks (Lefthook)
 cp .env.example .env.local  # set BETTER_AUTH_SECRET; optionally VAPID keys
 docker compose up -d        # PostgreSQL 18 on :5432, Mailpit on :1025 / :8025
-npm run db:migrate
-npm run dev                 # http://localhost:3000
+pnpm run db:migrate
+pnpm run dev                 # http://localhost:3000
 ```
 
 With `EMAIL_PROVIDER=smtp`, every email the app sends in development lands in **Mailpit**: http://localhost:8025. Sign up, open Mailpit, and click the confirmation link.
 
-To send real emails with **Resend** instead, set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` (in `.env.local`, which wins over `.env`), then check the setup with `npx tsx scripts/send-test-email.ts you@example.com`. Until your domain is verified in Resend, use `EMAIL_FROM="Comeby <onboarding@resend.dev>"`, which can only send to your own Resend account email. The end-to-end tests read emails from Mailpit, so switch back to `smtp` before running them.
+To send real emails with **Resend** instead, set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` (in `.env.local`, which wins over `.env`), then check the setup with `pnpm dlx tsx scripts/send-test-email.ts you@example.com`. Until your domain is verified in Resend, use `EMAIL_FROM="Comeby <onboarding@resend.dev>"`, which can only send to your own Resend account email. The end-to-end tests read emails from Mailpit, so switch back to `smtp` before running them.
 
 Migrations also run automatically whenever the server starts.
 
@@ -20,15 +20,15 @@ Migrations also run automatically whenever the server starts.
 
 | Task | Command |
 |---|---|
-| Lint + format check | `npm run lint` (`npm run lint:fix` to fix) |
-| Typecheck | `npm run typecheck` |
-| Unit tests | `npm test` / `npm run test:watch` (`npm run test:coverage` for a coverage report) |
-| Integration tests (real Postgres) | `docker compose up -d`, then `npm run test:integration`. Creates and drops a throwaway database. |
-| End-to-end tests | `docker compose up -d`, then `npm run test:e2e`. Starts `npm run dev` if the app isn't running; for a production-like run use `npm run build && npm start` first. Set `E2E_ADMIN_EMAIL` (and start the app with `ADMIN_EMAILS` set to the same address) to include the admin tests. |
-| Theme contrast (WCAG) | `npm run check:contrast` (part of `npm run check`) |
-| Change the database | edit `src/db/schema/*`, then `npm run db:generate` and commit the new SQL and snapshot files in `drizzle/`. Never edit a migration that is already committed; add a new one |
-| Browse the database | `npm run db:studio` |
-| Regenerate app icons | `npx tsx scripts/generate-icons.ts` |
+| Lint + format check | `pnpm run lint` (`pnpm run lint:fix` to fix) |
+| Typecheck | `pnpm run typecheck` |
+| Unit tests | `pnpm test` / `pnpm run test:watch` (`pnpm run test:coverage` for a coverage report) |
+| Integration tests (real Postgres) | `docker compose up -d`, then `pnpm run test:integration`. Creates and drops a throwaway database. |
+| End-to-end tests | `docker compose up -d`, then `pnpm run test:e2e`. Starts `pnpm run dev` if the app isn't running; for a production-like run use `pnpm run build && pnpm start` first. Set `E2E_ADMIN_EMAIL` (and start the app with `ADMIN_EMAILS` set to the same address) to include the admin tests. |
+| Theme contrast (WCAG) | `pnpm run check:contrast` (part of `pnpm run check`) |
+| Change the database | edit `src/db/schema/*`, then `pnpm run db:generate` and commit the new SQL and snapshot files in `drizzle/`. Never edit a migration that is already committed; add a new one |
+| Browse the database | `pnpm run db:studio` |
+| Regenerate app icons | `pnpm dlx tsx scripts/generate-icons.ts` |
 
 ## Conventions
 

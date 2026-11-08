@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run build:sw && next dev",
-    "build": "npm run build:sw && next build",
+    "dev": "pnpm run build:sw && next dev",
+    "build": "pnpm run build:sw && next build",
     "start": "next start",
     "build:sw": "esbuild src/sw/service-worker.ts --bundle --minify --format=iife --target=es2022 --outfile=public/sw.js --log-level=warning",
     "lint": "biome check",
@@ -19,7 +19,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "check": "npm run lint && npm run typecheck && npm run check:contrast && npm run test",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run check:contrast && pnpm run test",
     "check:contrast": "tsx scripts/check-theme-contrast.ts",
     "prepare": "lefthook install || true"
   },
@@ -70,6 +70,7 @@
     "@biomejs/biome": "2.4.2",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
+    "@commitlint/types": "^21.2.3",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/dom": "^10.4.2",
@@ -96,5 +97,6 @@
   "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=24"
-  }
+  },
+  "packageManager": "pnpm@11.5.0"
 }

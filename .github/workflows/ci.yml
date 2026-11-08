@@ -15,26 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
       - name: Dependency audit (high severity, production dependencies)
-        run: npm audit --omit=dev --audit-level=high
+        run: pnpm audit --prod --audit-level=high
       - name: Migrations match the schema
         run: |
-          npx drizzle-kit check
-          npx drizzle-kit generate
-          git diff --exit-code drizzle || (echo "Schema changed without a migration. Run npm run db:generate." && exit 1)
-          test -z "$(git ls-files --others --exclude-standard drizzle)" || (echo "Untracked migration files were generated. Run npm run db:generate and commit them." && exit 1)
-      - run: npm run typecheck
+          pnpm drizzle-kit check
+          pnpm drizzle-kit generate
+          git diff --exit-code drizzle || (echo "Schema changed without a migration. Run pnpm run db:generate." && exit 1)
+          test -z "$(git ls-files --others --exclude-standard drizzle)" || (echo "Untracked migration files were generated. Run pnpm run db:generate and commit them." && exit 1)
+      - run: pnpm run typecheck
         env:
           SKIP_ENV_VALIDATION: "1"
-      - run: npm run check:contrast
-      - run: npm run test:coverage
-      - run: npm run build
+      - run: pnpm run check:contrast
+      - run: pnpm run test:coverage
+      - run: pnpm run build
         env:
           SKIP_ENV_VALIDATION: "1"
           SKIP_STARTUP_TASKS: "1"
@@ -55,12 +56,13 @@ jobs:
           --health-cmd "pg_isready -U comeby" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run test:integration
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:integration
 
   e2e:
     name: End-to-end tests
@@ -90,17 +92,18 @@ jobs:
       E2E_ADMIN_EMAIL: e2e-admin@example.com
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
       - name: Start app
-        run: npm start &
-      - run: npx wait-on http://localhost:3000/api/health --timeout 60000
-      - run: npm run test:e2e
+        run: pnpm start &
+      - run: pnpm dlx wait-on http://localhost:3000/api/health --timeout 60000
+      - run: pnpm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

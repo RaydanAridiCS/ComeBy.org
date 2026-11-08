@@ -5,7 +5,7 @@ import type { ThemeId } from "@/features/events/schema";
  * The five launch themes. One definition drives the invite page (as CSS variables),
  * the theme previews, the celebration and the link-preview image, so they always match.
  * See docs/themes.md for how to add a theme, and run
- * `npx tsx scripts/check-theme-contrast.ts` after changing any colour.
+ * `pnpm dlx tsx scripts/check-theme-contrast.ts` after changing any colour.
  */
 export type ThemeTokens = {
   id: ThemeId;

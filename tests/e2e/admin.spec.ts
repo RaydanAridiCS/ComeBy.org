@@ -4,8 +4,8 @@ import { createInvite, expect, signUpHost, test, withDatabase } from "./support"
 
 /**
  * Needs the app started with ADMIN_EMAILS=<E2E_ADMIN_EMAIL>, for example:
- *   ADMIN_EMAILS=e2e-admin@example.com npm start
- *   E2E_ADMIN_EMAIL=e2e-admin@example.com npm run test:e2e
+ *   ADMIN_EMAILS=e2e-admin@example.com pnpm start
+ *   E2E_ADMIN_EMAIL=e2e-admin@example.com pnpm run test:e2e
  * CI does both. Without E2E_ADMIN_EMAIL these tests are skipped.
  */
 const adminEmail = process.env.E2E_ADMIN_EMAIL;

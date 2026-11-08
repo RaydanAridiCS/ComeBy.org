@@ -47,7 +47,7 @@ Every choice below serves the [product principles](business-plan.md#5-product-pr
 
 | Concern | Choice |
 |---|---|
-| Package manager | **npm** |
+| Package manager | **pnpm** |
 | Lint + format | **Biome** |
 | Unit tests | **Vitest** (services run against in-memory repositories) |
 | End-to-end tests | **Playwright** (desktop + mobile) |

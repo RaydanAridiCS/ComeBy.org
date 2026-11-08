@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 /*
  * Integration tests run the real repositories and services against a real Postgres.
  * A throwaway database is created and migrated before the run (see global-setup.ts).
- *   docker compose up -d && npm run test:integration
+ *   docker compose up -d && pnpm run test:integration
  * Any Postgres works: point TEST_DATABASE_ADMIN_URL at it (default: the docker compose one).
  */
 const adminUrl =

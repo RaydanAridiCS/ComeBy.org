@@ -27,12 +27,12 @@ An invite's theme sets its colours, display font, card surface and art. There ar
 
 ## Adding a theme
 
-1. Add the ID to `THEMES` in `src/features/events/schema.ts` and to `themeEnum` in `src/db/schema/app.ts`, then run `npm run db:generate`.
+1. Add the ID to `THEMES` in `src/features/events/schema.ts` and to `themeEnum` in `src/db/schema/app.ts`, then run `pnpm run db:generate`.
 2. Add its tokens to `THEME_TOKENS` in `src/themes/index.ts`. If it needs a new font, add it in `src/app/fonts.ts` (with `preload: false`) and add a static TTF to `src/themes/og-fonts/`.
 3. Add its scenes:
    - `ThemeHeroArt` and `ThemeBackdrop` in `decorations.tsx`;
    - `OgArt` in `og-art.tsx`;
    - a fixed sample date in `invite-mini.tsx`.
 4. Add `themes.<id>.name`, `tagline`, `sampleTitle` and `sampleHost` to every message catalogue.
-5. Run `npx tsx scripts/check-theme-contrast.ts`. Every check must pass (WCAG AA).
+5. Run `pnpm dlx tsx scripts/check-theme-contrast.ts`. Every check must pass (WCAG AA).
 6. Check it on a phone in the invite page, the theme picker and the preview image (`/<slug>/opengraph-image`). Pages must stay light.

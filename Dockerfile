@@ -11,12 +11,13 @@ ARG NODE_VERSION=24-alpine
 
 FROM node:${NODE_VERSION} AS base
 RUN apk add --no-cache libc6-compat
+RUN corepack enable
 WORKDIR /app
 
 # --- Dependencies -------------------------------------------------------------
 FROM base AS deps
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 
 # --- Build --------------------------------------------------------------------
 FROM base AS builder
@@ -42,7 +43,7 @@ ENV S3_PUBLIC_URL=${S3_PUBLIC_URL} \
     SKIP_ENV_VALIDATION=1 \
     SKIP_STARTUP_TASKS=1
 
-RUN npm run build
+RUN pnpm run build
 
 # --- Runtime ------------------------------------------------------------------
 FROM base AS runner

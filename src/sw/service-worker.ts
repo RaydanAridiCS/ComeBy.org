@@ -2,7 +2,7 @@
 
 /*
  * Comeby service worker: shows push notifications for new responses and opens the
- * right dashboard page when one is tapped. Built to /public/sw.js by `npm run build:sw`.
+ * right dashboard page when one is tapped. Built to /public/sw.js by `pnpm run build:sw`.
  */
 
 declare const self: ServiceWorkerGlobalScope;

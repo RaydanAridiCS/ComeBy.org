@@ -54,7 +54,7 @@ Guest emails about event changes and host alert emails carry an unsubscribe link
 
 | Variable | Notes |
 |---|---|
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys`. Push is off when unset. |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | `pnpm dlx web-push generate-vapid-keys`. Push is off when unset. |
 | `VAPID_SUBJECT` | `mailto:` contact for push services |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile. Bot checks are off when unset. |
 | `NEXT_PUBLIC_UMAMI_SCRIPT_URL`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | Self-hosted Umami analytics (optional) |

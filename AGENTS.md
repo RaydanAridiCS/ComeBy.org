@@ -11,9 +11,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Comeby project conventions
 
 - Read `docs/architecture.md` first. Layers: routes/components → server actions (`features/*/actions.ts`) → services (`src/server/services`) → repositories (`src/server/repositories`). Only repositories import Drizzle.
-- TypeScript only, strict; no `any`. Lint/format with Biome (`npm run lint:fix`).
+- TypeScript only, strict; no `any`. Lint/format with Biome (`pnpm run lint:fix`).
 - Every user-facing string goes through next-intl (`src/i18n/messages/en.json`). Zod messages are translation keys.
 - Free-tier limits live in `src/config/limits.ts` and are enforced in services.
 - Cache Components is on: request-time reads (cookies, session, fresh counts, `new Date()`) belong inside `<Suspense>`; call `connection()` before reading the clock.
 - After host mutations, call `updateTag(eventCacheTag(id))` and `refresh()`.
-- Run `npm run check` before finishing; e2e tests need the app + `docker compose up -d`.
+- Run `pnpm run check` before finishing; e2e tests need the app + `docker compose up -d`.

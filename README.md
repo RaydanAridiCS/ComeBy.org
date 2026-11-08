@@ -37,11 +37,11 @@ The reasons behind each choice are in [docs/tech-stack.md](docs/tech-stack.md).
 Requirements: Node.js 24+, Docker.
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env.local        # then set BETTER_AUTH_SECRET (see the file)
 docker compose up -d              # PostgreSQL + Mailpit
-npm run db:migrate
-npm run dev
+pnpm run db:migrate
+pnpm run dev
 ```
 
 - App: http://localhost:3000
@@ -53,14 +53,14 @@ See [docs/development.md](docs/development.md) for the full guide.
 
 | Script | What it does |
 |---|---|
-| `npm run dev` | Start the dev server |
-| `npm run build` / `npm start` | Production build / server |
-| `npm run lint` / `lint:fix` | Biome lint + format check / auto-fix |
-| `npm run typecheck` | TypeScript (app + service worker) |
-| `npm test` | Unit tests (Vitest) |
-| `npm run test:e2e` | End-to-end tests (Playwright; needs the app running) |
-| `npm run db:generate` / `db:migrate` / `db:studio` | Drizzle migrations and studio |
-| `npm run check` | Lint + typecheck + unit tests |
+| `pnpm run dev` | Start the dev server |
+| `pnpm run build` / `pnpm start` | Production build / server |
+| `pnpm run lint` / `lint:fix` | Biome lint + format check / auto-fix |
+| `pnpm run typecheck` | TypeScript (app + service worker) |
+| `pnpm test` | Unit tests (Vitest) |
+| `pnpm run test:e2e` | End-to-end tests (Playwright; needs the app running) |
+| `pnpm run db:generate` / `db:migrate` / `db:studio` | Drizzle migrations and studio |
+| `pnpm run check` | Lint + typecheck + unit tests |
 
 ## Documentation
 
