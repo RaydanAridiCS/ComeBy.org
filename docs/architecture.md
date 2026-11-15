@@ -21,32 +21,39 @@ src/
   app/                 Routes only: pages, layouts, route handlers. Thin; no business logic.
     (auth)/            Sign in, sign up, password reset
     dashboard/         Host area (events, event dashboard, settings)
+    admin/             Operator moderation queue (allowlisted emails only)
     [slug]/            Public invite page + preview image, calendar file, QR code
-    api/               Auth handler, dashboard live data, CSV export, health check
     r/[credential]/    Guests' private "change my response" links
+    unsubscribe/       Confirmation page for email unsubscribe links
+    privacy/  terms/   Legal pages
+    api/               Auth handler, dashboard live data, exports, webhooks, health check
     uploads/[...key]/  Serves cover images when using local storage
   features/            UI + server actions grouped by feature
-    auth/  dashboard/  events/  rsvp/  settings/
+    admin/  auth/  dashboard/  events/  marketing/  rsvp/  settings/  unsubscribe/
   server/
     services/          Business rules and hard limits (framework-free, unit-tested)
     repositories/      Database access only: interfaces + Drizzle implementations
     adapters/          Swappable providers: email, storage, push
     jobs/              pg-boss queue, job types, worker registration
-    auth/              Better Auth configuration and session helpers
-    security/          Hashing, client IP, Turnstile
+    auth/              Better Auth configuration, session helpers, admin policy
+    security/          Hashing, client IP, Turnstile, unsubscribe tokens, webhook signatures
+    monitoring/        Error reporting to a Sentry-compatible server
     actions/           `runAction`: turns errors into translated results
   db/                  Drizzle schema, client and migration runner
   emails/              React Email templates
-  themes/              The five invite themes (tokens + decorations)
+  themes/              The ten invite themes (tokens + decorations)
   i18n/                next-intl setup and message catalogues
-  config/              Limits and site constants
+  config/              Limits, site constants, Content-Security-Policy, SEO rules
   components/          Shared UI (shadcn/ui in components/ui)
   lib/                 Pure helpers: dates, slugs, calendar, share links…
   sw/                  Service worker (TypeScript, built to public/sw.js)
 drizzle/               Generated SQL migrations
-tests/unit/            Vitest
+tests/unit/            Vitest, services against in-memory fakes
+tests/integration/     Vitest, repositories and services against real Postgres
 tests/e2e/             Playwright
 ```
+
+Every page and route handler is listed in [routes.md](routes.md), and every table in [data-model.md](data-model.md).
 
 ## Layers and rules
 
@@ -67,24 +74,27 @@ Next.js 16 runs with `cacheComponents: true`:
 
 ## Guests without accounts
 
-When a guest responds, the server creates a random secret and stores only its SHA-256 hash. The guest's browser keeps `rsvpId.secret` in an httpOnly cookie for that event, so they can change their answer later. If they left an email, the confirmation email contains `/r/<rsvpId.secret>`, which restores the cookie on any device.
+When a guest responds, the server creates a random secret and stores only its SHA-256 hash. The guest's browser keeps `rsvpId.secret` in an httpOnly cookie for that event, so they can change their answer later. If they left an email, the confirmation email contains `/r/<rsvpId.secret>`, which restores the cookie on any device. See [ADR 0004](adr/0004-guests-without-accounts.md).
+
+The same credential lets a guest download or delete their own response from the invite page. Deleting also removes their name from the host's activity timeline. Details are in [privacy-and-data.md](privacy-and-data.md).
+
+## Host accounts
+
+Better Auth handles email and password sign-in with verified emails, plus optional Google sign-in ([ADR 0012](adr/0012-better-auth.md)). From settings a host can change their name, password and email (two steps: the current address approves, then the new one is verified), see and revoke sessions, download their data and delete the account. Sessions are looked up in the database on every request, so revoking one takes effect immediately.
 
 ## Background jobs
 
-`pg-boss` keeps jobs in Postgres (schema `pgboss`). Workers start in `src/instrumentation.ts` right after migrations run:
+`pg-boss` keeps jobs in Postgres (schema `pgboss`). Workers start in `src/instrumentation.ts` right after migrations run. They send every email, alert hosts, email guests about changes, send reminders and the one-time nudge, send the daily digest, purge guest contact details after 90 days and clean up rate-limit counters.
 
-| Job | When |
-|---|---|
-| `email.send` | Every email (retried 3× with backoff) |
-| `host.rsvp-alert` | After each response: push + email, respecting settings and the 50/day quota |
-| `guests.event-update` | When a host changes the time, place or details, or cancels |
-| `guests.reminders-due` | Every 15 minutes: one reminder to going and maybe guests in the 24 hours before an event ([ADR 0011](adr/0011-reminders-by-sweep.md)) |
-| `guests.nudge` | When a host sends the one-time nudge to "maybe" guests and pasted addresses |
-| `hosts.daily-digest` | Daily at 18:00 UTC |
-| `privacy.purge-guest-data` | Daily: deletes guests' phone and email, and pasted invitee addresses, 90 days after events end |
-| `maintenance.cleanup-rate-limits` | Hourly |
+The full list with schedules, retries and how to add a job is in [background-jobs.md](background-jobs.md).
 
-With `JOBS_ENABLED=false`, jobs run inline in the request instead (useful for debugging).
+## Email
+
+Templates are React Email components rendered to HTML and plain text. Each email has a category (`transactional`, `guest-update` or `host-alert`) that decides whether an unsubscribe stops it. A suppression list holds addresses that unsubscribed, bounced or complained. See [email.md](email.md).
+
+## Moderation
+
+Every invite has a report button. After 3 reports from different networks an event is hidden automatically and operators are emailed. Operators are the addresses in `ADMIN_EMAILS`; they review hidden events at `/admin` and either restore or delete them, and each action is written to an audit log. See [admin.md](admin.md).
 
 ## Dates and time zones
 
@@ -94,12 +104,14 @@ With `JOBS_ENABLED=false`, jobs run inline in the request instead (useful for de
 
 ## Limits and abuse
 
-All free-tier numbers live in `src/config/limits.ts` (mirrored in the business plan). Services enforce them and throw `LimitReachedError`; the UI shows a friendly translated message. Counters use the `rate_limits` table (fixed windows). Other protections: link-only events, Turnstile on RSVPs, Better Auth rate limits, sign-ups per network per day, and automatic hiding after 3 reports.
+All free-tier numbers live in `src/config/limits.ts` (mirrored in the business plan). Services enforce them and throw `LimitReachedError`; the UI shows a friendly translated message. Counters use the `rate_limits` table (fixed windows). Other protections: link-only events, Turnstile on sign-up, password reset and RSVPs, Better Auth rate limits, sign-ups per network per day, and automatic hiding after 3 reports.
 
 ## Security notes
 
+The full picture is in [security.md](security.md). In short:
+
 - Every server action and route handler re-checks the session and ownership; UI checks are never trusted.
 - Guest phone numbers, emails and messages are only returned to the event's host.
-- IP addresses are only stored as keyed hashes (`hmac`).
+- IP addresses are only stored as keyed hashes (HMAC with `BETTER_AUTH_SECRET`).
 - CSV exports neutralise spreadsheet formulas; storage keys are validated against a strict pattern.
-- Logs redact emails, phones, passwords and tokens.
+- Logs redact emails, phones, passwords and tokens. Error reports carry the route pattern, never the real URL.

@@ -8,8 +8,8 @@
 | **Domain** | `comeby.org` |
 | **Licence** | AGPL-3.0 |
 | **Owner** | Solo founder / developer |
-| **Status** | Planning (business side done; tech next) |
-| **Last updated** | 2026-10-17 |
+| **Status** | MVP built and deployed; polishing before the private beta (see [Roadmap](#15-roadmap--milestones)) |
+| **Last updated** | 2026-11-15 |
 
 Items marked ***(suggested)*** were added during planning and need the founder's confirmation. See [Open Questions](#16-open-questions).
 
@@ -187,8 +187,8 @@ When the host changes the time or place, or cancels:
 - **Automatic guest data clean-up:** guests' phone numbers and emails are deleted a set time after the event (for example 90 days) *(suggested; a privacy selling point)*
 - Delete account and all data at any time
 
-### Launch themes (the first 5)
-Every event uses one theme. A theme sets the colours, fonts, background style and decorations of the whole invite page, and the host can still add their own cover image on top. These five are the basic set; more will be designed after launch, including community-made themes.
+### Launch themes
+Every event uses one theme. A theme sets the colours, fonts, background style and decorations of the whole invite page, and the host can still add their own cover image on top. The plan started with five themes; ten are built. More will be designed after launch, including community-made themes.
 
 | # | Theme | Best for | Mood & look |
 |---|---|---|---|
@@ -197,6 +197,13 @@ Every event uses one theme. A theme sets the colours, fonts, background style an
 | 3 | **Sunset** 🌅 | Beach days, rooftops, summer hangouts | Warm and dreamy: an orange-to-pink gradient, soft sun glow, light airy text |
 | 4 | **Midnight** 🌙 | Game nights, movie nights, nights out | Dark and cosy: a deep navy or black background, neon or glow accents, a modern bold font |
 | 5 | **Clean** ✨ | Meetups, club events, study sessions | Simple and neutral: lots of white space, one accent colour, a clean modern font. Works for anything |
+| 6 | **Bloom** 🌸 | Garden parties, showers, tea | |
+| 7 | **Cyber** ⚡ | DJ sets, raves, nightlife | |
+| 8 | **Aura** 🔮 | Art, sound baths, creative meetups | |
+| 9 | **Oasis** 🌴 | Pool parties, summer brunches | |
+| 10 | **Matcha** 🍵 | Coffee dates, brunch, book clubs | |
+
+Themes 6–10 were added during the build. Their look is defined in code (`src/themes/index.ts`); see [themes.md](themes.md).
 
 Every theme must:
 - look great on a phone first
@@ -213,26 +220,32 @@ These limits keep Comeby free, fast and safe from abuse, so one person or bot ca
 | New events per host per month | **20** |
 | Responses per event | **200** |
 | +1s per guest | **up to 5** |
-| Custom questions per event | **3** |
+| Custom questions per event | **3** (up to **6** choices in a multiple-choice question) |
 | Cover images per event | **1** (max **5 MB** upload, automatically compressed) |
 | Event description length | **2,000 characters** |
 | Guest message length | **300 characters** |
 | Update emails ("event changed" or "cancelled") per event | **5** |
 | Pasted invitee addresses to nudge per event | **100** |
 | Nudge emails per event | **1** (to guests who answered "maybe" and the pasted addresses) |
+| Reminder emails per guest | **1**, sent in the **24 hours** before the event, and not to guests who responded in the last **2 hours** |
 | Instant response alert emails per host per day | **50**, after which alerts switch to a daily summary for the rest of the day |
 | Responses from the same device to the same event | **5 per hour** (stops spam submissions) |
 | New events one host can create per hour | **5** (stops scripted event creation) |
 | New host accounts from the same network per day | **3** |
 | Reports before an event is automatically hidden for review | **3** |
+| Whole-account data downloads per host per day | **5** |
+| Download or delete requests per guest response per hour | **10** |
+| Days after an event before guests' contact details are deleted | **90** |
+
+The numbers live in `src/config/limits.ts`; change both together.
 
 ### v1.1: Fast follow
-- **Co-hosts:** invite friends to help manage an event and see the dashboard
+- ✅ **Reminder emails** (built): one automatic reminder in the 24 hours before the event, to going and maybe guests who left an email. The host can switch it off per event.
+- ✅ **Nudge non-responders** (built): the host sends one email per event to guests who answered "maybe" and to up to 100 addresses they paste in. This replaced the original idea of a ready-made message for the host to share.
+- ✅ **More themes** (built): ten instead of five.
 - **Capacity limit + waitlist:** "Only 20 spots", with later guests joining a waitlist and moving up automatically
+- **Co-hosts:** invite friends to help manage an event and see the dashboard
 - **Comments wall:** guests can post short messages or hype on the event page (the host can turn it off and moderate)
-- **Reminder emails:** automatic "Tomorrow!" reminder to guests who opted in
-- **Nudge non-responders:** a ready-made "Still waiting on your RSVP!" message for the host to share
-- More themes and cover designs
 
 ### v2: Group planning extras
 - **Bring list:** "Who brings what?" Guests claim items (drinks, snacks, speaker, ball).
@@ -329,7 +342,7 @@ Every invite reaches 10–100 guests. Every guest sees **"Make your own free inv
 4. **Consumer reach:**
    - Short TikTok, Instagram and YouTube Shorts demos: "how I planned a picnic for 20 people in 1 minute"
    - University clubs, hiking groups, running clubs and community organisers
-5. **Ongoing:** a public roadmap and changelog, with regular "what's new" posts.
+5. **Ongoing:** a public roadmap and changelog, with regular "what's new" posts. Neither exists yet; both are due at the public launch.
 
 ### Core message
 - To guests and hosts: *"Invite anyone in seconds. Know exactly who's coming. Free, no app needed."*
@@ -373,7 +386,7 @@ Every invite reaches 10–100 guests. Every guest sees **"Make your own free inv
   - Phone numbers and messages are only visible to the host (and co-hosts later).
   - Guest emails are only used for that event's updates, never for marketing.
   - Automatic deletion after the event *(suggested)*.
-- **Abuse handling:** a report button, quick takedowns, and the ability to ban abusive accounts.
+- **Abuse handling:** a report button, automatic hiding after 3 reports, and operators who can restore or delete a reported event. Banning or suspending an abusive account is planned but not built yet.
 - **No selling or sharing data with advertisers**, ever.
 
 ---
@@ -394,14 +407,17 @@ Every invite reaches 10–100 guests. Every guest sees **"Make your own free inv
 
 ## 15. Roadmap & Milestones
 
-| Phase | Goal | Includes |
-|---|---|---|
-| **0. Planning** | Lock the idea | This document ✅, domain ✅, licence ✅, tech discussion |
-| **1. MVP build** | Core works end to end | Everything in the MVP section above |
-| **2. Private beta** | Real events with real friends | 10–20 real events; fix every point of confusion |
-| **3. Public launch** | Get noticed | GitHub public, Show HN, Product Hunt, Reddit, social demos |
-| **4. v1.1** | Retention and polish | Co-hosts, waitlist, comments, reminders, nudges, more themes |
-| **5. v2** | Group planning | Bring list, chip-in, polls, carpool, translations, recurring events |
+| Phase | Goal | Includes | Status (2026-11-15) |
+|---|---|---|---|
+| **0. Planning** | Lock the idea | This document, domain, licence, tech discussion | Done |
+| **1. MVP build** | Core works end to end | Everything in the MVP section above | Done and deployed |
+| **1b. Polish** | It feels good to use | First-run and sharing flow, error pages, accessibility, mobile feel, installable app, themed emails, live dashboard | In progress |
+| **2. Private beta** | Real events with real friends | 10–20 real events; fix every point of confusion | Not started |
+| **3. Public launch** | Get noticed | GitHub public, Show HN, Product Hunt, Reddit, social demos, public roadmap and changelog | Not started |
+| **4. v1.1** | Retention | Waitlist, co-hosts, comments (reminders, nudges and more themes are already built) | Partly done |
+| **5. v2** | Group planning | Bring list, chip-in, polls, carpool, translations, recurring events | Not started |
+
+The order changed from the original plan in one way: reminders, the nudge, guest privacy controls and account settings were built before the beta, and the rest of v1.1 waits for beta feedback.
 
 ---
 
@@ -415,7 +431,7 @@ Every invite reaches 10–100 guests. Every guest sees **"Make your own free inv
   - [x] RSVP deadline and close-RSVPs switch
   - [x] Guests can edit their own response
   - [x] "Sign in with Google"
-  - [ ] Automatic deletion of guest data after the event (and how long: 30, 90 or 180 days?)
+  - [x] Automatic deletion of guest data after the event: built, at 90 days
 - [x] **Monthly cost limit:** $100/month triggers planning a funding model
 - [x] **Launch themes:** Confetti, Wild, Sunset, Midnight, Clean
 - [x] **Free-tier hard limits:** set (starting values; adjustable)

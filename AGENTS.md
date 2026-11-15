@@ -16,4 +16,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Free-tier limits live in `src/config/limits.ts` and are enforced in services.
 - Cache Components is on: request-time reads (cookies, session, fresh counts, `new Date()`) belong inside `<Suspense>`; call `connection()` before reading the clock.
 - After host mutations, call `updateTag(eventCacheTag(id))` and `refresh()`.
-- Run `pnpm run check` before finishing; e2e tests need the app + `docker compose up -d`.
+- Run `pnpm run check` before finishing; e2e tests need the app + `docker compose up -d`. `docs/testing.md` explains the suites and how to run e2e without touching the dev database.
+- Adding a repository method means three edits: `interfaces.ts`, the Drizzle repository and `tests/unit/support/fakes.ts`. Adding a background job: see `docs/background-jobs.md`.
+- Wording: hosts create an "event"; the page guests open is the "invite" (`docs/i18n.md`).

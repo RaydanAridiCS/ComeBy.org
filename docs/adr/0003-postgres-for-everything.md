@@ -10,4 +10,5 @@ Use one PostgreSQL database for application data, background jobs (pg-boss, sche
 
 ## Consequences
 - One service to back up and monitor.
-- Good for a single server and our expected load. If we ever run several app instances, workers can move to a separate process with no code changes, and Better Auth's in-memory rate limiter should switch to database storage.
+- Good for a single server and our expected load.
+- Running several app instances is not supported today. It would need two changes first: a worker-only entrypoint (workers start from `instrumentation.ts` inside the web process, and `JOBS_ENABLED=false` runs jobs inline in the request rather than handing them to another process), and database storage for Better Auth's rate limiter, which keeps its counters in memory.

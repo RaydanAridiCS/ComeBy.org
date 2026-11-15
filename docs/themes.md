@@ -1,6 +1,19 @@
 # Themes
 
-An invite's theme sets its colours, display font, card surface and art. There are five launch themes: **Confetti**, **Wild**, **Sunset**, **Midnight** and **Clean**.
+An invite's theme sets its colours, display font, card surface and art. There are ten themes:
+
+| Theme | Made for |
+|---|---|
+| **Confetti** | Birthdays and parties |
+| **Wild** | Picnics, hikes and nature |
+| **Sunset** | Beach days and summer |
+| **Midnight** | Game and movie nights |
+| **Clean** | Meetups and clubs |
+| **Bloom** | Garden parties, showers and tea |
+| **Cyber** | DJ sets, raves and nightlife |
+| **Aura** | Art, sound baths and creative meetups |
+| **Oasis** | Pool parties and summer brunches |
+| **Matcha** | Coffee dates, brunch and book clubs |
 
 ## How it works
 
@@ -27,12 +40,12 @@ An invite's theme sets its colours, display font, card surface and art. There ar
 
 ## Adding a theme
 
-1. Add the ID to `THEMES` in `src/features/events/schema.ts` and to `themeEnum` in `src/db/schema/app.ts`, then run `pnpm run db:generate`.
+1. Add the ID to `THEMES` in `src/features/events/schema.ts` and to `themeEnum` in `src/db/schema/app.ts`, then run `pnpm run db:generate`. The migration should only **add** the enum value. PostgreSQL cannot use a new enum value in the same transaction that added it, so never put an `UPDATE` that uses the new value in that migration. Renaming or removing a theme needs the same care: see `0002_repair_theme_enum.sql` and `repairLegacyThemes()` in `src/db/migrate.ts` for how an early rename was repaired.
 2. Add its tokens to `THEME_TOKENS` in `src/themes/index.ts`. If it needs a new font, add it in `src/app/fonts.ts` (with `preload: false`) and add a static TTF to `src/themes/og-fonts/`.
 3. Add its scenes:
    - `ThemeHeroArt` and `ThemeBackdrop` in `decorations.tsx`;
    - `OgArt` in `og-art.tsx`;
    - a fixed sample date in `invite-mini.tsx`.
 4. Add `themes.<id>.name`, `tagline`, `sampleTitle` and `sampleHost` to every message catalogue.
-5. Run `pnpm dlx tsx scripts/check-theme-contrast.ts`. Every check must pass (WCAG AA).
+5. Run `pnpm run check:contrast`. Every check must pass (WCAG AA). CI runs it too.
 6. Check it on a phone in the invite page, the theme picker and the preview image (`/<slug>/opengraph-image`). Pages must stay light.

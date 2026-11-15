@@ -15,3 +15,10 @@ Short notes explaining *why* a big decision was made, so future contributors don
 | [0009](0009-csp-without-nonces.md) | Content-Security-Policy without nonces |
 | [0010](0010-operators-by-email-allowlist.md) | Operators identified by an email allowlist |
 | [0011](0011-reminders-by-sweep.md) | Guest reminders by periodic sweep, not per-event delayed jobs |
+| [0012](0012-better-auth.md) | Better Auth with database sessions and no cookie cache |
+| [0013](0013-email-adapter-and-suppression.md) | Email behind an adapter, with categories and a suppression list |
+| [0014](0014-storage-adapter.md) | File storage behind an adapter; exports are generated live, never stored |
+| [0015](0015-rate-limits-and-client-ip.md) | Fixed-window rate limits in PostgreSQL, keyed by hashed network |
+| [0016](0016-migrations-on-boot.md) | Migrations run when the server starts |
+| [0017](0017-pnpm-no-git-hooks.md) | pnpm, and no git hooks |
+| [0018](0018-guest-data-retention.md) | Guest contact details are deleted 90 days after an event |

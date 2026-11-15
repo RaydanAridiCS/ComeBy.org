@@ -6,9 +6,11 @@
 Guests must respond in seconds with no sign-up, but should still be able to change their answer, and nobody else should be able to.
 
 ## Decision
-On a guest's first response we generate a random secret, store only its SHA-256 hash on the RSVP, and set an httpOnly cookie `cb_rsvp_<eventId>` containing `rsvpId.secret`. If the guest leaves an email, the confirmation email includes `/r/<rsvpId.secret>`, which restores the cookie on another device. No SMS verification (it costs money for every message).
+On a guest's first response we generate a random secret, store only its SHA-256 hash on the RSVP, and set an httpOnly cookie `cb_rsvp_<eventId without dashes>` containing `rsvpId.secret` (`src/features/rsvp/cookies.ts`). If the guest leaves an email, the confirmation email includes `/r/<rsvpId.secret>`, which restores the cookie on another device. No SMS verification (it costs money for every message).
 
 ## Consequences
 - Zero friction for guests; edits are tied to the browser or the email link.
 - Clearing cookies without an email means a new response; the host can remove duplicates.
 - Abuse is limited by per-device rate limits, Turnstile and the 200-response cap.
+- The same credential lets a guest download or delete their own response.
+- When guest contact details are purged 90 days after an event ([ADR 0018](0018-guest-data-retention.md)), the stored hash is overwritten, so edit links and cookies for that event stop working.

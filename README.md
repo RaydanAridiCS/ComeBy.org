@@ -17,14 +17,18 @@ Comeby is an open-source invitation and RSVP app for casual plans: birthdays, pi
 
 - **Guests never sign up.** No account, no download, a 10-second RSVP.
 - **Live host dashboard.** Headcount including +1s, every response with submit and change times, an activity timeline, search, filters and CSV export.
-- **Five themes:** Confetti, Wild, Sunset, Midnight and Clean, plus an optional cover image.
+- **Ten themes,** from Confetti for birthdays to Matcha for coffee dates, plus an optional cover image.
 - **Flexible guest form.** The host decides whether phone is required, optional or not asked. Also messages, +1s, up to 3 custom questions and an RSVP deadline.
 - **Private by default.** Link-only events, a guest list visibility setting, phone numbers only visible to the host, and guest contact details deleted automatically 90 days after the event.
+- **Guests control their own data.** Change, download or delete your response from the invite page, with no account.
 - **Updates that reach people.** Email updates for guests who opt in, plus a ready-made WhatsApp message for the host to paste in their group.
+- **Reminders and a nudge.** Guests who left an email get one reminder in the 24 hours before the event. Hosts can send one nudge to people who said "maybe" or haven't answered.
 - **Host alerts.** Email (instant or a daily summary) and free web push notifications.
+- **Full account control.** Change your name, email and password, sign out other devices, download everything or delete your account.
 - **Great link previews.** Every invite gets a themed preview card in WhatsApp, iMessage, Telegram and more.
 - **Sharing tools.** Copy link, share to WhatsApp, QR code, add to calendar (Google, Apple, Outlook).
-- **Built to stay free.** Hard limits, bot protection, rate limits and abuse reports. No SMS, no paid APIs.
+- **Built to stay free.** Hard limits, bot protection and rate limits. No SMS, no paid APIs.
+- **Abuse handling.** A report button on every invite, automatic hiding after repeated reports, and a moderation queue for operators.
 
 ## Tech stack
 
@@ -34,7 +38,7 @@ The reasons behind each choice are in [docs/tech-stack.md](docs/tech-stack.md).
 
 ## Quick start (development)
 
-Requirements: Node.js 24+, Docker.
+Requirements: Node.js 24+, Docker, and pnpm (run `corepack enable` once to get the version pinned in `package.json`).
 
 ```bash
 pnpm install
@@ -47,30 +51,20 @@ pnpm run dev
 - App: http://localhost:3000
 - Emails sent in development: http://localhost:8025 (Mailpit)
 
-See [docs/development.md](docs/development.md) for the full guide.
-
-## Scripts
-
-| Script | What it does |
-|---|---|
-| `pnpm run dev` | Start the dev server |
-| `pnpm run build` / `pnpm start` | Production build / server |
-| `pnpm run lint` / `lint:fix` | Biome lint + format check / auto-fix |
-| `pnpm run typecheck` | TypeScript (app + service worker) |
-| `pnpm test` | Unit tests (Vitest) |
-| `pnpm run test:e2e` | End-to-end tests (Playwright; needs the app running) |
-| `pnpm run db:generate` / `db:migrate` / `db:studio` | Drizzle migrations and studio |
-| `pnpm run check` | Lint + typecheck + unit tests |
+Before opening a pull request, run `pnpm run check` (lint, typecheck, theme contrast and unit tests). Every command is listed in [docs/development.md](docs/development.md).
 
 ## Documentation
 
+The full index is in [docs/README.md](docs/README.md). Good places to start:
+
 - [Business plan & product requirements](docs/business-plan.md)
-- [Architecture](docs/architecture.md)
-- [Tech stack](docs/tech-stack.md)
-- [Configuration](docs/configuration.md)
-- [Deployment](docs/deployment.md)
+- [Development](docs/development.md) · [Testing](docs/testing.md)
+- [Architecture](docs/architecture.md) · [Tech stack](docs/tech-stack.md) · [Data model](docs/data-model.md)
+- [Security](docs/security.md) · [Privacy and data](docs/privacy-and-data.md)
 - [Themes](docs/themes.md) · [Translations](docs/i18n.md)
 - [Architecture decision records](docs/adr/)
+
+Only the hosted service at [comeby.org](https://comeby.org) is supported. [docs/deployment.md](docs/deployment.md) describes how it is run.
 
 ## License
 
