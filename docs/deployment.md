@@ -67,4 +67,3 @@ The repository also contains `docker-compose.prod.yml`, which runs the app and P
 - [ ] Backups scheduled with retention of 30 days or less, and a restore tested ([operations.md](operations.md#backups))
 - [ ] Uptime check on `/api/health`
 - [ ] Share an invite link in WhatsApp and check the preview card
-- [ ] Confirm `SITE.repositoryUrl` / `supportUrl` in `src/config/site.ts`

@@ -32,7 +32,10 @@ ARG NEXT_PUBLIC_UMAMI_SCRIPT_URL=
 ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID=
 # Read by next.config.ts at build time (allowed image host and Content-Security-Policy).
 ARG S3_PUBLIC_URL=
+# Set to 1 to send the Content-Security-Policy in report-only mode (next.config.ts).
+ARG CSP_REPORT_ONLY=
 ENV S3_PUBLIC_URL=${S3_PUBLIC_URL} \
+    CSP_REPORT_ONLY=${CSP_REPORT_ONLY} \
     NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
     NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY} \
     NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY} \

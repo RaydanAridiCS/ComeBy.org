@@ -17,10 +17,7 @@ export function SiteFooter() {
     },
     {
       title: t("landing.footerProject"),
-      links: [
-        { href: SITE.repositoryUrl, label: t("nav.github"), external: true },
-        { href: SITE.supportUrl, label: t("nav.support"), external: true },
-      ],
+      links: [{ href: SITE.repositoryUrl, label: t("nav.github"), external: true }],
     },
     {
       title: t("landing.footerLegal"),

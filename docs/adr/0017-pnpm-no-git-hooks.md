@@ -15,5 +15,5 @@ The project started on npm with Lefthook running Biome, the typecheck and commit
 ## Consequences
 - Installs are faster and stricter: a package can only import what it declares.
 - Commits are instant, and work-in-progress commits are possible. The cost is that a broken commit is only caught by CI, or by remembering to run `pnpm run check`.
-- Commit message format is not checked anywhere. `commitlint.config.ts` and the `@commitlint/*` dev dependencies are still in the repository but nothing calls them; they should either be removed or run in CI.
+- Commit message format is not checked anywhere. The commitlint config and its dev dependencies were removed on 2026-11-15, since nothing called them.
 - Tools installed in the project are run with `pnpm exec` (or a script), not `pnpm dlx`, which would download a second copy.

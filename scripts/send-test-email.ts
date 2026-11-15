@@ -1,7 +1,7 @@
 /**
  * Sends one test email with your Resend settings, to check they work.
  *
- *   pnpm dlx tsx scripts/send-test-email.ts you@example.com
+ *   pnpm exec tsx scripts/send-test-email.ts you@example.com
  *
  * Reads .env.local then .env (same priority as Next.js). Never prints the API key.
  */
@@ -17,7 +17,7 @@ async function main(): Promise<void> {
 
   const to = process.argv[2];
   if (!to || !to.includes("@")) {
-    console.error("Usage: pnpm dlx tsx scripts/send-test-email.ts you@example.com");
+    console.error("Usage: pnpm exec tsx scripts/send-test-email.ts you@example.com");
     process.exit(1);
   }
 

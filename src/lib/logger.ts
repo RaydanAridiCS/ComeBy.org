@@ -4,8 +4,8 @@ import pino from "pino";
 import { env } from "@/env";
 
 /**
- * Structured server logger. Logs JSON in production (easy to ship to any log tool)
- * and stays readable in development. Never log guests' phone numbers or emails.
+ * Structured server logger. Logs one JSON object per line in every environment
+ * (easy to ship to any log tool). Never log guests' phone numbers or emails.
  */
 export const logger = pino({
   // Builds and tests that skip env validation get no defaults, hence the fallback.

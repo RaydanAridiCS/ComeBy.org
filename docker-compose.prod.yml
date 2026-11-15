@@ -15,6 +15,7 @@ services:
         NEXT_PUBLIC_UMAMI_SCRIPT_URL: ${NEXT_PUBLIC_UMAMI_SCRIPT_URL:-}
         NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
         S3_PUBLIC_URL: ${S3_PUBLIC_URL:-}
+        CSP_REPORT_ONLY: ${CSP_REPORT_ONLY:-}
     restart: unless-stopped
     env_file: .env.production
     environment:

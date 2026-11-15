@@ -10,7 +10,7 @@ import { InviteMini } from "@/themes/invite-mini";
 
 const CYCLE_MS = 3600;
 
-/** The landing hero: a phone cycling through the five invite themes. */
+/** The landing hero: a phone cycling through the invite themes. */
 export function HeroPhone() {
   const t = useTranslations();
   const [active, setActive] = useState(0);

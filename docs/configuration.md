@@ -7,7 +7,7 @@ All settings are environment variables, validated at startup by `src/env.ts`. If
 `NEXT_PUBLIC_*` variables are embedded in browser code **at build time**. In Docker, pass them as build args; setting them only on the running container changes the server but not the browser code. Two more are read by `next.config.ts` while building:
 
 - `S3_PUBLIC_URL` sets the allowed image host and the Content-Security-Policy. The Dockerfile has a build arg for it. Set it at run time as well, because the storage adapter uses it to build image URLs.
-- `CSP_REPORT_ONLY` (see [Security headers](#security-headers)). The Dockerfile has **no** build arg for it, so it only works for builds you run yourself (`CSP_REPORT_ONLY=1 pnpm run build`).
+- `CSP_REPORT_ONLY` (see [Security headers](#security-headers)). The Dockerfile has a build arg for it (`--build-arg CSP_REPORT_ONLY=1`); for a build you run yourself, use `CSP_REPORT_ONLY=1 pnpm run build`.
 
 Everything else is read when the server starts.
 

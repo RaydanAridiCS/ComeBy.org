@@ -1,6 +1,6 @@
 /**
  * Generates the PNG app icons in /public and src/app/icon.svg from the Comeby mark.
- * Run with: pnpm dlx tsx scripts/generate-icons.ts
+ * Run with: pnpm exec tsx scripts/generate-icons.ts
  */
 import { writeFile } from "node:fs/promises";
 import path from "node:path";

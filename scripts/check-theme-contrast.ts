@@ -1,6 +1,6 @@
 /**
  * Checks WCAG 2.2 contrast for every invite theme (dev only).
- * Run with: pnpm dlx tsx scripts/check-theme-contrast.ts
+ * Run with: pnpm run check:contrast
  *
  * Translucent ("glass") cards are composited over the theme's darkest and
  * lightest backdrop colours, so the check covers the worst case.
