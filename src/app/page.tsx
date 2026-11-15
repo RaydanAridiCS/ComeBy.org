@@ -95,7 +95,7 @@ function Hero() {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(70%_60%_at_80%_10%,oklch(0.88_0.065_264/0.7),transparent_70%),radial-gradient(50%_50%_at_0%_30%,oklch(0.94_0.04_300/0.6),transparent_70%)]" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_1px_1px,var(--border)_1px,transparent_1.3px)] bg-size-[22px_22px] [mask-image:radial-gradient(70%_60%_at_50%_30%,black,transparent)]" />
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-20 sm:px-6 md:pt-20 lg:grid-cols-[1.08fr_1fr] lg:pb-28">
-        <div className="flex flex-col items-start gap-7">
+        <div className="flex min-w-0 flex-col items-start gap-7">
           <a
             href={SITE.repositoryUrl}
             rel="noopener"
@@ -148,7 +148,7 @@ function Hero() {
             ))}
           </ul>
         </div>
-        <div className="animate-pop" style={stagger(2)}>
+        <div className="min-w-0 animate-pop" style={stagger(2)}>
           <HeroPhone />
         </div>
       </div>
@@ -176,12 +176,13 @@ function HowItWorks() {
             {t("landing.step1Sample")}
             <span className="ms-0.5 h-4 w-px animate-pulse bg-brand-600" />
           </span>
-          <span className="mt-1 flex gap-2">
+          {/* The swatches shrink together so ten of them fit a 360 px phone. */}
+          <span className="mt-1 flex gap-1.5 sm:gap-2">
             {swatches.map((color, index) => (
               <span
                 key={color}
                 className={cn(
-                  "size-7 rounded-full ring-2 ring-card",
+                  "aspect-square min-w-0 max-w-7 flex-1 rounded-full ring-2 ring-card",
                   index === 0 && "outline-2 outline-brand-600 outline-offset-1",
                 )}
                 style={{ background: color }}
@@ -234,7 +235,7 @@ function HowItWorks() {
           {steps.map((step, index) => (
             <li
               key={step.title}
-              className="flex flex-col gap-5 rounded-3xl border bg-background p-4 pb-6 shadow-xs"
+              className="flex min-w-0 flex-col gap-5 rounded-3xl border bg-background p-4 pb-6 shadow-xs"
             >
               <Vignette>{step.vignette}</Vignette>
               <div className="flex flex-col gap-1.5 px-2">

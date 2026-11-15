@@ -18,7 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
 import { isBotCheckError, TURNSTILE_HEADER } from "@/lib/turnstile-header";
 
-const forgotSchema = z.object({ email: z.email({ message: "rsvp.emailInvalid" }) });
+const forgotSchema = z.object({ email: z.email({ message: "auth.emailInvalid" }) });
 
 export function ForgotPasswordForm({ turnstileSiteKey }: { turnstileSiteKey: string | undefined }) {
   const t = useTranslations("auth");

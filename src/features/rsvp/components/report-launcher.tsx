@@ -37,9 +37,16 @@ const ReportDialog = dynamic(
  * loads when someone shows intent, so it costs nothing on a normal page view.
  */
 export function ReportLauncher({ eventId }: { eventId: string }) {
-  const [state, setState] = useState<"idle" | "loaded" | "open">("idle");
-  if (state === "idle") {
-    return <TriggerLookalike onIntent={() => setState("loaded")} onOpen={() => setState("open")} />;
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    // Intent only warms the download. Swapping the button out here would swallow the tap
+    // that follows it, so a phone needed two taps to open the dialog.
+    return (
+      <TriggerLookalike
+        onIntent={() => void import("./report-dialog")}
+        onOpen={() => setOpen(true)}
+      />
+    );
   }
-  return <ReportDialog eventId={eventId} defaultOpen={state === "open"} />;
+  return <ReportDialog eventId={eventId} defaultOpen />;
 }

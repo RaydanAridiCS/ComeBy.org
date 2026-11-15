@@ -20,7 +20,7 @@ import { GoogleButton } from "./google-button";
 import { ResendVerification } from "./resend-verification";
 
 const loginSchema = z.object({
-  email: z.email({ message: "rsvp.emailInvalid" }),
+  email: z.email({ message: "auth.emailInvalid" }),
   password: z.string().min(1, { message: "errors.validation" }),
 });
 type LoginValues = z.infer<typeof loginSchema>;

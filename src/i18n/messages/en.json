@@ -137,6 +137,8 @@
     "emailPlaceholder": "you@example.com",
     "password": "Password",
     "passwordHint": "At least 8 characters.",
+    "nameRequired": "Please enter your name.",
+    "emailInvalid": "Please enter a valid email.",
     "forgotPassword": "Forgot password?",
     "signInButton": "Sign in",
     "signUpButton": "Create account",

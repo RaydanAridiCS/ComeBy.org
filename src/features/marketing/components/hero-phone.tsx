@@ -89,7 +89,8 @@ export function HeroPhone() {
         </span>
       </div>
 
-      <div className="flex items-center gap-1">
+      {/* The ten dots share the row, so they shrink to fit a 360 px phone instead of widening the page. */}
+      <div className="flex w-full items-center justify-center gap-1">
         {THEMES.map((theme, index) => (
           <button
             key={theme}
@@ -100,7 +101,7 @@ export function HeroPhone() {
               setActive(index);
               setPaused(true);
             }}
-            className="group flex size-9 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+            className="group flex h-9 min-w-0 max-w-9 flex-1 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
           >
             <span
               className={cn(

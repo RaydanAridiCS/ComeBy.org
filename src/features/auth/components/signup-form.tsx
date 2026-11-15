@@ -27,9 +27,9 @@ const signupSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, { message: "rsvp.nameRequired" })
+    .min(1, { message: "auth.nameRequired" })
     .max(FIELD_LIMITS.hostNameMaxLength, { message: "errors.validation" }),
-  email: z.email({ message: "rsvp.emailInvalid" }),
+  email: z.email({ message: "auth.emailInvalid" }),
   password: z.string().min(8, { message: "auth.passwordHint" }).max(128),
 });
 type SignupValues = z.infer<typeof signupSchema>;

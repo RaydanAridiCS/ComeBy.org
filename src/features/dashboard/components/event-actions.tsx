@@ -90,7 +90,7 @@ export function EventActions({ event }: { event: DashboardData["event"] }) {
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-auto min-w-44">
           <DropdownMenuItem
             onSelect={() =>
               startTransition(async () => {

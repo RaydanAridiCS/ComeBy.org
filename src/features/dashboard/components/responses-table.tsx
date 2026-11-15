@@ -115,6 +115,7 @@ function RemoveButton({ eventId, response }: { eventId: string; response: Dashbo
         <AlertDialogFooter>
           <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
+            variant="destructive"
             disabled={pending}
             onClick={() =>
               startTransition(async () => {
@@ -124,7 +125,7 @@ function RemoveButton({ eventId, response }: { eventId: string; response: Dashbo
               })
             }
           >
-            {t("common.delete")}
+            {t("eventDashboard.removeResponse")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
