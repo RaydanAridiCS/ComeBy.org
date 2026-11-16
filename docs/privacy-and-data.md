@@ -45,7 +45,7 @@ Also stored per response: a SHA-256 hash of the secret that lets the guest edit 
 | Emails waiting to be sent, and recently sent | `pgboss` job tables | The full message and the recipient's address |
 | Operator actions | `admin_audit_log` | The operator's email, and the title and link of the event |
 
-Cookies: one session cookie for signed-in hosts, one cookie per invite holding the guest's edit credential, and one random device id used only for rate limiting. All are `httpOnly`. There are no advertising or tracking cookies.
+Cookies: one session cookie for signed-in hosts, one cookie per invite holding the guest's edit credential, one random device id used only for rate limiting, and, for hosts, `comeby_first_event_tip`, which remembers that the tip on the first new-event form was closed (no personal data, one year). All are `httpOnly`. There are no advertising or tracking cookies.
 
 IP addresses are never written to the application tables in the clear, with one exception: Better Auth records the IP address and user agent on each host session.
 

@@ -70,6 +70,7 @@ Next.js 16 runs with `cacheComponents: true`:
 - Pages render a **static shell** instantly; anything that reads the request (cookies, session, fresh counts) sits inside `<Suspense>` and streams in.
 - The public event behind a link is cached with `"use cache"` (`features/events/queries.ts`) and tagged `event:<id>`. Every host change calls `updateTag(...)`, so guests see edits immediately.
 - Guest counts, the guest's own response and everything on the dashboard are never cached.
+- The public header (`src/components/layout/site-header.tsx`) shows "My events" to a signed-in host. Only its button corner reads the session, inside `<Suspense>` with the signed-out buttons as the fallback, so the landing and legal pages are still served from a prebuilt shell (◐ in the build output, `x-nextjs-prerender: 1`). The cost: those pages' HTML is no longer cacheable as a whole (`Cache-Control: private, no-store`), and each request does a small render for that corner.
 - Chat apps' link-preview bots (WhatsApp, Telegram…) get a blocking render with metadata in `<head>` (`htmlLimitedBots` in `next.config.ts`).
 - **A page is not thrown away when the host leaves it.** Next.js keeps up to three pages alive, hidden, and shows the same one again on the next visit, with its state, form values and scroll position. That is why a half-written event survives going to another page and back. It also means a client component must tidy up what should not come back: effects are cleaned up when a page is hidden and run again when it is shown, so do the tidying in an effect cleanup. The event form does this after a save (`afterSave` in `src/features/events/components/event-form.tsx`); without it, "New event" would open with the previous event's details.
 
@@ -82,6 +83,8 @@ The same credential lets a guest download or delete their own response from the 
 ## Host accounts
 
 Better Auth handles email and password sign-in with verified emails, plus optional Google sign-in ([ADR 0012](adr/0012-better-auth.md)). From settings a host can change their name, password and email (two steps: the current address approves, then the new one is verified), see and revoke sessions, download their data and delete the account. Sessions are looked up in the database on every request, so revoking one takes effect immediately.
+
+A confirmation link lands a new host in the new-event form when they have no events yet (`/dashboard/start`, see [routes.md](routes.md)); their first event form has a short tip until they close it. After "Create", the event page opens with the "your invite is ready" panel, so the first run ends on sharing.
 
 ## Background jobs
 

@@ -197,6 +197,9 @@
     "emptyTitle": "No events yet",
     "emptyBody": "Create your first invite. It takes less than a minute.",
     "emptyPastBody": "Events you've hosted will show up here.",
+    "emptyUpcomingTitle": "Nothing coming up",
+    "emptyUpcomingBody": "Plan the next one?",
+    "startFrom": "Start from “{title}”",
     "createEvent": "Create event",
     "statusCancelled": "Cancelled",
     "statusClosed": "RSVPs closed",
@@ -220,6 +223,8 @@
   "eventForm": {
     "createTitle": "New event",
     "createSubtitle": "Fill in the basics and pick a look. You can change everything later.",
+    "firstEventTip": "Give it a name and a time. Everything else has good defaults.",
+    "firstEventTipClose": "Hide this tip",
     "editTitle": "Edit event",
     "sectionBasics": "The basics",
     "sectionWhen": "When",
@@ -792,7 +797,7 @@
       },
       {
         "title": "Cookies",
-        "body": "We use a few essential cookies: one to keep hosts signed in, one per invite so your browser remembers your own response, and one random ID used only to stop spam. No advertising or tracking cookies. If analytics is enabled it is privacy-friendly and cookie-less."
+        "body": "We use a few essential cookies: one to keep hosts signed in, one per invite so your browser remembers your own response, one random ID used only to stop spam, and, for hosts, one that remembers you closed the tip on the new-event form. No advertising or tracking cookies. If analytics is enabled it is privacy-friendly and cookie-less."
       },
       {
         "title": "Who processes data for us",

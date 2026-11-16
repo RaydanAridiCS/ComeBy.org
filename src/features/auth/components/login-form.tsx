@@ -17,7 +17,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { signIn } from "@/lib/auth-client";
-import { safeNext } from "../safe-next";
+import { firstRunNext, safeNext } from "../safe-next";
 import { GoogleButton } from "./google-button";
 import { ResendVerification } from "./resend-verification";
 
@@ -31,7 +31,10 @@ export function LoginForm() {
   const t = useTranslations("auth");
   const translateError = useTranslateError();
   const router = useRouter();
-  const next = safeNext(useSearchParams().get("next"));
+  const requested = useSearchParams().get("next");
+  const next = safeNext(requested);
+  // A link sent from here to an unconfirmed account opens the first run, like sign-up's.
+  const afterConfirm = firstRunNext(requested);
   const [formError, setFormError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -74,13 +77,13 @@ export function LoginForm() {
       noValidate
       className="flex flex-col gap-5"
     >
-      <GoogleButton next={next} />
+      <GoogleButton next={next} newUserNext={afterConfirm} />
       {formError ? (
         <Alert variant="destructive">
           <AlertDescription>{formError}</AlertDescription>
         </Alert>
       ) : null}
-      {unverifiedEmail ? <ResendVerification email={unverifiedEmail} next={next} /> : null}
+      {unverifiedEmail ? <ResendVerification email={unverifiedEmail} next={afterConfirm} /> : null}
       <FieldGroup>
         <Field data-invalid={Boolean(errors.email)}>
           <FieldLabel htmlFor="email">{t("email")}</FieldLabel>

@@ -41,7 +41,10 @@ export function tomorrowAt(hour: number): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(hour)}:00`;
 }
 
-/** Signs up through the real form, confirms the email from Mailpit, and lands on the dashboard. */
+/**
+ * Signs up through the real form and confirms the email from Mailpit. A new host with no
+ * events lands in the new-event form (the first run).
+ */
 export async function signUpHost(page: Page, options: { email?: string; name?: string } = {}) {
   const email = options.email ?? uniqueEmail();
   await page.goto("/signup");
@@ -55,7 +58,7 @@ export async function signUpHost(page: Page, options: { email?: string; name?: s
 
   const verification = await waitForEmail(email, "Confirm your email");
   await page.goto(findLink(verification, "verify-email"));
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(/\/dashboard\/events\/new$/);
   return { email };
 }
 

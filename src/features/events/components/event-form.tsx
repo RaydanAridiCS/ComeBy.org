@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, Eye, Globe, HelpCircle, MapPin } from "lucide-react";
+import { ChevronDown, Eye, Globe, HelpCircle, MapPin, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -19,6 +19,7 @@ import { fieldA11y } from "@/components/forms/field-a11y";
 import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { useUnsavedChanges } from "@/components/navigation/navigation-guard";
+import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -62,6 +63,7 @@ import type { ActionResult } from "@/lib/result";
 import { cn } from "@/lib/utils";
 import {
   createEventAction,
+  dismissFirstEventTipAction,
   removeCoverAction,
   updateEventAction,
   uploadCoverAction,
@@ -73,7 +75,12 @@ import { InvitePreview } from "./invite-preview";
 import { ThemePicker } from "./theme-picker";
 
 type EventFormProps =
-  | { mode: "create"; defaultValues: EventFormInput }
+  | {
+      mode: "create";
+      defaultValues: EventFormInput;
+      /** Show the "name and a time is enough" tip: a host's first event, until closed. */
+      firstEventTip?: boolean;
+    }
   | {
       mode: "edit";
       eventId: string;
@@ -170,6 +177,8 @@ export function EventForm(props: EventFormProps) {
   const [coverUrl, setCoverUrl] = useState(props.mode === "edit" ? props.coverUrl : null);
   const [coverBusy, setCoverBusy] = useState(false);
   const [notifyGuests, setNotifyGuests] = useState(true);
+  const [tipClosed, setTipClosed] = useState(false);
+  const showTip = props.mode === "create" && props.firstEventTip === true && !tipClosed;
 
   // A quick-start link (/dashboard/events/new?theme=wild) preselects the theme.
   const [initialValues] = useState<EventFormInput>(() => {
@@ -361,6 +370,29 @@ export function EventForm(props: EventFormProps) {
       className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]"
     >
       <div className="flex min-w-0 flex-col gap-5">
+        {showTip ? (
+          // Room for the one small close button, not a wide action.
+          <Alert className="animate-rise py-3.5 has-data-[slot=alert-action]:pe-11">
+            <AlertDescription className="text-brand-900">{t("firstEventTip")}</AlertDescription>
+            <AlertAction className="top-1/2 -translate-y-1/2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label={t("firstEventTipClose")}
+                className="text-brand-800 hover:bg-brand-100"
+                onClick={() => {
+                  setTipClosed(true);
+                  // The button is gone: carry on where the tip pointed.
+                  form.setFocus("title");
+                  void dismissFirstEventTipAction();
+                }}
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </AlertAction>
+          </Alert>
+        ) : null}
         <Section step={1} title={t("sectionBasics")}>
           <FieldGroup>
             <Field data-invalid={Boolean(errors.title)}>

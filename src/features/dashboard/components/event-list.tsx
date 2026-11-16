@@ -17,6 +17,7 @@ import { isEventOver } from "@/server/services/event.service";
 import { ThemeHeroArt } from "@/themes/decorations";
 import { InviteMini } from "@/themes/invite-mini";
 import { EventStatusBadges } from "./event-status-badges";
+import { StartFromPast } from "./start-from-past";
 
 export async function EventList() {
   const user = await requireUser("/dashboard");
@@ -32,6 +33,10 @@ export async function EventList() {
     .filter((event) => !isEventOver(event, now))
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
   const past = events.filter((event) => isEventOver(event, now));
+  const latestPast = past.reduce<EventWithStats | null>(
+    (latest, event) => (!latest || event.startsAt > latest.startsAt ? event : latest),
+    null,
+  );
 
   if (events.length === 0) return <EmptyState />;
 
@@ -78,9 +83,24 @@ export async function EventList() {
           {upcoming.length > 0 ? (
             <EventGrid events={upcoming} now={now} />
           ) : (
-            <p className="rounded-3xl border border-dashed py-12 text-center text-muted-foreground">
-              {t("emptyBody")}
-            </p>
+            // Only reached by a host who has hosted before: no "first invite" copy here.
+            <div className="flex flex-col items-center gap-5 rounded-3xl border border-dashed px-5 py-10 text-center">
+              <div className="flex flex-col gap-1">
+                <h2 className="heading text-lg">{t("emptyUpcomingTitle")}</h2>
+                <p className="text-muted-foreground">{t("emptyUpcomingBody")}</p>
+              </div>
+              <div className="flex w-full flex-col items-center gap-2 sm:w-auto sm:flex-row">
+                <Button asChild>
+                  <Link href="/dashboard/events/new">
+                    <Plus aria-hidden="true" />
+                    {t("createEvent")}
+                  </Link>
+                </Button>
+                {latestPast ? (
+                  <StartFromPast eventId={latestPast.id} title={latestPast.title} />
+                ) : null}
+              </div>
+            </div>
           )}
         </TabsContent>
         <TabsContent value="past" className="mt-4">

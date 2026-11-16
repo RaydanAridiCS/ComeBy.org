@@ -35,6 +35,14 @@ describe("event service", () => {
     expect(world.activity.map((a) => a.type)).toEqual(["event_created"]);
   });
 
+  it("knows whether a host has any event yet", async () => {
+    expect(await service.hasEvents("host-1")).toBe(false);
+    world.events.set("e1", makeEvent({ id: "e1", hostId: "host-2" }));
+    expect(await service.hasEvents("host-1")).toBe(false);
+    await service.create("host-1", values());
+    expect(await service.hasEvents("host-1")).toBe(true);
+  });
+
   it("refuses a link that is already taken", async () => {
     await service.create("host-1", values({ slug: "picnic" }));
     await expect(service.create("host-2", values({ slug: "picnic" }))).rejects.toMatchObject({

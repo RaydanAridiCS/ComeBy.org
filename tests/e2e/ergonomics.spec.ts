@@ -80,6 +80,9 @@ test("controls on a phone are at least 44 px to a thumb", async ({ page, isMobil
   }
 
   await signUpHost(page);
+  await expect(page.getByText("Give it a name and a time.")).toBeVisible();
+  expect(await smallTargets(page), "first new-event form, with its tip").toEqual([]);
+  await page.goto("/dashboard");
   expect(await smallTargets(page), "event list (empty)").toEqual([]);
   const { eventId, inviteHref } = await createInvite(page, "Thumb check");
   await page.goto(`/dashboard/events/${eventId}`);

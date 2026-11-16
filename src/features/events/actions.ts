@@ -1,7 +1,9 @@
 "use server";
 
 import { refresh, updateTag } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
+import { env } from "@/env";
 import type { ActionResult } from "@/lib/result";
 import { runAction } from "@/server/actions/run-action";
 import { getFileStorage } from "@/server/adapters/storage";
@@ -9,6 +11,7 @@ import { requireUser } from "@/server/auth/session";
 import { AppError } from "@/server/errors";
 import { eventService, rsvpService } from "@/server/services";
 import { processCoverImage } from "@/server/services/image.service";
+import { FIRST_EVENT_TIP_COOKIE } from "./first-event-tip";
 import { eventCacheTag, slugCacheTag } from "./queries";
 import { cancelEventSchema, eventFormSchema, nudgeSchema, updateEventSchema } from "./schema";
 
@@ -73,6 +76,21 @@ export async function nudgeGuestsAction(
     const result = await eventService.nudge(user.id, eventId, invitees);
     refresh();
     return result;
+  });
+}
+
+/** Remembers on this device that the host closed the first-event tip. */
+export async function dismissFirstEventTipAction(): Promise<ActionResult> {
+  return runAction(async () => {
+    await requireUser();
+    (await cookies()).set(FIRST_EVENT_TIP_COOKIE, "closed", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: env.NEXT_PUBLIC_APP_URL.startsWith("https://"),
+      path: "/dashboard",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return undefined;
   });
 }
 

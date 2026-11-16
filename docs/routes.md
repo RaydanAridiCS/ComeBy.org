@@ -56,8 +56,9 @@ The guest is identified by the edit-credential cookie for that event; there is n
 
 | Path | What it is |
 |---|---|
-| `/dashboard` | The host's events, upcoming and past |
-| `/dashboard/events/new` | Create an event. `?theme=<id>` preselects a theme |
+| `/dashboard` | The host's events, upcoming and past. With nothing upcoming after hosting before: "Nothing coming up", with a create button and a copy of the latest past event |
+| `/dashboard/start` | Route handler where a confirmation link lands a new account when no other page was asked for: a host with no events goes to `/dashboard/events/new`, anyone else to `/dashboard`, no session to `/login` |
+| `/dashboard/events/new` | Create an event. `?theme=<id>` preselects a theme. On a host's first event, a tip at the top until it is closed (the `comeby_first_event_tip` cookie) |
 | `/dashboard/events/<id>` | The event dashboard: counts, responses, activity, sharing, nudge |
 | `/dashboard/events/<id>/edit` | Edit an event |
 | `/dashboard/settings` | Profile, password, email alerts, push, sessions, data download, account deletion |

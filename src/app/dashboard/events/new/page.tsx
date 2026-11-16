@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventForm } from "@/features/events/components/event-form";
+import { FIRST_EVENT_TIP_COOKIE } from "@/features/events/first-event-tip";
 import { newEventDefaults } from "@/features/events/form-values";
 import { requireUser } from "@/server/auth/session";
+import { eventService } from "@/server/services";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("eventForm");
@@ -30,7 +33,15 @@ function FormSkeleton() {
 
 async function NewEventForm() {
   const user = await requireUser("/dashboard/events/new");
-  return <EventForm mode="create" defaultValues={newEventDefaults(user.name)} />;
+  const [hasEvents, cookieStore] = await Promise.all([eventService.hasEvents(user.id), cookies()]);
+  return (
+    <EventForm
+      mode="create"
+      defaultValues={newEventDefaults(user.name)}
+      // Only on a host's first event, until they close it.
+      firstEventTip={!hasEvents && !cookieStore.has(FIRST_EVENT_TIP_COOKIE)}
+    />
+  );
 }
 
 export default async function NewEventPage() {

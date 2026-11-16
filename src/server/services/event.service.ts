@@ -171,6 +171,11 @@ export function createEventService(deps: ServiceDeps) {
       return repos.events.listByHostWithStats(hostId);
     },
 
+    /** Whether the host has any event yet, for the first-run screens. */
+    async hasEvents(hostId: string) {
+      return (await repos.events.countCreatedByHostSince(hostId, new Date(0))) > 0;
+    },
+
     /** The public invite by link. Returns null when it doesn't exist. */
     async findPublicBySlug(slug: string) {
       return repos.events.findBySlug(slug.toLowerCase());

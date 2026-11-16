@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/server/auth/session";
 
-/** Floating glass header for public pages (landing, legal, auth). */
+/** Floating glass header for public pages (landing, legal). */
 export function SiteHeader() {
   const t = useTranslations("nav");
   const links = [
@@ -28,15 +31,37 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-1.5">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/login">{t("signIn")}</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/signup">{t("createInvite")}</Link>
-          </Button>
-        </div>
+        {/* The pages stay static: the shell carries the signed-out buttons, and only this
+            corner waits for the session. */}
+        <Suspense fallback={<SignedOutActions />}>
+          <HeaderActions />
+        </Suspense>
       </div>
     </header>
+  );
+}
+
+async function HeaderActions() {
+  const user = await getCurrentUser();
+  if (!user) return <SignedOutActions />;
+  const t = await getTranslations("nav");
+  return (
+    <Button asChild size="sm">
+      <Link href="/dashboard">{t("myEvents")}</Link>
+    </Button>
+  );
+}
+
+function SignedOutActions() {
+  const t = useTranslations("nav");
+  return (
+    <div className="flex items-center gap-1.5">
+      <Button asChild variant="ghost" size="sm">
+        <Link href="/login">{t("signIn")}</Link>
+      </Button>
+      <Button asChild size="sm">
+        <Link href="/signup">{t("createInvite")}</Link>
+      </Button>
+    </div>
   );
 }

@@ -21,7 +21,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { FIELD_LIMITS } from "@/config/limits";
 import { signUp } from "@/lib/auth-client";
 import { isBotCheckError, TURNSTILE_HEADER } from "@/lib/turnstile-header";
-import { safeNext } from "../safe-next";
+import { firstRunNext, safeNext } from "../safe-next";
 import { AuthStatus, MailHint, StatusTile } from "./auth-status";
 import { GoogleButton } from "./google-button";
 import { ResendVerification } from "./resend-verification";
@@ -40,7 +40,10 @@ type SignupValues = z.infer<typeof signupSchema>;
 export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | undefined }) {
   const t = useTranslations("auth");
   const translateError = useTranslateError();
-  const next = safeNext(useSearchParams().get("next"));
+  const requested = useSearchParams().get("next");
+  const next = safeNext(requested);
+  // The confirmation link lands a new host in the first-run route unless a page was asked for.
+  const afterConfirm = firstRunNext(requested);
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -66,7 +69,7 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
     setFormError(null);
     const { error } = await signUp.email({
       ...values,
-      callbackURL: next,
+      callbackURL: afterConfirm,
       fetchOptions: { headers: turnstileToken ? { [TURNSTILE_HEADER]: turnstileToken } : {} },
     });
     if (!error) {
@@ -92,7 +95,7 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
         body={t("checkEmailBody", { email: sentTo })}
       >
         <MailHint>{t("checkEmailHint")}</MailHint>
-        <ResendVerification email={sentTo} next={next} />
+        <ResendVerification email={sentTo} next={afterConfirm} />
         <Button
           type="button"
           variant="ghost"
@@ -123,7 +126,7 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
       noValidate
       className="flex flex-col gap-5"
     >
-      <GoogleButton next={next} />
+      <GoogleButton next={next} newUserNext={afterConfirm} />
       {formError ? (
         <Alert variant="destructive">
           <AlertDescription>{formError}</AlertDescription>

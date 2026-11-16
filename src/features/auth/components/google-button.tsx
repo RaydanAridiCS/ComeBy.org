@@ -30,8 +30,11 @@ function GoogleIcon() {
   );
 }
 
-/** "Continue with Google". Hidden unless Google sign-in is configured. */
-export function GoogleButton({ next }: { next: string }) {
+/**
+ * "Continue with Google". Hidden unless Google sign-in is configured. `newUserNext` is where an
+ * account Google has only just created goes instead of `next`.
+ */
+export function GoogleButton({ next, newUserNext }: { next: string; newUserNext: string }) {
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const [pending, setPending] = useState(false);
@@ -47,7 +50,11 @@ export function GoogleButton({ next }: { next: string }) {
         disabled={pending}
         onClick={async () => {
           setPending(true);
-          await signIn.social({ provider: "google", callbackURL: next });
+          await signIn.social({
+            provider: "google",
+            callbackURL: next,
+            newUserCallbackURL: newUserNext,
+          });
         }}
       >
         {pending ? <Spinner /> : <GoogleIcon />}
