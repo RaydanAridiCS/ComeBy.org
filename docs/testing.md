@@ -60,6 +60,8 @@ Playwright drives Chromium through real flows: signing up (reading the confirmat
 
 `tests/e2e/forms.spec.ts` checks what axe cannot: that a failed submit marks the field, ties it to its message, and moves focus to it (also inside a collapsed section, and for an error that comes back from the server); that leaving the event form with unsaved changes asks first; and that "New event" opens blank after an event was created.
 
+`tests/e2e/confirmations.spec.ts` holds a server action back or drops it (`page.route` on POSTs with a `next-action` header) to check that a confirm stays open and busy while it works, keeps a failure inside, closes on success and returns focus; that it is a bottom sheet on the mobile project and a centred dialog on desktop; and that removing a response is immediate and undone on failure.
+
 `tests/e2e/first-run.spec.ts` follows a new host from the confirmation link to the share panel (the tip, closing it for good, nothing in between), a confirmation link that carries a `next` page, the "Nothing coming up" state for a host with only past events, and the public header for a signed-in host.
 
 `tests/e2e/account-screens.spec.ts` walks the forgot-password flow to a new password and back to sign-in, the broken reset link, going back from "Check your email" to fix an address, and sign-in's field messages and focus.

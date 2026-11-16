@@ -1,24 +1,15 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import { Download, MessageCircle, Phone, Search, Trash2, Users } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useMemo, useTransition } from "react";
+import { useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useRovingRadio } from "@/components/forms/use-roving-radio";
 import { LocalTime } from "@/components/local-time";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,52 +83,104 @@ function PhoneLinks({ phone, name }: { phone: string; name: string }) {
   );
 }
 
-function RemoveButton({ eventId, response }: { eventId: string; response: DashboardResponse }) {
+/** The dashboard data without one response: the row, its counts and its slot in the limit. */
+function withoutResponse(data: DashboardData, id: string): DashboardData {
+  const removed = data.responses.find((response) => response.id === id);
+  if (!removed) return data;
+  const { stats } = data;
+  return {
+    ...data,
+    responses: data.responses.filter((response) => response.id !== id),
+    stats: {
+      going: stats.going - (removed.status === "going" ? 1 : 0),
+      maybe: stats.maybe - (removed.status === "maybe" ? 1 : 0),
+      notGoing: stats.notGoing - (removed.status === "not_going" ? 1 : 0),
+      total: stats.total - 1,
+      guests: stats.guests - (removed.status === "going" ? 1 + removed.plusOnes : 0),
+    },
+    capacity: { ...data.capacity, used: data.capacity.used - 1 },
+  };
+}
+
+function RemoveButton({
+  response,
+  onRemove,
+  returnFocusTo,
+}: {
+  response: DashboardResponse;
+  onRemove: () => void;
+  returnFocusTo: () => HTMLElement | null;
+}) {
   const t = useTranslations();
-  const [pending, startTransition] = useTransition();
+  // Only a removed row hands focus on; cancelling goes back to this button, as usual.
+  const removed = useRef(false);
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
+    <ConfirmDialog
+      trigger={
         <Button
           variant="ghost"
           size="icon-sm"
           className="text-muted-foreground hover:text-danger"
-          aria-label={t("eventDashboard.removeResponse")}
+          aria-label={t("eventDashboard.removeResponseOf", { name: response.name })}
+          data-remove-response={response.id}
         >
           <Trash2 />
         </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {t("eventDashboard.removeConfirmTitle", { name: response.name })}
-          </AlertDialogTitle>
-          <AlertDialogDescription>{t("eventDashboard.removeConfirmBody")}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={pending}
-            onClick={() =>
-              startTransition(async () => {
-                const result = await removeRsvpAction(eventId, response.id);
-                if (result.ok) toast.success(t("eventDashboard.removed"));
-                else toast.error(result.error.message);
-              })
-            }
-          >
-            {t("eventDashboard.removeResponse")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      }
+      variant="destructive"
+      title={t("eventDashboard.removeConfirmTitle", { name: response.name })}
+      description={t("eventDashboard.removeConfirmBody")}
+      confirmLabel={t("eventDashboard.removeResponse")}
+      returnFocusTo={() => (removed.current ? returnFocusTo() : null)}
+      // The row goes at once; the server catches up behind it (and puts it back on failure).
+      onConfirm={async () => {
+        removed.current = true;
+        onRemove();
+        return { ok: true };
+      }}
+    />
   );
 }
 
 export function ResponsesTable({ data }: { data: DashboardData }) {
   const t = useTranslations();
   const { search, status, sort, setSearch, setStatus, setSort } = useResponseFilters();
+  const queryClient = useQueryClient();
+  const queryKey = ["event-dashboard", data.event.id];
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  async function remove(id: string) {
+    // A poll already on its way would bring the row back: stop it first.
+    await queryClient.cancelQueries({ queryKey });
+    const before = queryClient.getQueryData<DashboardData>(queryKey);
+    queryClient.setQueryData<DashboardData>(queryKey, (current) =>
+      current ? withoutResponse(current, id) : current,
+    );
+    let message: string | null = null;
+    try {
+      const result = await removeRsvpAction(data.event.id, id);
+      if (!result.ok) message = result.error.message;
+    } catch {
+      message = t("common.networkError");
+    }
+    if (message === null) {
+      toast.success(t("eventDashboard.removed"));
+      return;
+    }
+    if (before) queryClient.setQueryData(queryKey, before);
+    void queryClient.invalidateQueries({ queryKey });
+    toast.error(message);
+  }
+
+  /** After a row is removed, focus goes to the next row's remove button, else the previous one, else the heading. */
+  function focusAfter(id: string): () => HTMLElement | null {
+    const index = visible.findIndex((response) => response.id === id);
+    const neighbour = visible[index + 1] ?? visible[index - 1];
+    return () =>
+      (neighbour
+        ? document.querySelector<HTMLElement>(`[data-remove-response="${neighbour.id}"]`)
+        : null) ?? headingRef.current;
+  }
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -170,7 +213,7 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
   return (
     <section className="flex flex-col gap-5 rounded-3xl border bg-card p-5 shadow-xs sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="heading text-xl">
+        <h2 ref={headingRef} tabIndex={-1} className="heading text-xl outline-none">
           {t("eventDashboard.responsesTitle")}
           <span className="ms-2 font-sans font-medium text-base text-muted-foreground tabular-nums">
             {data.responses.length}
@@ -300,7 +343,11 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
                             </Badge>
                           ) : null}
                         </div>
-                        <RemoveButton eventId={data.event.id} response={response} />
+                        <RemoveButton
+                          response={response}
+                          onRemove={() => void remove(response.id)}
+                          returnFocusTo={focusAfter(response.id)}
+                        />
                       </div>
                       {response.phone ? (
                         <PhoneLinks phone={response.phone} name={response.name} />

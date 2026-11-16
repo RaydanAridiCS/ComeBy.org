@@ -23,17 +23,23 @@ test("a host nudges maybe guests and pasted addresses once", async ({ page, brow
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("1 guest answered maybe.")).toBeVisible();
 
-  // A bad address stops the whole list, and nothing is sent.
-  await page.getByLabel("Other people to remind (optional)").fill("not-an-email");
+  // A bad address stops the whole list before the confirm step, and nothing is sent.
+  const list = page.getByLabel("Other people to remind (optional)");
+  await list.fill("not-an-email");
   await page.getByRole("button", { name: "Send reminder" }).click();
-  await page.getByRole("button", { name: "Send it" }).click();
   await expect(page.getByText("doesn't look like an email address")).toBeVisible();
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(list).toBeFocused();
 
   const inviteeEmail = uniqueEmail("invitee");
   await page.getByLabel("Other people to remind (optional)").fill(`${inviteeEmail}, ${maybeEmail}`);
   await page.getByRole("button", { name: "Send reminder" }).click();
+  // The confirm step says who it reaches.
+  await expect(page.getByRole("alertdialog")).toContainText(
+    "It goes to 1 guest who answered maybe and 2 addresses you added.",
+  );
   await page.getByRole("button", { name: "Send it" }).click();
-  await expect(page.getByText("Reminder on its way")).toBeVisible();
+  await expect(page.getByText("Reminder on its way to 2 people")).toBeVisible();
 
   const toMaybe = await waitForEmail(maybeEmail, "Can you make it to Garden party?");
   const toInvitee = await waitForEmail(inviteeEmail, "Can you make it to Garden party?");

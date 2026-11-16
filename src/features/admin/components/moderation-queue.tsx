@@ -3,21 +3,11 @@
 import { ExternalLink, EyeOff, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog, outcomeOf } from "@/components/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ActionResult } from "@/lib/result";
 import { deleteEventAsAdminAction, restoreEventAction } from "../actions";
 
 /** What the page passes down: plain values only, so it can cross the server/client boundary. */
@@ -45,19 +35,9 @@ const REASON_LABEL = {
 export function ModerationQueue({ items }: { items: QueueItem[] }) {
   const t = useTranslations("admin");
   const tReport = useTranslations("report");
-  const tCommon = useTranslations("common");
-  const [pending, startTransition] = useTransition();
   const [dialog, setDialog] = useState<{ kind: "restore" | "delete"; item: QueueItem } | null>(
     null,
   );
-
-  const run = (work: () => Promise<ActionResult>, success: string) =>
-    startTransition(async () => {
-      const result = await work();
-      if (result.ok) toast.success(success);
-      else toast.error(result.error.message);
-      setDialog(null);
-    });
 
   if (items.length === 0) {
     return (
@@ -126,7 +106,6 @@ export function ModerationQueue({ items }: { items: QueueItem[] }) {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={pending}
                 onClick={() => setDialog({ kind: "restore", item })}
               >
                 <RotateCcw />
@@ -135,7 +114,6 @@ export function ModerationQueue({ items }: { items: QueueItem[] }) {
               <Button
                 variant="destructive"
                 size="sm"
-                disabled={pending}
                 onClick={() => setDialog({ kind: "delete", item })}
               >
                 <Trash2 />
@@ -146,37 +124,30 @@ export function ModerationQueue({ items }: { items: QueueItem[] }) {
         ))}
       </ul>
 
-      <AlertDialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {dialog?.kind === "delete" ? t("deleteTitle") : t("restoreTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {dialog?.item.title}
-              {" — "}
-              {dialog?.kind === "delete" ? t("deleteBody") : t("restoreBody")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(event) => {
-                event.preventDefault();
-                if (!dialog) return;
-                const { kind, item } = dialog;
-                if (kind === "delete") {
-                  run(() => deleteEventAsAdminAction(item.id), t("deleted"));
-                } else {
-                  run(() => restoreEventAction(item.id), t("restored"));
-                }
-              }}
-            >
-              {dialog?.kind === "delete" ? t("delete") : t("restore")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={dialog !== null}
+        onOpenChange={(open) => !open && setDialog(null)}
+        variant={dialog?.kind === "delete" ? "destructive" : "default"}
+        title={dialog?.kind === "delete" ? t("deleteTitle") : t("restoreTitle")}
+        description={
+          <>
+            {dialog?.item.title}
+            {" — "}
+            {dialog?.kind === "delete" ? t("deleteBody") : t("restoreBody")}
+          </>
+        }
+        confirmLabel={dialog?.kind === "delete" ? t("delete") : t("restore")}
+        onConfirm={async () => {
+          if (!dialog) return { ok: true };
+          const { kind, item } = dialog;
+          const result =
+            kind === "delete"
+              ? await deleteEventAsAdminAction(item.id)
+              : await restoreEventAction(item.id);
+          if (result.ok) toast.success(kind === "delete" ? t("deleted") : t("restored"));
+          return outcomeOf(result);
+        }}
+      />
     </>
   );
 }

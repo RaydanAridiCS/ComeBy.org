@@ -63,7 +63,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           </div>
         </NavigationGuardProvider>
       </QueryProvider>
-      <Toaster position="top-center" richColors />
+      <Toaster position="top-center" richColors belowHeader />
     </NextIntlClientProvider>
   );
 }

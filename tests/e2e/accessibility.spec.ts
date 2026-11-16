@@ -70,6 +70,13 @@ test("the event page with responses and the edit form have no serious violations
   await page.waitForLoadState("networkidle");
   await expectNoSeriousViolations(page, "event page with responses");
 
+  // The confirm step, open (a bottom sheet on the mobile project).
+  await page.getByRole("button", { name: "Remove Karim's response" }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await expectNoSeriousViolations(page, "remove-response confirm");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Remove Karim's response" })).toBeFocused();
+
   await page.goto(`/dashboard/events/${eventId}/edit`);
   await expect(page.getByLabel("Event name")).toHaveValue("Sunday brunch");
   await page.waitForLoadState("networkidle");

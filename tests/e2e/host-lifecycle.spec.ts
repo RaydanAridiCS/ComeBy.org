@@ -85,8 +85,14 @@ test("host deletes their account and can no longer sign in", async ({ page }) =>
 
   await page.goto("/dashboard/settings");
   await page.getByRole("button", { name: "Delete my account" }).click();
-  await page.getByRole("textbox").fill("DELETE");
-  await page.getByRole("button", { name: "Delete my account" }).last().click();
+  const dialog = page.getByRole("alertdialog", { name: "Delete your account?" });
+  const confirm = dialog.getByRole("button", { name: "Delete my account" });
+  // Nothing typed yet: the box is empty (no look-alike placeholder) and the button waits.
+  await expect(dialog.getByLabel("Type DELETE to confirm")).toHaveValue("");
+  await expect(dialog.getByLabel("Type DELETE to confirm")).not.toHaveAttribute("placeholder");
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel("Type DELETE to confirm").fill("DELETE");
+  await confirm.click();
   await expect(page).toHaveURL("/");
 
   await page.goto("/login");

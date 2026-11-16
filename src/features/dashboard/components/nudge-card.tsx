@@ -1,45 +1,66 @@
 "use client";
 
 import { Mail } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { LIMITS } from "@/config/limits";
 import { nudgeGuestsAction } from "@/features/events/actions";
+import { nudgeSchema } from "@/features/events/schema";
 import type { DashboardData } from "../dto";
 
 /** The host's one-time email to "maybe" guests and pasted addresses who haven't answered. */
 export function NudgeCard({ event, maybe }: { event: DashboardData["event"]; maybe: number }) {
   const t = useTranslations("eventDashboard");
-  const [pending, startTransition] = useTransition();
+  const translateError = useTranslateError();
   const [open, setOpen] = useState(false);
   const [invitees, setInvitees] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [addresses, setAddresses] = useState(0);
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
+  const locale = useLocale();
+  // Who the confirm step names: "2 guests who answered maybe and 1 address you added".
+  const recipients = new Intl.ListFormat(locale, { type: "conjunction" }).format([
+    ...(maybe > 0 ? [t("nudgeToMaybe", { count: maybe })] : []),
+    ...(addresses > 0 ? [t("nudgeToAddresses", { count: addresses })] : []),
+  ]);
 
-  function send() {
-    startTransition(async () => {
-      const result = await nudgeGuestsAction({ eventId: event.id, invitees });
-      if (result.ok) {
-        setInvitees("");
-        setError(null);
-        toast.success(t("nudgeSent"));
-        return;
-      }
-      setError(result.error.fieldErrors?.invitees ?? result.error.message);
-    });
+  /** Checks the pasted list here first, so the confirm step can say who gets the email. */
+  function review() {
+    const parsed = nudgeSchema.shape.invitees.safeParse(invitees);
+    if (!parsed.success) {
+      setError(translateError(parsed.error.issues[0]?.message) ?? null);
+      fieldRef.current?.focus();
+      return;
+    }
+    if (maybe === 0 && parsed.data.length === 0) {
+      setError(t("nudgeErrorNobody"));
+      fieldRef.current?.focus();
+      return;
+    }
+    setAddresses(parsed.data.length);
+    setOpen(true);
+  }
+
+  async function send() {
+    const result = await nudgeGuestsAction({ eventId: event.id, invitees });
+    if (result.ok) {
+      setInvitees("");
+      setError(null);
+      toast.success(t("nudgeSent", { count: result.data.recipients }));
+      return { ok: true } as const;
+    }
+    const fieldError = result.error.fieldErrors?.invitees;
+    if (!fieldError) return { ok: false, message: result.error.message } as const;
+    // A problem with the list belongs under the list: close and point at it.
+    setError(fieldError);
+    requestAnimationFrame(() => fieldRef.current?.focus());
+    return { ok: true } as const;
   }
 
   return (
@@ -57,6 +78,7 @@ export function NudgeCard({ event, maybe }: { event: DashboardData["event"]; may
           <Field data-invalid={Boolean(error)}>
             <FieldLabel htmlFor="nudge-invitees">{t("nudgeInviteesLabel")}</FieldLabel>
             <Textarea
+              ref={fieldRef}
               id="nudge-invitees"
               value={invitees}
               rows={3}
@@ -79,27 +101,27 @@ export function NudgeCard({ event, maybe }: { event: DashboardData["event"]; may
               </FieldDescription>
             )}
           </Field>
-          <Button className="self-start" disabled={pending} onClick={() => setOpen(true)}>
+          <Button className="self-start" onClick={review}>
             <Mail />
             {t("nudgeSend")}
           </Button>
         </>
       )}
 
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("nudgeConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("nudgeConfirmBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("nudgeBack")}</AlertDialogCancel>
-            <AlertDialogAction disabled={pending} onClick={send}>
-              {t("nudgeConfirm")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t("nudgeConfirmTitle")}
+        description={
+          <>
+            {t("nudgeConfirmBody", { who: recipients })}
+            {maybe > 0 ? ` ${t("nudgeConfirmMaybeHint")}` : null}
+          </>
+        }
+        cancelLabel={t("nudgeBack")}
+        confirmLabel={t("nudgeConfirm")}
+        onConfirm={send}
+      />
     </section>
   );
 }

@@ -2,20 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
@@ -23,46 +14,45 @@ export function DeleteAccount() {
   const t = useTranslations();
   const router = useRouter();
   const [confirmation, setConfirmation] = useState("");
-  const [pending, startTransition] = useTransition();
   const word = t("settings.deleteConfirmWord");
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
+    <ConfirmDialog
+      trigger={
         <Button variant="destructive" size="sm" className="self-start">
           {t("settings.deleteAccount")}
         </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("settings.deleteConfirmTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>{t("settings.deleteConfirmBody")}</AlertDialogDescription>
-        </AlertDialogHeader>
+      }
+      onOpenChange={(open) => !open && setConfirmation("")}
+      variant="destructive"
+      title={t("settings.deleteConfirmTitle")}
+      description={t("settings.deleteConfirmBody")}
+      confirmLabel={t("settings.deleteAccount")}
+      confirmDisabled={confirmation.trim() !== word}
+      onConfirm={async () => {
+        const { error } = await authClient.deleteUser();
+        if (error) return { ok: false, message: t("common.somethingWentWrong") };
+        toast.success(t("settings.deleted"));
+        router.replace("/");
+        router.refresh();
+        return { ok: true };
+      }}
+    >
+      {/* No placeholder: the word in the box would look already typed. */}
+      <Field>
+        <FieldLabel htmlFor="delete-confirmation">
+          {t("settings.deleteConfirmLabel", { word })}
+        </FieldLabel>
         <Input
+          id="delete-confirmation"
           value={confirmation}
+          autoComplete="off"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
           onChange={(event) => setConfirmation(event.target.value)}
-          placeholder={word}
-          aria-label={t("settings.deleteConfirmBody")}
         />
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={confirmation.trim() !== word || pending}
-            onClick={() =>
-              startTransition(async () => {
-                const { error } = await authClient.deleteUser();
-                if (error) return void toast.error(t("common.somethingWentWrong"));
-                toast.success(t("settings.deleted"));
-                router.replace("/");
-                router.refresh();
-              })
-            }
-          >
-            {t("settings.deleteAccount")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </Field>
+    </ConfirmDialog>
   );
 }
