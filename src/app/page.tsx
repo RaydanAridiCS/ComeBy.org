@@ -99,7 +99,7 @@ function Hero() {
           <a
             href={SITE.repositoryUrl}
             rel="noopener"
-            className="group inline-flex animate-rise items-center gap-2 rounded-full border bg-card/80 py-1.5 ps-1.5 pe-3.5 font-medium text-sm shadow-xs backdrop-blur transition-colors hover:border-brand-200"
+            className="group inline-flex min-h-11 animate-rise items-center gap-2 rounded-full border bg-card/80 py-1.5 ps-1.5 pe-3.5 sm:min-h-0 font-medium text-sm shadow-xs backdrop-blur transition-colors hover:border-brand-200"
           >
             <span className="flex size-6 items-center justify-center rounded-full bg-brand-50 text-brand-700">
               <GitHubIcon className="size-3.5" />
@@ -471,7 +471,7 @@ function Faq() {
         <div className="flex flex-col divide-y rounded-3xl border bg-background px-2 shadow-xs">
           {items.map((item) => (
             <details key={item.q} className="group px-4 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 font-semibold outline-none focus-visible:text-brand-700">
+              <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 rounded-lg py-4 font-semibold focus-visible:text-brand-700">
                 {item.q}
                 <Plus
                   className="size-5 shrink-0 text-muted-foreground transition-transform duration-300 group-open:rotate-45"
@@ -512,7 +512,11 @@ export default async function LandingPage() {
     <NextIntlClientProvider messages={await clientMessages(LANDING_NAMESPACES)}>
       <div className={cn(bricolage.variable, "contents")}>
         <SiteHeader />
-        <main className="-mt-[4.25rem] flex-1 overflow-x-clip pt-[4.25rem]">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="-mt-[calc(4.25rem+var(--safe-top))] flex-1 overflow-x-clip pt-[calc(4.25rem+var(--safe-top))]"
+        >
           <Hero />
           <HowItWorks />
           <Themes />

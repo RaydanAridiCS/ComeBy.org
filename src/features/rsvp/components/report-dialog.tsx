@@ -49,7 +49,7 @@ export function ReportDialog({
       {/* The invite page has no global toaster (it stays light), so this dialog brings its own. */}
       <Toaster position="top-center" richColors />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger className="invite-focus inline-flex min-h-8 items-center gap-1.5 rounded text-invite-muted text-xs underline-offset-4 hover:underline">
+        <DialogTrigger className="invite-focus inline-flex min-h-11 items-center gap-1.5 rounded text-invite-muted text-xs underline-offset-4 hover:underline">
           <Flag className="size-3" aria-hidden="true" />
           {t("title")}
         </DialogTrigger>

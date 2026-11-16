@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 const triggerClass =
-  "invite-focus inline-flex min-h-8 items-center gap-1.5 rounded text-invite-muted text-xs underline-offset-4 hover:underline";
+  "invite-focus inline-flex min-h-11 items-center gap-1.5 rounded text-invite-muted text-xs underline-offset-4 hover:underline";
 
 function TriggerLookalike(props: { onIntent?: () => void; onOpen?: () => void }) {
   const t = useTranslations("report");

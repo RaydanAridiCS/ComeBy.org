@@ -103,7 +103,7 @@ export function InviteCard({
               href={invite.onlineHref}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="invite-link invite-focus inline-flex min-h-6 items-center gap-1 rounded text-sm"
+              className="invite-link invite-focus relative hit-area inline-flex min-h-6 items-center gap-1 rounded text-sm"
             >
               {t("joinOnline")} <ExternalLink className="size-3.5" aria-hidden="true" />
             </a>
@@ -126,7 +126,7 @@ export function InviteCard({
               href={invite.mapsHref}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="invite-link invite-focus inline-flex min-h-6 items-center gap-1 rounded text-sm"
+              className="invite-link invite-focus relative hit-area inline-flex min-h-6 items-center gap-1 rounded text-sm"
             >
               {t("openInMaps")} <ExternalLink className="size-3.5" aria-hidden="true" />
             </a>

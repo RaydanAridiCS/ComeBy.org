@@ -1,14 +1,29 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { THEMES } from "@/features/events/schema";
+import { THEMES, type ThemeId } from "@/features/events/schema";
 import { cn } from "@/lib/utils";
 import { THEME_TOKENS } from "@/themes";
 import { InviteMini } from "@/themes/invite-mini";
 
 const CYCLE_MS = 3600;
+
+const stepClass =
+  "flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40";
+
+function Dot({ theme, active }: { theme: ThemeId; active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "block rounded-full transition-all duration-300",
+        active ? "h-2.5 w-6" : "size-2.5 opacity-50 group-hover:opacity-80",
+      )}
+      style={{ background: THEME_TOKENS[theme].accent }}
+    />
+  );
+}
 
 /** The landing hero: a phone cycling through the invite themes. */
 export function HeroPhone() {
@@ -23,6 +38,12 @@ export function HeroPhone() {
     }, CYCLE_MS);
     return () => clearInterval(timer);
   }, [paused]);
+
+  // Choosing a theme by hand stops the cycling, so it doesn't move on under the visitor.
+  const show = (index: number) => {
+    setActive((index + THEMES.length) % THEMES.length);
+    setPaused(true);
+  };
 
   return (
     <div className="relative mx-auto flex w-full max-w-[22rem] flex-col items-center gap-5">
@@ -89,27 +110,44 @@ export function HeroPhone() {
         </span>
       </div>
 
-      {/* The ten dots share the row, so they shrink to fit a 360 px phone instead of widening the page. */}
-      <div className="flex w-full items-center justify-center gap-1">
+      {/*
+        Ten dots can't each be a 44 px target on a 360 px phone. So on phones the dots only
+        show where you are, and Previous/Next do the moving; from sm up each dot is a button.
+      */}
+      <div className="flex w-full items-center justify-center gap-1 sm:hidden">
+        <button
+          type="button"
+          aria-label={t("landing.heroPreviousTheme")}
+          onClick={() => show(active - 1)}
+          className={stepClass}
+        >
+          <ChevronLeft className="size-5 rtl:rotate-180" aria-hidden="true" />
+        </button>
+        <div className="flex items-center gap-2" aria-hidden="true">
+          {THEMES.map((theme, index) => (
+            <Dot key={theme} theme={theme} active={index === active} />
+          ))}
+        </div>
+        <button
+          type="button"
+          aria-label={t("landing.heroNextTheme")}
+          onClick={() => show(active + 1)}
+          className={stepClass}
+        >
+          <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="hidden w-full items-center justify-center gap-1 sm:flex">
         {THEMES.map((theme, index) => (
           <button
             key={theme}
             type="button"
             aria-label={t("landing.heroShowTheme", { name: t(`themes.${theme}.name`) })}
             aria-pressed={index === active}
-            onClick={() => {
-              setActive(index);
-              setPaused(true);
-            }}
+            onClick={() => show(index)}
             className="group flex h-9 min-w-0 max-w-9 flex-1 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
           >
-            <span
-              className={cn(
-                "block rounded-full transition-all duration-300",
-                index === active ? "h-2.5 w-6" : "size-2.5 opacity-50 group-hover:opacity-80",
-              )}
-              style={{ background: THEME_TOKENS[theme].accent }}
-            />
+            <Dot theme={theme} active={index === active} />
           </button>
         ))}
       </div>

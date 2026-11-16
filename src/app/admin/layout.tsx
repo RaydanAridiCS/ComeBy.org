@@ -14,18 +14,22 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <NextIntlClientProvider messages={await clientMessages(ADMIN_NAMESPACES)}>
       <div className={`${bricolage.variable} flex min-h-dvh flex-1 flex-col bg-muted/30`}>
-        <header className="border-b bg-background">
+        <header className="border-b bg-background pt-(--safe-top)">
           <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-3 px-4 sm:px-6">
             <Logo href="/dashboard" />
             <Link
               href="/dashboard"
-              className="font-medium text-muted-foreground text-sm hover:text-foreground"
+              className="inline-flex min-h-11 items-center rounded-lg font-medium text-muted-foreground text-sm hover:text-foreground"
             >
               {t("backToDashboard")}
             </Link>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-10">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-4xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-10"
+        >
           {children}
         </main>
       </div>

@@ -20,7 +20,7 @@ export function PasswordInput(props: Omit<ComponentProps<typeof InputGroupInput>
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-pressed={visible}
-          className="-me-1 flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
+          className="relative hit-area -me-1 flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
         >
           {visible ? (
             <EyeOff className="size-4" aria-hidden="true" />

@@ -48,7 +48,7 @@ export default async function EditEventPage({ params }: PageProps<"/dashboard/ev
           {params.then(({ id }) => (
             <GuardedLink
               href={`/dashboard/events/${id}`}
-              className="inline-flex items-center gap-1.5 self-start rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+              className="relative hit-area inline-flex items-center gap-1.5 self-start rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
             >
               <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" /> {t("common.back")}
             </GuardedLink>

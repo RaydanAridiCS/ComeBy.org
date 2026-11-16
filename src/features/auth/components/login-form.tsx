@@ -83,7 +83,8 @@ export function LoginForm() {
             <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
             <Link
               href="/forgot-password"
-              className="font-medium text-brand-700 text-sm hover:underline"
+              // 44 px tall to a thumb; the negative margin keeps the row from growing into the field.
+              className="-my-2 inline-flex min-h-11 items-center rounded font-medium text-brand-700 text-sm hover:underline"
             >
               {t("forgotPassword")}
             </Link>

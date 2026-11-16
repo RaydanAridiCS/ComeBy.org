@@ -139,7 +139,7 @@ async function EmptyState() {
             <Link
               key={item.theme}
               href={`/dashboard/events/new?theme=${item.theme}`}
-              className="inline-flex h-10 items-center rounded-full border bg-background px-4 font-medium text-sm shadow-xs transition-colors hover:border-brand-200 hover:bg-brand-50"
+              className="inline-flex h-11 items-center rounded-full border bg-background px-4 sm:h-10 font-medium text-sm shadow-xs transition-colors hover:border-brand-200 hover:bg-brand-50"
             >
               {item.label}
             </Link>

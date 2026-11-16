@@ -70,24 +70,34 @@ function AuthShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-col bg-[radial-gradient(70%_40%_at_50%_0%,var(--brand-50),transparent_70%)] lg:bg-background">
-        <header className="flex items-center justify-between gap-3 px-5 pt-5 sm:px-8 sm:pt-7">
+        <header className="flex items-center justify-between gap-3 px-5 pt-[calc(1.25rem+var(--safe-top))] sm:px-8 sm:pt-[calc(1.75rem+var(--safe-top))]">
           <Logo className="lg:invisible" />
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+            className="relative hit-area inline-flex items-center gap-1.5 rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
             {t("auth.backHome")}
           </Link>
         </header>
-        <main className="flex flex-1 items-start justify-center px-5 pt-10 pb-16 sm:items-center sm:pt-6">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="flex flex-1 items-start justify-center px-5 pt-10 pb-16 sm:items-center sm:pt-6"
+        >
           <div className="w-full max-w-sm animate-rise">{children}</div>
         </main>
-        <footer className="flex justify-center gap-5 px-5 pb-6 text-muted-foreground text-xs">
-          <Link href="/privacy" className="hover:text-foreground">
+        <footer className="flex justify-center gap-3 px-5 pb-[calc(0.75rem+var(--safe-bottom))] text-muted-foreground text-xs">
+          <Link
+            href="/privacy"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-2 hover:text-foreground"
+          >
             {t("nav.privacy")}
           </Link>
-          <Link href="/terms" className="hover:text-foreground">
+          <Link
+            href="/terms"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-2 hover:text-foreground"
+          >
             {t("nav.terms")}
           </Link>
         </footer>

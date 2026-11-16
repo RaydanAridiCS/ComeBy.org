@@ -743,29 +743,33 @@ export function EventForm(props: EventFormProps) {
           </div>
         ) : null}
 
-        <div className="sticky bottom-3 z-20 flex items-center gap-2 rounded-2xl border bg-background/85 p-2 shadow-lg backdrop-blur-xl lg:justify-end">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button type="button" variant="outline" size="lg" className="lg:hidden">
-                <Eye aria-hidden="true" />
-                {t("previewOpen")}
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="bottom"
-              className="max-h-[92dvh] gap-0 overflow-y-auto rounded-t-[2rem] p-0"
-            >
-              <SheetHeader className="px-5 pt-5 pb-3">
-                <SheetTitle className="heading text-lg">{t("previewTitle")}</SheetTitle>
-                <SheetDescription>{t("previewHint")}</SheetDescription>
-              </SheetHeader>
-              <div className="px-3 pb-6">{preview}</div>
-            </SheetContent>
-          </Sheet>
-          <Button type="submit" size="lg" disabled={pending} className="flex-1 lg:flex-none">
-            {pending ? <Spinner /> : null}
-            {props.mode === "create" ? t("submitCreate") : t("submitEdit")}
-          </Button>
+        {/* Sticks to the bottom edge with the page colour under it, so the form doesn't show
+            through a gap, and stays above a phone's home bar. */}
+        <div className="pointer-events-none sticky bottom-0 z-20 -mx-4 bg-linear-to-t from-50% from-background to-transparent px-4 pt-5 pb-[calc(0.75rem+var(--safe-bottom))] sm:mx-0 sm:px-0">
+          <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border bg-background/85 p-2 shadow-lg backdrop-blur-xl lg:justify-end">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button type="button" variant="outline" size="lg" className="lg:hidden">
+                  <Eye aria-hidden="true" />
+                  {t("previewOpen")}
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side="bottom"
+                className="max-h-[92dvh] gap-0 overflow-y-auto rounded-t-[2rem] p-0"
+              >
+                <SheetHeader className="px-5 pt-5 pb-3">
+                  <SheetTitle className="heading text-lg">{t("previewTitle")}</SheetTitle>
+                  <SheetDescription>{t("previewHint")}</SheetDescription>
+                </SheetHeader>
+                <div className="px-3 pb-6">{preview}</div>
+              </SheetContent>
+            </Sheet>
+            <Button type="submit" size="lg" disabled={pending} className="flex-1 lg:flex-none">
+              {pending ? <Spinner /> : null}
+              {props.mode === "create" ? t("submitCreate") : t("submitEdit")}
+            </Button>
+          </div>
         </div>
       </div>
 

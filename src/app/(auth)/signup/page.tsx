@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { env } from "@/env";
 import { AuthCard } from "@/features/auth/components/auth-card";
+import { AuthFormSkeleton } from "@/features/auth/components/auth-form-skeleton";
 import { SignupForm } from "@/features/auth/components/signup-form";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,7 +15,7 @@ export default async function SignupPage() {
   const t = await getTranslations("auth");
   return (
     <AuthCard title={t("signUpTitle")} subtitle={t("signUpSubtitle")}>
-      <Suspense>
+      <Suspense fallback={<AuthFormSkeleton fields={3} />}>
         <SignupForm turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
       </Suspense>
     </AuthCard>

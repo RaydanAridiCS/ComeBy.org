@@ -12,9 +12,11 @@ export function SiteHeader() {
     { href: "/#faq", label: t("faq") },
   ];
   return (
-    <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
+    // Under a notch, the strip above the floating bar is solid so the page doesn't scroll
+    // under the status bar (it is 0 px tall everywhere else).
+    <header className="sticky top-0 z-40 bg-[linear-gradient(var(--background)_var(--safe-top),transparent_var(--safe-top))] px-3 pt-[calc(0.75rem+var(--safe-top))] sm:px-4">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/75 ps-4 pe-2 shadow-sm backdrop-blur-xl">
-        <Logo />
+        <Logo compact />
         <nav aria-label={t("mainNav")} className="hidden items-center gap-1 md:flex">
           {links.map((link) => (
             <Link

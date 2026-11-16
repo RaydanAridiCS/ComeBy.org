@@ -10,6 +10,8 @@ import { Logo } from "@/components/brand/logo";
 export function StatusPage({ children }: { children: ReactNode }) {
   return (
     <main
+      id="main"
+      tabIndex={-1}
       className={`${bricolageLazy.variable} flex flex-1 flex-col items-center justify-center gap-6 bg-[radial-gradient(60%_50%_at_50%_30%,var(--brand-50),transparent_70%)] px-5 py-20 text-center`}
     >
       <Logo className="mb-6" />

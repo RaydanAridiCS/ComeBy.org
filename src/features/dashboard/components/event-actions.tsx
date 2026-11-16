@@ -80,13 +80,7 @@ export function EventActions({ event }: { event: DashboardData["event"] }) {
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8"
-            disabled={pending}
-            aria-label={t("common.more")}
-          >
+          <Button variant="outline" size="icon-sm" disabled={pending} aria-label={t("common.more")}>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>

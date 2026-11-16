@@ -45,12 +45,15 @@ export function Logo({
   href = "/",
   tone = "default",
   className,
+  compact = false,
   link: LinkComponent = Link,
 }: {
   href?: string;
   /** "inverse" draws the whole lock-up in white, for brand-coloured backgrounds. */
   tone?: "default" | "inverse";
   className?: string;
+  /** Shows the mark alone on the narrowest phones (under 360 px), where a header runs out of room. */
+  compact?: boolean;
   /** The link to render with; the dashboard passes one that asks before leaving unsaved work. */
   link?: ComponentType<{ href: string; className?: string; children: ReactNode }>;
 }) {
@@ -58,13 +61,13 @@ export function Logo({
     <LinkComponent
       href={href}
       className={cn(
-        "-m-1 inline-flex items-center gap-2 rounded-lg p-1 font-heading font-bold text-[1.375rem] lowercase leading-none tracking-[-0.045em] outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        "relative hit-area -m-1 inline-flex items-center gap-2 rounded-lg p-1 font-heading font-bold text-[1.375rem] lowercase leading-none tracking-[-0.045em] outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         tone === "inverse" && "text-white",
         className,
       )}
     >
       <LogoMark className={cn("size-7", tone === "inverse" ? "text-white" : "text-brand")} />
-      <span className="-mt-0.5">{SITE.name}</span>
+      <span className={cn("-mt-0.5", compact && "max-[359px]:sr-only")}>{SITE.name}</span>
     </LinkComponent>
   );
 }

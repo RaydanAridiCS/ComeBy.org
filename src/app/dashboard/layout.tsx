@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           <div
             className={`${bricolage.variable} flex min-h-dvh flex-1 flex-col bg-[radial-gradient(80%_40%_at_50%_0%,var(--brand-50),transparent_70%)]`}
           >
-            <header className="sticky top-0 z-40 px-3 pt-3 [view-transition-name:site-header] sm:px-4">
+            <header className="sticky top-0 z-40 bg-[linear-gradient(var(--background)_var(--safe-top),transparent_var(--safe-top))] px-3 pt-[calc(0.75rem+var(--safe-top))] [view-transition-name:site-header] sm:px-4">
               <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/80 ps-4 pe-2 shadow-sm backdrop-blur-xl">
                 <div className="flex items-center gap-6">
                   <Logo href="/dashboard" link={GuardedLink} />
@@ -41,7 +41,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
                   </nav>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Button asChild size="sm">
+                  <Button asChild size="sm" className="min-w-11">
                     <GuardedLink href="/dashboard/events/new">
                       <Plus aria-hidden="true" />
                       <span className="sr-only sm:not-sr-only">{t("newEvent")}</span>
@@ -53,7 +53,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
                 </div>
               </div>
             </header>
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-10">
+            <main
+              id="main"
+              tabIndex={-1}
+              className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-10"
+            >
               {children}
             </main>
           </div>

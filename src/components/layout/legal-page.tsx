@@ -21,7 +21,11 @@ export async function LegalPage({
   return (
     <div className={`${bricolage.variable} contents`}>
       <SiteHeader />
-      <main className="mx-auto grid w-full max-w-5xl flex-1 gap-10 px-4 pt-12 pb-20 sm:px-6 md:pt-16 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto grid w-full max-w-5xl flex-1 gap-10 px-4 pt-12 pb-20 sm:px-6 md:pt-16 lg:grid-cols-[220px_minmax(0,1fr)]"
+      >
         <header className="flex flex-col gap-3 lg:col-span-2">
           <h1 className="heading animate-rise text-title">{t(titleKey)}</h1>
           <p className="text-muted-foreground text-sm">{t("lastUpdated", { date: lastUpdated })}</p>

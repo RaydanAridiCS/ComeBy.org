@@ -233,6 +233,53 @@
     background: var(--brand-200);
     color: var(--brand-950);
   }
+
+  /*
+   * The phone's notch, rounded corners and home bar. Non-zero only with viewport-fit=cover
+   * (src/app/layout.tsx). Use these for anything that touches a screen edge: sticky bars,
+   * bottom sheets, toasts, the last row of a page.
+   */
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+  }
+  /* Keeps content clear of the notch in landscape. Fixed backgrounds still reach the edge. */
+  body {
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+
+  /*
+   * One focus ring for plain links and disclosure toggles. Buttons and inputs draw their own
+   * ring and set outline-none, so they keep it. Invite pages colour it with the theme.
+   */
+  :where(a[href], summary):focus-visible {
+    outline: 2px solid var(--focus-color, var(--brand-600));
+    outline-offset: 2px;
+  }
+  /* The skip link focuses <main> (tabIndex -1); the region itself needs no ring. */
+  main:focus {
+    outline: none;
+  }
+}
+
+/*
+ * Gives a small control a hit area of at least 44 × 44 px without changing how it looks.
+ * The element must be positioned (relative or absolute). It draws on ::before, so don't
+ * combine it with before: styles, and keep 44 px between neighbouring controls' centres.
+ */
+@utility hit-area {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    translate: -50% -50%;
+  }
 }
 
 /* A heading in the brand display face with tight tracking. */
@@ -354,6 +401,7 @@
  * ------------------------------------------------------------------------- */
 @layer components {
   .invite-page {
+    --focus-color: var(--invite-accent-ink);
     background-color: var(--invite-bg-solid);
     color: var(--invite-fg);
   }

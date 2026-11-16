@@ -3,6 +3,9 @@ import { useTranslations } from "next-intl";
 import { Logo } from "@/components/brand/logo";
 import { SITE } from "@/config/site";
 
+const footerLinkClass =
+  "inline-flex min-h-11 min-w-11 items-center rounded text-muted-foreground text-sm transition-colors hover:text-foreground sm:min-h-0";
+
 export function SiteFooter() {
   const t = useTranslations();
   const columns = [
@@ -39,22 +42,16 @@ export function SiteFooter() {
         {columns.map((column) => (
           <nav key={column.title} aria-label={column.title} className="flex flex-col gap-3">
             <p className="font-semibold text-sm">{column.title}</p>
-            <ul className="flex flex-col gap-2">
+            {/* On phones each link is a 44 px row; from sm up they sit closer, as text. */}
+            <ul className="flex flex-col sm:gap-2">
               {column.links.map((link) => (
                 <li key={link.href}>
                   {"external" in link ? (
-                    <a
-                      href={link.href}
-                      rel="noopener"
-                      className="text-muted-foreground text-sm transition-colors hover:text-foreground"
-                    >
+                    <a href={link.href} rel="noopener" className={footerLinkClass}>
                       {link.label}
                     </a>
                   ) : (
-                    <Link
-                      href={link.href}
-                      className="text-muted-foreground text-sm transition-colors hover:text-foreground"
-                    >
+                    <Link href={link.href} className={footerLinkClass}>
                       {link.label}
                     </Link>
                   )}
@@ -65,7 +62,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-muted-foreground text-xs sm:px-6">
+        <p className="mx-auto max-w-6xl px-4 pt-5 pb-[calc(1.25rem+var(--safe-bottom))] text-muted-foreground text-xs sm:px-6">
           {t("landing.footerMade")}
         </p>
       </div>

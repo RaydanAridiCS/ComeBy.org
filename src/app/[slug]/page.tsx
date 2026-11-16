@@ -168,7 +168,11 @@ async function Invite({ params }: { params: Promise<{ slug: string }> }) {
   return (
     <div className="invite-page relative min-h-dvh" style={themeStyle(event.theme)}>
       <ThemeBackdrop theme={event.theme} fixed />
-      <main className="relative mx-auto flex w-full max-w-[34rem] flex-col gap-4 px-3 pt-4 pb-10 sm:px-4 sm:pt-12 sm:pb-16">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="relative mx-auto flex w-full max-w-[34rem] flex-col gap-4 px-3 pt-4 pb-[calc(2.5rem+var(--safe-bottom))] sm:px-4 sm:pt-12 sm:pb-[calc(4rem+var(--safe-bottom))]"
+      >
         <Banners event={event} />
         <InviteCard
           theme={event.theme}
@@ -218,7 +222,7 @@ async function Invite({ params }: { params: Promise<{ slug: string }> }) {
           <Link
             href="/"
             prefetch={false}
-            className="invite-focus group inline-flex items-center gap-2.5 rounded-full font-semibold"
+            className="invite-focus group inline-flex min-h-11 items-center gap-2.5 rounded-full font-semibold"
           >
             <span className="flex size-8 items-center justify-center rounded-[30%] bg-invite-accent text-invite-accent-fg shadow-sm">
               <LogoMark className="size-5" />

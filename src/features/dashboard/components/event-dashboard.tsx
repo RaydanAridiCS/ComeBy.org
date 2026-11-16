@@ -99,7 +99,7 @@ export function EventDashboard({
         <div className="flex flex-col gap-6">
           <Link
             href="/dashboard"
-            className="inline-flex animate-rise items-center gap-1.5 self-start rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+            className="relative hit-area inline-flex animate-rise items-center gap-1.5 self-start rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
             {t("eventDashboard.backToEvents")}

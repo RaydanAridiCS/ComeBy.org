@@ -45,7 +45,11 @@ async function UnsubscribeContent({
 
 export default function UnsubscribePage({ searchParams }: PageProps<"/unsubscribe">) {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-[radial-gradient(60%_50%_at_50%_30%,var(--brand-50),transparent_70%)] px-5 py-20">
+    <main
+      id="main"
+      tabIndex={-1}
+      className="flex flex-1 flex-col items-center justify-center gap-8 bg-[radial-gradient(60%_50%_at_50%_30%,var(--brand-50),transparent_70%)] px-5 py-20"
+    >
       <Logo />
       <div className="w-full max-w-md">
         <Suspense>

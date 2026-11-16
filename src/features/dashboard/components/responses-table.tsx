@@ -70,10 +70,11 @@ function PhoneLinks({ phone, name }: { phone: string; name: string }) {
   const display = parsed?.formatInternational() ?? phone;
   const digits = (parsed?.number ?? phone).replace(/[^\d]/g, "");
   return (
-    <span className="inline-flex flex-wrap items-center gap-2">
+    // Compact chips in a dense row; hit-area makes each a 44 px target without looking heavier.
+    <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-3">
       <a
         href={`tel:${parsed?.number ?? phone}`}
-        className="inline-flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 font-medium text-sm transition-colors hover:bg-brand-50 hover:text-brand-800"
+        className="relative hit-area inline-flex h-8 items-center gap-1.5 rounded-full bg-muted px-3 font-medium text-sm transition-colors hover:bg-brand-50 hover:text-brand-800"
       >
         <Phone className="size-3.5" aria-hidden="true" />
         {display}
@@ -82,7 +83,7 @@ function PhoneLinks({ phone, name }: { phone: string; name: string }) {
         href={`https://wa.me/${digits}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex size-8 items-center justify-center rounded-full bg-[#e7f8ee] text-[#128c4a] transition-colors hover:bg-[#d2f2df]"
+        className="relative hit-area inline-flex size-8 items-center justify-center rounded-full bg-[#e7f8ee] text-[#128c4a] transition-colors hover:bg-[#d2f2df]"
         aria-label={t("whatsappGuest", { name })}
       >
         <MessageCircle className="size-4" aria-hidden="true" />
@@ -211,7 +212,7 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
               <div
                 role="radiogroup"
                 aria-label={t("eventDashboard.responsesTitle")}
-                className="flex flex-wrap gap-1 rounded-xl bg-muted p-1 ring-1 ring-border/60 ring-inset"
+                className="flex flex-wrap gap-x-1 gap-y-2 rounded-xl bg-muted p-1 ring-1 ring-border/60 ring-inset"
               >
                 {filters.map((filter, index) => {
                   const selected = status === filter.value;
@@ -229,7 +230,7 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
                       onClick={() => setStatus(filter.value)}
                       onKeyDown={(event) => filterRadio.onKeyDown(event, index)}
                       className={cn(
-                        "relative isolate flex h-9 items-center gap-1.5 rounded-lg px-3 font-semibold text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/40",
+                        "relative isolate hit-area flex h-9 items-center gap-1.5 rounded-lg px-3 font-semibold text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/40",
                         selected
                           ? "text-foreground"
                           : "text-muted-foreground hover:text-foreground",
@@ -251,11 +252,7 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
                 })}
               </div>
               <Select value={sort} onValueChange={(value) => setSort(value as ResponseSort)}>
-                <SelectTrigger
-                  className="ms-auto w-40"
-                  size="sm"
-                  aria-label={t("eventDashboard.sortLabel")}
-                >
+                <SelectTrigger className="ms-auto w-40" aria-label={t("eventDashboard.sortLabel")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

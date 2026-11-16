@@ -23,13 +23,15 @@ const buttonVariants = cva(
       size: {
         default:
           "h-11 gap-2 px-4 sm:h-10 has-data-[icon=inline-end]:pe-3 has-data-[icon=inline-start]:ps-3",
-        xs: "h-8 gap-1 rounded-lg px-2.5 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-10 gap-1.5 rounded-lg px-3 text-[0.8125rem] sm:h-9 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        // xs stays small to the eye; hit-area gives it a 44 px target for a thumb.
+        xs: "relative hit-area h-8 gap-1 rounded-lg px-2.5 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&_svg:not([class*='size-'])]:size-3",
+        // 44 px on phones, compact from sm up.
+        sm: "h-11 gap-1.5 rounded-lg px-3 text-[0.8125rem] sm:h-9 in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-12 gap-2 rounded-2xl px-6 text-base has-data-[icon=inline-end]:pe-5 has-data-[icon=inline-start]:ps-5",
         icon: "size-11 sm:size-10",
         "icon-xs":
-          "size-8 rounded-lg in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-10 rounded-lg sm:size-9 in-data-[slot=button-group]:rounded-lg",
+          "relative hit-area size-8 rounded-lg in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-11 rounded-lg sm:size-9 in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-12 rounded-2xl",
       },
     },

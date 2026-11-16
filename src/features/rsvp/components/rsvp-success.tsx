@@ -87,7 +87,7 @@ export function RsvpSuccess({
             {afterSuccess}
             <button
               type="button"
-              className="invite-focus inline-flex h-9 items-center rounded-full px-3.5 font-semibold text-sm underline-offset-4 hover:underline"
+              className="invite-focus inline-flex h-11 items-center rounded-full px-3.5 font-semibold text-sm underline-offset-4 hover:underline"
               onClick={onChange}
             >
               {t("changeResponse")}
