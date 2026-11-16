@@ -56,7 +56,7 @@ Playwright drives Chromium through real flows: signing up (reading the confirmat
 
 ### Accessibility
 
-`tests/e2e/accessibility.spec.ts` runs axe (`@axe-core/playwright`) against WCAG 2.0 A/AA and 2.2 AA rules, and fails on serious or critical violations. It covers the public pages, the not-found pages, the event list, the event page with responses, the new-event and edit forms, settings, the invite page in five themes (two of them dark), and both forms in their error state. A new screen or a new state of a screen (a dialog, an error state) should be added there.
+`tests/e2e/accessibility.spec.ts` runs axe (`@axe-core/playwright`) against WCAG 2.0 A/AA and 2.2 AA rules, and fails on serious or critical violations. It covers the public pages, the not-found pages, the event list, the event page with responses, the new-event and edit forms, settings, the invite page in five themes (two of them dark), and both forms in their error state. `tests/e2e/invite-guest-flow.spec.ts` covers the guest's path on a phone: the RSVP bar, focus after answering, and changing or keeping an answer. A new screen or a new state of a screen (a dialog, an error state) should be added there.
 
 `tests/e2e/forms.spec.ts` checks what axe cannot: that a failed submit marks the field, ties it to its message, and moves focus to it (also inside a collapsed section, and for an error that comes back from the server); that leaving the event form with unsaved changes asks first; and that "New event" opens blank after an event was created.
 

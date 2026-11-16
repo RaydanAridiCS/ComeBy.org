@@ -2,7 +2,7 @@ import { Ban, CalendarCheck2, Clock, Lock, Users } from "lucide-react";
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/env";
-import { formatEventDay } from "@/lib/dates";
+import { formatEventDay, formatEventTime } from "@/lib/dates";
 import type { EventRecord } from "@/server/repositories/types";
 import { rsvpService } from "@/server/services";
 import { rsvpBlockReason } from "@/server/services/rsvp.service";
@@ -106,6 +106,7 @@ export async function GuestSection({
             settings={{
               eventId: event.id,
               hostName: event.hostName,
+              dateLabel: `${formatEventDay(event.startsAt, event.timezone)} · ${formatEventTime(event.startsAt, event.timezone)}`,
               phoneMode: event.phoneMode,
               allowMessage: event.allowMessage,
               allowPlusOnes: event.allowPlusOnes,
@@ -127,7 +128,7 @@ export async function GuestSection({
                 : null
             }
             turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-            afterSuccess={<CalendarMenu links={calendarLinks} />}
+            afterSuccess={<CalendarMenu links={calendarLinks} size="lg" />}
           />
         ) : (
           <div className="flex flex-col items-center gap-3 py-2 text-center">

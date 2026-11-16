@@ -1,10 +1,25 @@
 "use client";
 
-import { Check, HelpCircle, type LucideIcon, X } from "lucide-react";
+import { Check, HelpCircle, type LucideIcon, Pencil, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useCallback, useId, useRef, useState, useTransition } from "react";
-import { Controller, type FieldPath, type Resolver, useForm, useWatch } from "react-hook-form";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import {
+  Controller,
+  type DefaultValues,
+  type FieldPath,
+  type Resolver,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import type { Country } from "react-phone-number-input";
 import { fieldA11y } from "@/components/forms/field-a11y";
 import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
@@ -17,10 +32,14 @@ import { cn } from "@/lib/utils";
 import { submitRsvpAction } from "../actions";
 import type { RsvpFormInput, RsvpStatusValue } from "../schema";
 import { GuestDataControls } from "./guest-data-controls";
+import { invitePrimaryButton, inviteSecondaryButton } from "./invite-buttons";
+import { RsvpJumpBar } from "./rsvp-jump-bar";
 
 export type RsvpEventSettings = {
   eventId: string;
   hostName: string;
+  /** The event's day and time, for the bar that points to the form. */
+  dateLabel: string;
   phoneMode: "required" | "optional" | "hidden";
   allowMessage: boolean;
   allowPlusOnes: boolean;
@@ -30,11 +49,23 @@ export type RsvpEventSettings = {
   confettiColors: string[];
 };
 
+type SavedResponse = RsvpFormInput & { status: RsvpStatusValue };
+
+const EMPTY_RESPONSE: DefaultValues<RsvpFormInput> = {
+  status: undefined,
+  name: "",
+  phone: "",
+  email: "",
+  message: "",
+  plusOnes: 0,
+  answers: {},
+};
+
 type Props = {
   settings: RsvpEventSettings;
-  existing: (RsvpFormInput & { status: RsvpStatusValue }) | null;
+  existing: SavedResponse | null;
   turnstileSiteKey: string | undefined;
-  /** Rendered next to the success message (e.g. add-to-calendar). */
+  /** Rendered with the success message and the "your response" summary (add-to-calendar). */
   afterSuccess?: ReactNode;
 };
 
@@ -124,6 +155,11 @@ function ErrorText({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
+/** The radio a roving group lets Tab reach: the chosen one, or the first. */
+function focusableOption(group: HTMLElement | null) {
+  return group?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]') ?? null;
+}
+
 /** The guest's response form: tap a status, type a name, done. */
 export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }: Props) {
   const t = useTranslations("rsvp");
@@ -137,7 +173,8 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
   const [submitted, setSubmitted] = useState<{ status: RsvpStatusValue; emailed: boolean } | null>(
     null,
   );
-  const [hasResponse, setHasResponse] = useState(Boolean(existing));
+  // The response as the server has it: from an earlier visit, or the one just sent.
+  const [saved, setSaved] = useState<SavedResponse | null>(existing);
   const [formError, setFormError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [country] = useState(guessCountry);
@@ -145,21 +182,17 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
 
   const form = useForm<RsvpFormInput>({
     resolver: lazyResolver,
-    defaultValues: existing ?? {
-      status: undefined,
-      name: "",
-      phone: "",
-      email: "",
-      message: "",
-      plusOnes: 0,
-      answers: {},
-    },
+    defaultValues: existing ?? EMPTY_RESPONSE,
     // Focus is handled below, so it also works for the phone field and for server errors.
     shouldFocusError: false,
   });
   const { control, register, formState, setError, setValue } = form;
   const { errors } = formState;
   const formRef = useRef<HTMLFormElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const changeRef = useRef<HTMLButtonElement>(null);
+  // Where focus goes once the next view has rendered.
+  const focusNext = useRef<"picker" | "change" | null>(null);
   const focusFirstInvalid = useFocusFirstInvalid(formRef);
   const nameField = fieldA11y("rsvp-name", { invalid: Boolean(errors.name) });
   const phoneField = fieldA11y("rsvp-phone", { invalid: Boolean(errors.phone) });
@@ -173,6 +206,36 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
   const selectStatus = (value: RsvpStatusValue) =>
     setValue("status", value, { shouldValidate: true });
   const statusRadio = useRovingRadio(statusValues, status, selectStatus);
+
+  /** The picker's focusable option: the chosen answer, or the first one. */
+  const pickerOption = () => focusableOption(pickerRef.current);
+
+  // After each render: if a view change asked for focus, the new view is on screen now.
+  useEffect(() => {
+    const target = focusNext.current;
+    if (!target) return;
+    focusNext.current = null;
+    if (target === "picker") focusableOption(pickerRef.current)?.focus();
+    if (target === "change") changeRef.current?.focus();
+  });
+
+  const showForm = () => {
+    focusNext.current = "picker";
+    setView("form");
+  };
+  /** Back to the summary without sending anything: the form forgets any edits. */
+  const keepAnswer = () => {
+    if (saved) form.reset(saved);
+    setFormError(null);
+    focusNext.current = "change";
+    setView("summary");
+  };
+  /** From the bar at the bottom: bring the form into view and put focus on the answers. */
+  const jumpToForm = () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    formRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    pickerOption()?.focus({ preventScroll: true });
+  };
 
   const plusOneOptions = Array.from(
     { length: Math.min(settings.maxPlusOnes, LIMITS.maxPlusOnesPerGuest) + 1 },
@@ -197,24 +260,18 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
         focusFirstInvalid();
         return;
       }
-      setSubmitted({ status: result.data.status as RsvpStatusValue, emailed: result.data.emailed });
-      setHasResponse(true);
+      const status = result.data.status as RsvpStatusValue;
+      setSubmitted({ status, emailed: result.data.emailed });
+      setSaved({ ...values, status });
+      form.reset({ ...values, status });
       setView("done");
     });
   }, focusFirstInvalid);
 
   const onDeleted = () => {
-    form.reset({
-      status: undefined,
-      name: "",
-      phone: "",
-      email: "",
-      message: "",
-      plusOnes: 0,
-      answers: {},
-    });
+    form.reset(EMPTY_RESPONSE);
     setSubmitted(null);
-    setHasResponse(false);
+    setSaved(null);
     setView("deleted");
   };
 
@@ -225,11 +282,7 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
       <div key="deleted" className="flex animate-pop flex-col items-center gap-4 text-center">
         <p className="invite-heading text-xl">{t("deletedTitle")}</p>
         <p className="text-invite-muted text-sm">{t("deletedBody")}</p>
-        <button
-          type="button"
-          className="invite-focus inline-flex h-11 items-center rounded-full bg-invite-accent px-6 font-semibold text-invite-accent-fg text-sm shadow-md transition hover:brightness-105 active:scale-[0.97]"
-          onClick={() => setView("form")}
-        >
+        <button type="button" className={invitePrimaryButton} onClick={showForm}>
           {t("respondAgain")}
         </button>
       </div>
@@ -242,18 +295,19 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
         hostName={settings.hostName}
         confettiColors={settings.confettiColors}
         afterSuccess={afterSuccess}
-        onChange={() => setView("form")}
+        onChange={showForm}
       />
     );
-  } else if (view === "summary" && existing) {
-    const Icon = STATUS_ICONS[existing.status];
+  } else if (view === "summary" && saved) {
+    const Icon = STATUS_ICONS[saved.status];
+    const bringing = saved.status === "going" ? (saved.plusOnes ?? 0) : 0;
     content = (
       <div key="summary" className="flex animate-pop flex-col items-center gap-4 text-center">
         <div className="invite-chip relative flex w-full flex-col items-center gap-3 overflow-hidden rounded-3xl px-5 py-6">
           <span
             className={cn(
               "flex size-12 items-center justify-center rounded-full",
-              existing.status === "going"
+              saved.status === "going"
                 ? "bg-invite-accent text-invite-accent-fg"
                 : "bg-(--invite-card) text-(--invite-accent-ink)",
             )}
@@ -261,27 +315,54 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
           >
             <Icon className="size-6" />
           </span>
-          <p className="font-semibold text-lg">
-            {t("yourResponse", { status: statusLabel(existing.status) })}
-          </p>
+          <div className="flex flex-col gap-0.5">
+            <h2 className="font-semibold text-lg">
+              {t("yourResponse", { status: statusLabel(saved.status) })}
+            </h2>
+            {bringing > 0 ? (
+              <p className="text-invite-muted text-sm">{t("yourPlusOnes", { count: bringing })}</p>
+            ) : null}
+          </div>
           <span className="w-full border-(--invite-card-border) border-t border-dashed" />
-          <p className="text-invite-muted text-sm">{t("doneBody", { host: settings.hostName })}</p>
+          <p className="text-invite-muted text-sm">
+            {t("doneBody", { host: settings.hostName })}{" "}
+            {saved.email ? t("changeHintEmail") : t("changeHint")}
+          </p>
         </div>
-        <button
-          type="button"
-          className="invite-focus inline-flex h-11 items-center rounded-full bg-invite-accent px-6 font-semibold text-invite-accent-fg text-sm shadow-md transition hover:brightness-105 active:scale-[0.97]"
-          onClick={() => setView("form")}
-        >
-          {t("changeResponse")}
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button
+            ref={changeRef}
+            type="button"
+            className={inviteSecondaryButton}
+            onClick={showForm}
+          >
+            <Pencil className="size-4" aria-hidden="true" />
+            {t("changeResponse")}
+          </button>
+          {afterSuccess}
+        </div>
       </div>
     );
   } else {
     const going = status === "going";
+    const changing = saved !== null;
     content = (
-      <form key="form" ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-        <h2 className="invite-heading text-center text-[1.75rem] leading-tight">{t("title")}</h2>
-        <div role="radiogroup" aria-label={t("title")} className="grid grid-cols-3 gap-2">
+      <form
+        key="form"
+        ref={formRef}
+        onSubmit={onSubmit}
+        noValidate
+        className="flex scroll-mt-4 flex-col gap-5"
+      >
+        <h2 className="invite-heading text-center text-[1.75rem] leading-tight">
+          {changing ? t("changeTitle") : t("title")}
+        </h2>
+        <div
+          ref={pickerRef}
+          role="radiogroup"
+          aria-label={changing ? t("changeTitle") : t("title")}
+          className="grid grid-cols-3 gap-2"
+        >
           {statusValues.map((value, index) => {
             const selected = status === value;
             const Icon = STATUS_ICONS[value];
@@ -503,8 +584,18 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
                 className="invite-focus flex h-14 items-center justify-center gap-2 rounded-2xl bg-invite-accent font-semibold text-base text-invite-accent-fg shadow-lg transition-[filter,opacity,transform] duration-200 hover:brightness-105 active:scale-[0.98] disabled:opacity-70"
               >
                 {pending ? <Spinner /> : null}
-                {pending ? t("submitting") : existing ? t("update") : t("submit")}
+                {pending ? t("submitting") : changing ? t("update") : t("submit")}
               </button>
+              {changing ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={keepAnswer}
+                  className={cn(inviteSecondaryButton, "self-center disabled:opacity-70")}
+                >
+                  {t("keepAnswer")}
+                </button>
+              ) : null}
               <p className="text-center text-invite-muted text-xs">{t("privacyNote")}</p>
             </div>
           </div>
@@ -516,7 +607,11 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
   return (
     <>
       {content}
-      {hasResponse && view !== "deleted" ? (
+      {/* Only for someone who hasn't answered yet: a guest who has knows where the form is. */}
+      {view === "form" && !saved ? (
+        <RsvpJumpBar target={pickerRef} dateLabel={settings.dateLabel} onJump={jumpToForm} />
+      ) : null}
+      {saved && view !== "deleted" ? (
         <GuestDataControls eventId={settings.eventId} onDeleted={onDeleted} />
       ) : null}
     </>

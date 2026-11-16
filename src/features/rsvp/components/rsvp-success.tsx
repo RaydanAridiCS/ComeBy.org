@@ -1,13 +1,14 @@
 "use client";
 
-import { Check, HelpCircle, X } from "lucide-react";
+import { Check, HelpCircle, Pencil, X } from "lucide-react";
 import { domAnimation, LazyMotion, MotionConfig, m } from "motion/react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { EASE_OUT, SPRING_PRESS } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { RsvpStatusValue } from "../schema";
 import { Celebration } from "./celebration";
+import { inviteSecondaryButton } from "./invite-buttons";
 
 /**
  * The "You're in!" moment after a guest responds. Loaded on demand (it's the only
@@ -36,16 +37,26 @@ export function RsvpSuccess({
         ? t("doneMaybeTitle")
         : t("doneNotGoingTitle");
   const Icon = status === "maybe" ? HelpCircle : status === "not_going" ? X : Check;
+  const rootRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // The form was taller than this, so the page may have jumped: bring the result into view
+  // and move focus to it, which also has a screen reader read it out.
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    rootRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
 
   return (
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">
         <m.div
+          ref={rootRef}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: EASE_OUT }}
           className="relative flex flex-col items-center gap-4 py-4 text-center"
-          aria-live="polite"
         >
           {status === "going" ? <Celebration colors={confettiColors} /> : null}
           <m.span
@@ -79,19 +90,24 @@ export function RsvpSuccess({
             )}
           </m.span>
           <div className="flex flex-col gap-1.5">
-            <h2 className="invite-heading text-[1.75rem] leading-tight">{title}</h2>
+            <h2
+              ref={headingRef}
+              tabIndex={-1}
+              className="invite-heading text-[1.75rem] leading-tight outline-none"
+            >
+              {title}
+            </h2>
             <p className="text-invite-muted">{t("doneBody", { host: hostName })}</p>
-            {emailed ? <p className="text-invite-muted text-sm">{t("editLinkSent")}</p> : null}
+            <p className="text-invite-muted text-sm">
+              {emailed ? t("editLinkSent") : t("changeHint")}
+            </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            {afterSuccess}
-            <button
-              type="button"
-              className="invite-focus inline-flex h-11 items-center rounded-full px-3.5 font-semibold text-sm underline-offset-4 hover:underline"
-              onClick={onChange}
-            >
+            <button type="button" className={inviteSecondaryButton} onClick={onChange}>
+              <Pencil className="size-4" aria-hidden="true" />
               {t("changeResponse")}
             </button>
+            {afterSuccess}
           </div>
         </m.div>
       </MotionConfig>

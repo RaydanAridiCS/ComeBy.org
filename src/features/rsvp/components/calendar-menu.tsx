@@ -1,5 +1,6 @@
 import { CalendarPlus, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 
 export type CalendarLinks = { google: string; outlook: string; ics: string };
 
@@ -7,13 +8,27 @@ export type CalendarLinks = { google: string; outlook: string; ics: string };
  * "Add to calendar" with Google, Apple (.ics), Outlook and a generic .ics download.
  * A native <details> menu: no JavaScript, keyboard accessible, light on the invite page.
  */
-export function CalendarMenu({ links }: { links: CalendarLinks }) {
+export function CalendarMenu({
+  links,
+  size = "default",
+}: {
+  links: CalendarLinks;
+  /** "lg" matches the 44 px buttons next to it after a guest responds. */
+  size?: "default" | "lg";
+}) {
   const t = useTranslations("eventPage");
   const itemClass =
     "invite-focus flex min-h-11 items-center rounded-xl px-3 font-medium text-sm transition-colors hover:bg-(--invite-accent-soft)";
   return (
     <details className="group relative inline-block [&_summary::-webkit-details-marker]:hidden">
-      <summary className="invite-chip invite-focus relative inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-full px-3.5 font-semibold text-(--invite-accent-ink) text-sm transition hover:brightness-95 after:absolute after:-inset-1 after:content-['']">
+      <summary
+        className={cn(
+          "invite-chip invite-focus relative inline-flex cursor-pointer list-none items-center gap-2 rounded-full font-semibold text-(--invite-accent-ink) text-sm transition hover:brightness-95",
+          size === "lg"
+            ? "h-11 px-5"
+            : "h-9 px-3.5 after:absolute after:-inset-1 after:content-['']",
+        )}
+      >
         <CalendarPlus className="size-4" aria-hidden="true" />
         {t("addToCalendar")}
         <ChevronDown
