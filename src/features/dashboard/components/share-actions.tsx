@@ -84,7 +84,8 @@ export function WhatsAppButton({
     <Button
       asChild
       className={cn(
-        "bg-[#1fae55] text-white shadow-[0_6px_16px_-6px_#1fae55] hover:bg-[#178f45]",
+        // WhatsApp's green, darkened until white text on it reaches 4.5:1 (this is 4.7:1).
+        "bg-[#12853f] text-white shadow-[0_6px_16px_-6px_#12853f] hover:bg-[#0f7039]",
         className,
       )}
       {...props}

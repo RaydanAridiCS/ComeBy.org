@@ -45,6 +45,10 @@ How the test suites work, what they need and how to run them safely is in [testi
 - **Business rules live in services**, never in components or actions. Database queries live in repositories.
 - **Server actions** always: `requireUser()` (if needed) → Zod `parse` → service → `updateTag`/`refresh` → return via `runAction`.
 - **Request-time data goes inside `<Suspense>`** (Cache Components). The dev overlay tells you when you forget.
+- **Forms** (React Hook Form + the shared Zod schema) follow three rules, each with a helper in `src/components/forms/`:
+  - Every control is tied to its error and hint: spread `fieldA11y(id, { invalid, hint }).control` on the input and give the error and hint elements the ids it returns. That sets `aria-invalid` (which is also what draws the red border) and `aria-describedby`. Errors are shown with `role="alert"` so they are announced.
+  - A failed submit moves focus to the first invalid field: pass `useFocusFirstInvalid(formRef)` as the second argument of `handleSubmit`, and call it after applying server errors. It opens a collapsed `<details>` section around the field first. Set `shouldFocusError: false` on the form so React Hook Form doesn't also try.
+  - A form that can lose work calls `useUnsavedChanges(dirty)` (`src/components/navigation/navigation-guard.tsx`) and calls the function it returns once the save has succeeded. Links that can leave such a form must be `GuardedLink`s: the dashboard header, the user menu and the edit page's back link already are. The browser's Back button cannot be intercepted; the page is kept alive instead (see [architecture.md](architecture.md#caching-and-rendering-cache-components)), so the draft is still there on return.
 - **A new repository method** goes in three places: `src/server/repositories/interfaces.ts`, the Drizzle repository, and the in-memory fake in `tests/unit/support/fakes.ts`.
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `docs:`…). This is a convention: there are no git hooks and CI does not check it.
 - New libraries or big design changes get a short ADR in `docs/adr/`.

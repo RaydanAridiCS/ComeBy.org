@@ -418,6 +418,12 @@
     outline-offset: 1px;
     border-color: transparent;
   }
+  /* A field with an error keeps a red edge, focused or not (the same red as the message). */
+  .invite-input[aria-invalid="true"],
+  .invite-input[aria-invalid="true"]:focus-visible {
+    border-color: color-mix(in oklab, #e5484d 75%, var(--invite-fg));
+    box-shadow: 0 0 0 3px color-mix(in oklab, #e5484d 18%, transparent);
+  }
 }
 
 /* Ambient theme motion: compositor-friendly (opacity/transform only). */

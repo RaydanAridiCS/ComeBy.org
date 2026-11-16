@@ -64,7 +64,8 @@ function avatarTone(name: string): string {
   return AVATAR_TONES[hash % AVATAR_TONES.length] ?? "bg-muted text-foreground";
 }
 
-function PhoneLinks({ phone }: { phone: string }) {
+function PhoneLinks({ phone, name }: { phone: string; name: string }) {
+  const t = useTranslations("eventDashboard");
   const parsed = parsePhoneNumberFromString(phone);
   const display = parsed?.formatInternational() ?? phone;
   const digits = (parsed?.number ?? phone).replace(/[^\d]/g, "");
@@ -82,7 +83,7 @@ function PhoneLinks({ phone }: { phone: string }) {
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex size-8 items-center justify-center rounded-full bg-[#e7f8ee] text-[#128c4a] transition-colors hover:bg-[#d2f2df]"
-        aria-label="WhatsApp"
+        aria-label={t("whatsappGuest", { name })}
       >
         <MessageCircle className="size-4" aria-hidden="true" />
       </a>
@@ -250,7 +251,11 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
                 })}
               </div>
               <Select value={sort} onValueChange={(value) => setSort(value as ResponseSort)}>
-                <SelectTrigger className="ms-auto w-40" size="sm">
+                <SelectTrigger
+                  className="ms-auto w-40"
+                  size="sm"
+                  aria-label={t("eventDashboard.sortLabel")}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,7 +305,9 @@ export function ResponsesTable({ data }: { data: DashboardData }) {
                         </div>
                         <RemoveButton eventId={data.event.id} response={response} />
                       </div>
-                      {response.phone ? <PhoneLinks phone={response.phone} /> : null}
+                      {response.phone ? (
+                        <PhoneLinks phone={response.phone} name={response.name} />
+                      ) : null}
                       {response.message ? (
                         <p className="relative self-start rounded-2xl rounded-ss-sm bg-muted px-3.5 py-2 text-sm">
                           “{response.message}”

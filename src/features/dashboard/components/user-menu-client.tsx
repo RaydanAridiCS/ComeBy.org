@@ -1,9 +1,9 @@
 "use client";
 
 import { CalendarDays, LogOut, Settings, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { GuardedLink, useNavigationGuard } from "@/components/navigation/navigation-guard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +40,7 @@ export function UserMenuClient({
 }) {
   const t = useTranslations("nav");
   const router = useRouter();
+  const guard = useNavigationGuard();
 
   return (
     <DropdownMenu>
@@ -60,32 +61,34 @@ export function UserMenuClient({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard">
+          <GuardedLink href="/dashboard">
             <CalendarDays />
             {t("myEvents")}
-          </Link>
+          </GuardedLink>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings">
+          <GuardedLink href="/dashboard/settings">
             <Settings />
             {t("settings")}
-          </Link>
+          </GuardedLink>
         </DropdownMenuItem>
         {showAdmin ? (
           <DropdownMenuItem asChild>
-            <Link href="/admin">
+            <GuardedLink href="/admin">
               <ShieldCheck />
               {t("moderation")}
-            </Link>
+            </GuardedLink>
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onSelect={async () => {
-            await signOut();
-            router.replace("/");
-            router.refresh();
-          }}
+          onSelect={() =>
+            guard.attempt(async () => {
+              await signOut();
+              router.replace("/");
+              router.refresh();
+            })
+          }
         >
           <LogOut />
           {t("signOut")}

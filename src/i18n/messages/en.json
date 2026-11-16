@@ -22,7 +22,11 @@
     "tryAgain": "Try again",
     "openSource": "Open source",
     "freeForever": "Free, no ads",
-    "more": "More options"
+    "more": "More options",
+    "unsavedTitle": "Leave without saving?",
+    "unsavedBody": "The changes you made on this page haven't been saved.",
+    "unsavedStay": "Keep editing",
+    "unsavedLeave": "Leave"
   },
   "nav": {
     "myEvents": "My events",
@@ -276,6 +280,9 @@
     "submitCreate": "Create invite",
     "submitEdit": "Save changes",
     "saved": "Changes saved",
+    "errorTitleRequired": "Give your event a name.",
+    "errorHostNameRequired": "Add a name, so guests know who is inviting them.",
+    "errorQuestionRequired": "Write the question, or remove it.",
     "errorEndBeforeStart": "The end time must be after the start.",
     "errorDeadlineAfterStart": "The deadline must be before the event starts.",
     "errorInvalidDate": "Please pick a valid date and time.",
@@ -373,6 +380,7 @@
     "responsesTitle": "Responses",
     "searchPlaceholder": "Search by name, phone or message",
     "filterAll": "All",
+    "sortLabel": "Sort responses",
     "sortNewest": "Newest first",
     "sortOldest": "Oldest first",
     "sortName": "Name A–Z",
@@ -389,6 +397,7 @@
     "plusOnes": "+{count}",
     "changedAt": "Changed",
     "removeResponse": "Remove response",
+    "whatsappGuest": "Message {name} on WhatsApp",
     "removeConfirmTitle": "Remove {name}'s response?",
     "removeConfirmBody": "Use this for spam or mistakes. They can respond again with the link.",
     "removed": "Response removed",
@@ -433,6 +442,7 @@
     "calendarOutlook": "Outlook",
     "calendarOther": "Other (.ics file)",
     "openInMaps": "Open in Maps",
+    "onTheMap": "See it on the map",
     "joinOnline": "Join online",
     "online": "Online",
     "locationTbd": "Location shared soon",
@@ -645,8 +655,7 @@
       "sampleHost": "Yasmine",
       "samplePlace": "Papercup Café"
     },
-    "pickerLabel": "Invite theme",
-    "selected": "Selected"
+    "pickerLabel": "Invite theme"
   },
   "errors": {
     "unauthorized": "Please sign in to continue.",

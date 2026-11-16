@@ -1,11 +1,11 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { z } from "zod";
 import { PageTransition } from "@/components/motion/page-transition";
+import { GuardedLink } from "@/components/navigation/navigation-guard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LIMITS } from "@/config/limits";
 import { EventForm } from "@/features/events/components/event-form";
@@ -46,12 +46,12 @@ export default async function EditEventPage({ params }: PageProps<"/dashboard/ev
       <div className="flex flex-col gap-6">
         <Suspense fallback={null}>
           {params.then(({ id }) => (
-            <Link
+            <GuardedLink
               href={`/dashboard/events/${id}`}
               className="inline-flex items-center gap-1.5 self-start rounded-lg py-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
             >
               <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" /> {t("common.back")}
-            </Link>
+            </GuardedLink>
           ))}
         </Suspense>
         <h1 className="heading animate-rise text-title">{t("eventForm.editTitle")}</h1>

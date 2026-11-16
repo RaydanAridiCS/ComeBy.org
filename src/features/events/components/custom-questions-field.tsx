@@ -11,9 +11,10 @@ import {
   useFieldArray,
   useWatch,
 } from "react-hook-form";
+import { fieldA11y } from "@/components/forms/field-a11y";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,19 +36,23 @@ function ChoicesEditor({
   control,
   setValue,
   index,
+  errorId,
 }: {
   control: Control<EventFormInput>;
   setValue: UseFormSetValue<EventFormInput>;
   index: number;
+  /** Set while "add at least two choices" is showing: the empty boxes are what's wrong. */
+  errorId: string | undefined;
 }) {
   const t = useTranslations("eventForm");
   const path = `customQuestions.${index}.choices` as const;
   const choices = useWatch({ control, name: path }) ?? [];
-  const update = (next: string[]) => setValue(path, next, { shouldDirty: true });
+  const update = (next: string[]) =>
+    setValue(path, next, { shouldDirty: true, shouldValidate: Boolean(errorId) });
 
   return (
     <div className="flex flex-col gap-2">
-      <FieldLabel>{t("questionChoices")}</FieldLabel>
+      <FieldTitle>{t("questionChoices")}</FieldTitle>
       {choices.map((choice, choiceIndex) => (
         // Choices have no identity besides their position; inputs are controlled, so this is safe.
         // biome-ignore lint/suspicious/noArrayIndexKey: see comment above
@@ -58,6 +63,8 @@ function ChoicesEditor({
           <Input
             value={choice}
             aria-label={t("choicePlaceholder", { number: choiceIndex + 1 })}
+            aria-invalid={(Boolean(errorId) && !choice.trim()) || undefined}
+            aria-describedby={errorId && !choice.trim() ? errorId : undefined}
             placeholder={t("choicePlaceholder", { number: choiceIndex + 1 })}
             onChange={(event) =>
               update(choices.map((value, i) => (i === choiceIndex ? event.target.value : value)))
@@ -112,6 +119,11 @@ export function CustomQuestionsField({
       {fields.map((field, index) => {
         const type = questions[index]?.type ?? "text";
         const error = errors?.[index];
+        const label = fieldA11y(`q-${field.id}`, { invalid: Boolean(error?.label) });
+        const choicesError = translateError(
+          error?.choices?.message ?? error?.choices?.root?.message,
+        );
+        const choicesErrorId = `q-${field.id}-choices-error`;
         return (
           <div
             key={field.id}
@@ -122,13 +134,13 @@ export function CustomQuestionsField({
             </p>
             <div className="flex items-start gap-2">
               <Field data-invalid={Boolean(error?.label)} className="flex-1">
-                <FieldLabel htmlFor={`q-${field.id}`}>{t("questionLabel")}</FieldLabel>
+                <FieldLabel htmlFor={label.control.id}>{t("questionLabel")}</FieldLabel>
                 <Input
-                  id={`q-${field.id}`}
+                  {...label.control}
                   placeholder={t("questionLabelPlaceholder")}
                   {...register(`customQuestions.${index}.label`)}
                 />
-                <FieldError>{translateError(error?.label?.message)}</FieldError>
+                <FieldError id={label.errorId}>{translateError(error?.label?.message)}</FieldError>
               </Field>
               <Button
                 type="button"
@@ -173,10 +185,13 @@ export function CustomQuestionsField({
             </div>
             {type === "choice" ? (
               <>
-                <ChoicesEditor control={control} setValue={setValue} index={index} />
-                <FieldError>
-                  {translateError(error?.choices?.message ?? error?.choices?.root?.message)}
-                </FieldError>
+                <ChoicesEditor
+                  control={control}
+                  setValue={setValue}
+                  index={index}
+                  errorId={choicesError ? choicesErrorId : undefined}
+                />
+                <FieldError id={choicesErrorId}>{choicesError}</FieldError>
               </>
             ) : null}
           </div>

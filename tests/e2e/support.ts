@@ -60,11 +60,21 @@ export async function signUpHost(page: Page, options: { email?: string; name?: s
 }
 
 /** Creates an event through the real form. Returns the event id and its public link. */
-export async function createInvite(page: Page, title = "Picnic in the park") {
+export async function createInvite(
+  page: Page,
+  title = "Picnic in the park",
+  options: { theme?: string } = {},
+) {
   await page.goto("/dashboard/events/new");
   await page.getByLabel("Event name").fill(title);
   await page.getByLabel("Starts").fill(tomorrowAt(16));
   await page.getByLabel("Place name").fill("Central Park");
+  if (options.theme) {
+    await page
+      .getByRole("radiogroup", { name: "Theme" })
+      .getByRole("radio", { name: options.theme })
+      .click();
+  }
   await page.getByRole("button", { name: "Create invite" }).click();
   await expect(page).toHaveURL(/\/dashboard\/events\/[0-9a-f-]{36}/);
   const eventId = page.url().match(/events\/([0-9a-f-]{36})/)?.[1] ?? "";

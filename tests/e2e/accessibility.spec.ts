@@ -49,6 +49,74 @@ test("not-found pages have no serious accessibility violations", async ({ page }
   await expectNoSeriousViolations(page, "/dashboard/events/not-an-id");
 });
 
+test("the event page with responses and the edit form have no serious violations", async ({
+  page,
+  browser,
+}) => {
+  await signUpHost(page);
+  const { eventId, inviteHref } = await createInvite(page, "Sunday brunch");
+  for (const [name, status] of [
+    ["Omar", "Going"],
+    ["Maya", "Maybe"],
+    ["Karim", "Can't go"],
+  ] as const) {
+    const context = await browser.newContext();
+    await respondAsGuest(await context.newPage(), inviteHref, { name, status });
+    await context.close();
+  }
+
+  await page.goto(`/dashboard/events/${eventId}`);
+  await expect(page.getByText("Karim", { exact: true })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await expectNoSeriousViolations(page, "event page with responses");
+
+  await page.goto(`/dashboard/events/${eventId}/edit`);
+  await expect(page.getByLabel("Event name")).toHaveValue("Sunday brunch");
+  await page.waitForLoadState("networkidle");
+  await expectNoSeriousViolations(page, "edit form");
+});
+
+test("both forms in their error state have no serious violations", async ({ page, browser }) => {
+  await signUpHost(page);
+  const { inviteHref } = await createInvite(page, "Tea at five");
+
+  await page.goto("/dashboard/events/new");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "Create invite" }).click();
+  await expect(page.getByLabel("Event name")).toHaveAttribute("aria-invalid", "true");
+  await expectNoSeriousViolations(page, "new-event form with errors");
+
+  const guestContext = await browser.newContext();
+  const guest = await guestContext.newPage();
+  await guest.goto(inviteHref);
+  await guest.getByRole("radio", { name: "Going" }).click();
+  await guest.getByRole("button", { name: "Send response" }).click();
+  await expect(guest.getByLabel("Your name")).toHaveAttribute("aria-invalid", "true");
+  await expectNoSeriousViolations(guest, "RSVP form with errors");
+  await guestContext.close();
+});
+
+test("invites in other themes, dark ones included, have no serious violations", async ({
+  page,
+  browser,
+}) => {
+  await signUpHost(page);
+  for (const theme of ["Midnight", "Cyber", "Bloom", "Clean"]) {
+    const { inviteHref } = await createInvite(page, `${theme} evening`, { theme });
+    const guestContext = await browser.newContext();
+    const guest = await guestContext.newPage();
+    await guest.goto(inviteHref);
+    await guest.waitForLoadState("networkidle");
+    await expectNoSeriousViolations(guest, `invite in ${theme}`);
+    // The open form too: inputs, hints and the send button in that theme's colours.
+    await guest.getByRole("radio", { name: "Going" }).click();
+    await guest.getByRole("button", { name: "Send response" }).click();
+    await expect(guest.getByLabel("Your name")).toHaveAttribute("aria-invalid", "true");
+    await expectNoSeriousViolations(guest, `invite in ${theme}, form with an error`);
+    await guestContext.close();
+  }
+});
+
 test("the invite page and host screens have no serious accessibility violations", async ({
   page,
   browser,

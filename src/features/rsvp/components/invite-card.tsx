@@ -87,6 +87,9 @@ export function InviteCard({
   const t = useTranslations("eventPage");
   const theme = THEME_TOKENS[invite.theme];
   const initial = invite.hostName.trim().charAt(0).toUpperCase() || "?";
+  // A pasted map link is for the "Open in Maps" button, not for reading.
+  const addressIsLink = /^https?:\/\//i.test(invite.locationAddress ?? "");
+  const addressText = addressIsLink ? null : invite.locationAddress;
 
   const where =
     invite.locationType === "online" ? (
@@ -113,8 +116,10 @@ export function InviteCard({
       <DetailRow
         icon={MapPin}
         label={t("where")}
-        primary={invite.locationName || invite.locationAddress || t("locationTbd")}
-        secondary={invite.locationName ? invite.locationAddress : null}
+        primary={
+          invite.locationName || addressText || (addressIsLink ? t("onTheMap") : t("locationTbd"))
+        }
+        secondary={invite.locationName ? addressText : null}
         action={
           invite.mapsHref ? (
             <a
@@ -178,7 +183,7 @@ export function InviteCard({
             icon={CalendarDays}
             label={t("when")}
             primary={invite.dayLabel}
-            secondary={`${invite.timeLabel} · ${invite.zoneLabel}`}
+            secondary={[invite.timeLabel, invite.zoneLabel].filter(Boolean).join(" · ")}
             action={calendar}
           />
           {where}

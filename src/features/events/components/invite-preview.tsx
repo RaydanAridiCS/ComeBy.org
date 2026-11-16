@@ -106,6 +106,16 @@ export function InvitePreview({
     };
   }, [values.startsAt, values.endsAt, values.timezone]);
 
+  // Before a date is picked, name the zone the way it will read afterwards ("GMT+2", not
+  // "Asia/Beirut"). Empty on the server render, where a new event has no zone yet.
+  const zoneToday = useMemo(
+    () =>
+      values.timezone && isValidTimeZone(values.timezone)
+        ? formatTimeZoneLabel(new Date(), values.timezone)
+        : "",
+    [values.timezone],
+  );
+
   return (
     <div
       className={cn("invite-page relative isolate overflow-hidden", className)}
@@ -122,7 +132,7 @@ export function InvitePreview({
           heroDate={when?.heroDate ?? { day: "–", month: "", weekday: "" }}
           dayLabel={when?.dayLabel ?? t("previewPickDate")}
           timeLabel={when?.timeLabel ?? t("previewPickTime")}
-          zoneLabel={when?.zoneLabel ?? values.timezone}
+          zoneLabel={when?.zoneLabel ?? zoneToday}
           locationType={values.locationType}
           locationName={values.locationName.trim() || null}
           locationAddress={values.locationAddress.trim() || null}

@@ -39,7 +39,7 @@ export const customQuestionSchema = z
     label: z
       .string()
       .trim()
-      .min(1, { message: "errors.validation" })
+      .min(1, { message: "eventForm.errorQuestionRequired" })
       .max(FIELD_LIMITS.questionLabelMaxLength, { message: "errors.validation" }),
     type: z.enum(["text", "choice"]),
     required: z.boolean(),
@@ -63,12 +63,12 @@ export const eventFormSchema = z
     title: z
       .string()
       .trim()
-      .min(1, { message: "errors.validation" })
+      .min(1, { message: "eventForm.errorTitleRequired" })
       .max(FIELD_LIMITS.titleMaxLength, { message: "errors.validation" }),
     hostName: z
       .string()
       .trim()
-      .min(1, { message: "errors.validation" })
+      .min(1, { message: "eventForm.errorHostNameRequired" })
       .max(FIELD_LIMITS.hostNameMaxLength, { message: "errors.validation" }),
     description: optionalText(LIMITS.descriptionMaxLength),
     startsAt: localDateTime,

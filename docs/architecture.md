@@ -71,6 +71,7 @@ Next.js 16 runs with `cacheComponents: true`:
 - The public event behind a link is cached with `"use cache"` (`features/events/queries.ts`) and tagged `event:<id>`. Every host change calls `updateTag(...)`, so guests see edits immediately.
 - Guest counts, the guest's own response and everything on the dashboard are never cached.
 - Chat apps' link-preview bots (WhatsApp, Telegram…) get a blocking render with metadata in `<head>` (`htmlLimitedBots` in `next.config.ts`).
+- **A page is not thrown away when the host leaves it.** Next.js keeps up to three pages alive, hidden, and shows the same one again on the next visit, with its state, form values and scroll position. That is why a half-written event survives going to another page and back. It also means a client component must tidy up what should not come back: effects are cleaned up when a page is hidden and run again when it is shown, so do the tidying in an effect cleanup. The event form does this after a save (`afterSave` in `src/features/events/components/event-form.tsx`); without it, "New event" would open with the previous event's details.
 
 ## Guests without accounts
 

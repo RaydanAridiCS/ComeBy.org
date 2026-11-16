@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
 import { useRovingRadio } from "@/components/forms/use-roving-radio";
 import { useTilt } from "@/components/motion/use-tilt";
 import { cn } from "@/lib/utils";
@@ -14,21 +15,38 @@ export function ThemePicker({
   value,
   onChange,
   previewTitle,
+  labelledBy,
 }: {
   value: ThemeId;
   onChange: (theme: ThemeId) => void;
   /** The event's title, shown on every preview once the host has typed one. */
   previewTitle?: string;
+  /** The id of the visible label; without it the group uses its own name. */
+  labelledBy?: string;
 }) {
   const t = useTranslations("themes");
   const tilt = useTilt();
   const radio = useRovingRadio<ThemeId>([...THEMES], value, onChange);
+  const row = useRef<HTMLDivElement>(null);
+
+  // On a phone the themes are one sideways row: start with the chosen one in view (editing
+  // an event, or arriving with ?theme=). Only the row scrolls, never the page.
+  const initial = useRef(value);
+  useEffect(() => {
+    const container = row.current;
+    const chosen =
+      radio.refs.current[THEME_LIST.findIndex((theme) => theme.id === initial.current)];
+    if (!container || !chosen || container.scrollWidth <= container.clientWidth) return;
+    container.scrollLeft = chosen.offsetLeft - (container.clientWidth - chosen.offsetWidth) / 2;
+  }, [radio.refs]);
 
   return (
     <div
+      ref={row}
       role="radiogroup"
-      aria-label={t("pickerLabel")}
-      className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pt-2 pb-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 xl:grid-cols-5"
+      aria-labelledby={labelledBy}
+      aria-label={labelledBy ? undefined : t("pickerLabel")}
+      className="relative -mx-5 flex w-auto! snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pt-2 pb-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 xl:grid-cols-5"
     >
       {THEME_LIST.map((theme, index) => {
         const selected = theme.id === value;
@@ -57,11 +75,14 @@ export function ThemePicker({
                 "group-focus-visible:ring-4 group-focus-visible:ring-ring/40",
               )}
             >
-              <InviteMini theme={theme.id} title={previewTitle} className="aspect-[3/4] w-full" />
+              {/* A picture of the theme. The option's name is the theme and its tagline below. */}
+              <span aria-hidden="true" className="block">
+                <InviteMini theme={theme.id} title={previewTitle} className="aspect-[3/4] w-full" />
+              </span>
               {selected ? (
                 <span className="absolute end-2 top-2 flex size-7 animate-pop items-center justify-center rounded-full bg-brand-600 text-white shadow-md">
+                  {/* Decoration: aria-checked on the button already says it is selected. */}
                   <Check className="size-4" strokeWidth={3} aria-hidden="true" />
-                  <span className="sr-only">{t("selected")}</span>
                 </span>
               ) : null}
             </span>

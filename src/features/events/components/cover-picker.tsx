@@ -21,12 +21,15 @@ export function CoverPicker({
   onFileChange,
   onRemoveCurrent,
   busy,
+  labelledBy,
 }: {
   currentUrl: string | null;
   file: File | null;
   onFileChange: (file: File | null) => void;
   onRemoveCurrent?: () => void;
   busy?: boolean;
+  /** The id of the visible label for this picker. */
+  labelledBy?: string;
 }) {
   const t = useTranslations("eventForm");
   const inputId = useId();
@@ -76,7 +79,8 @@ export function CoverPicker({
   };
 
   return (
-    <div className="flex flex-col gap-2.5">
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would restyle the picker; the group role is enough
+    <div role="group" aria-labelledby={labelledBy} className="flex flex-col gap-2.5">
       <input
         ref={inputRef}
         id={inputId}

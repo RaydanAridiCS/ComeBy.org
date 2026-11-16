@@ -49,12 +49,15 @@ Playwright drives Chromium through real flows: signing up (reading the confirmat
 - Two projects run every spec: **desktop** (Desktop Chrome) and **mobile** (Pixel 7). The admin spec runs on desktop only, because its tests share one account.
 - Two workers at a time, no parallelism inside a file. Each test sends real emails and jobs.
 - If `E2E_BASE_URL` is not set, Playwright starts `pnpm run dev` on port 3000, **or reuses whatever is already answering on port 3000**.
-- The helpers in `tests/e2e/support.ts` (`signUpHost`, `createInvite`, `respondAsGuest`, `withDatabase`) cover the common steps. `withDatabase` writes straight to the database named by `DATABASE_URL`, so that variable must point at the same database the app under test is using.
+- The helpers in `tests/e2e/support.ts` (`signUpHost`, `createInvite`, `respondAsGuest`, `withDatabase`) cover the common steps. `createInvite` takes a theme: `createInvite(page, "Game night", { theme: "Midnight" })`.
+- Tests mostly move with `page.goto`, which loads a fresh page. A host moves with links, and a page reached by a link can be one that was kept alive from before. When the behaviour depends on that (a form reopened after a save), click the link in the test. `withDatabase` writes straight to the database named by `DATABASE_URL`, so that variable must point at the same database the app under test is using.
 - The admin tests are skipped unless `E2E_ADMIN_EMAIL` is set and the app was started with `ADMIN_EMAILS` set to the same address.
 
 ### Accessibility
 
-`tests/e2e/accessibility.spec.ts` runs axe (`@axe-core/playwright`) against WCAG 2.0 A/AA and 2.2 AA rules, and fails on serious or critical violations. It covers the public pages, the event list, the new-event form, settings and an invite page. A new screen or a new state of a screen (a dialog, an error state) should be added there.
+`tests/e2e/accessibility.spec.ts` runs axe (`@axe-core/playwright`) against WCAG 2.0 A/AA and 2.2 AA rules, and fails on serious or critical violations. It covers the public pages, the not-found pages, the event list, the event page with responses, the new-event and edit forms, settings, the invite page in five themes (two of them dark), and both forms in their error state. A new screen or a new state of a screen (a dialog, an error state) should be added there.
+
+`tests/e2e/forms.spec.ts` checks what axe cannot: that a failed submit marks the field, ties it to its message, and moves focus to it (also inside a collapsed section, and for an error that comes back from the server); that leaving the event form with unsaved changes asks first; and that "New event" opens blank after an event was created.
 
 The colour contrast of every invite theme is checked separately by `pnpm run check:contrast`.
 

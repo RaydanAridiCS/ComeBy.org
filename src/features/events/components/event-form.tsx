@@ -4,13 +4,31 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Eye, Globe, HelpCircle, MapPin } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { Controller, type FieldPath, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { fieldA11y } from "@/components/forms/field-a11y";
+import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
 import { useTranslateError } from "@/components/forms/use-translate-error";
+import { useUnsavedChanges } from "@/components/navigation/navigation-guard";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -69,6 +87,11 @@ const selectClass =
 
 const optionCardClass =
   "flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border bg-card px-3.5 py-2.5 text-sm transition-colors hover:border-input has-data-checked:border-brand-500 has-data-checked:bg-brand-50/60";
+
+// On a phone three side-by-side options are about 96 px each: the icon sits above the label,
+// or "Shared later" would run from border to border.
+const locationOptionClass =
+  "h-auto min-w-0 flex-col gap-1 px-1.5 py-2.5 data-[state=on]:border-brand-500 data-[state=on]:bg-brand-50 data-[state=on]:text-brand-800 sm:h-10 sm:flex-row sm:gap-1.5 sm:px-3 sm:py-0";
 
 function Section({ step, title, children }: { step: number; title: string; children: ReactNode }) {
   return (
@@ -160,16 +183,41 @@ export function EventForm(props: EventFormProps) {
     resolver: zodResolver(eventFormSchema),
     defaultValues: initialValues,
     mode: "onTouched",
+    // Focus is handled below, so it also works for server errors and collapsed sections.
+    shouldFocusError: false,
   });
   const { control, register, formState, setValue, setError } = form;
-  const { errors } = formState;
+  const { errors, isDirty } = formState;
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusFirstInvalid = useFocusFirstInvalid(formRef);
+  // A cover picked for a new event is only uploaded on save, so it counts as unsaved too.
+  const releaseUnsaved = useUnsavedChanges(
+    isDirty || (props.mode === "create" && coverFile !== null),
+  );
 
-  // New events default to the host's own time zone.
+  // Next keeps this page alive, hidden, after the host leaves it, and shows it again the
+  // next time they come here. So once a save has gone through, the form is put in order
+  // the moment the page is hidden: a new-event form goes back to blank (or the next
+  // "New event" would open with this event's details), an edit form takes the saved
+  // values as its starting point. An unsaved draft is left alone and is still there.
+  const afterSave = useRef<(() => void) | null>(null);
+  useLayoutEffect(
+    () => () => {
+      afterSave.current?.();
+      afterSave.current = null;
+    },
+    [],
+  );
+
+  // New events default to the host's own time zone. It becomes the field's starting value,
+  // so the form doesn't count as edited before the host has touched it.
   useEffect(() => {
     if (props.mode === "create" && !form.getValues("timezone")) {
-      setValue("timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
+      form.resetField("timezone", {
+        defaultValue: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
     }
-  }, [props.mode, form, setValue]);
+  }, [props.mode, form]);
 
   const watched = useWatch({ control });
   const locationType = watched.locationType ?? "physical";
@@ -223,6 +271,7 @@ export function EventForm(props: EventFormProps) {
       setError(path.replace(/^values\./, "") as FieldPath<EventFormInput>, { message });
     }
     toast.error(result.error.message);
+    focusFirstInvalid();
   }
 
   async function uploadCover(eventId: string, file: File): Promise<boolean> {
@@ -239,6 +288,11 @@ export function EventForm(props: EventFormProps) {
       if (props.mode === "create") {
         const result = await createEventAction(values);
         if (!result.ok) return applyServerErrors(result);
+        releaseUnsaved();
+        afterSave.current = () => {
+          form.reset();
+          setCoverFile(null);
+        };
         if (coverFile) await uploadCover(result.data.id, coverFile);
         // No toast: the event page greets the host with the "your invite is ready" panel.
         router.push(`/dashboard/events/${result.data.id}?created=1`);
@@ -246,10 +300,12 @@ export function EventForm(props: EventFormProps) {
       }
       const result = await updateEventAction({ eventId: props.eventId, values, notifyGuests });
       if (!result.ok) return applyServerErrors(result);
+      releaseUnsaved();
+      afterSave.current = () => form.reset(form.getValues());
       toast.success(t("saved"));
       router.push(`/dashboard/events/${props.eventId}`);
     });
-  });
+  }, focusFirstInvalid);
 
   async function handleCoverChange(file: File | null) {
     if (props.mode === "create") {
@@ -274,6 +330,20 @@ export function EventForm(props: EventFormProps) {
   }
 
   const err = (message: string | undefined) => translateError(message);
+  /** Ties one control to its error (and to its hint, if it has one). */
+  const a11y = (name: keyof EventFormInput & string, hint = false) =>
+    fieldA11y(name, { invalid: Boolean(errors[name]), hint });
+  const titleField = a11y("title");
+  const hostNameField = a11y("hostName");
+  const descriptionField = a11y("description", true);
+  const startsAtField = a11y("startsAt");
+  const endsAtField = a11y("endsAt");
+  const timezoneField = a11y("timezone", !errors.timezone);
+  const locationNameField = a11y("locationName");
+  const locationAddressField = a11y("locationAddress");
+  const onlineUrlField = a11y("onlineUrl");
+  const slugField = a11y("slug", !errors.slug);
+  const rsvpDeadlineField = a11y("rsvpDeadline", !errors.rsvpDeadline);
   const preview = (
     <InvitePreview
       values={previewValues}
@@ -285,6 +355,7 @@ export function EventForm(props: EventFormProps) {
 
   return (
     <form
+      ref={formRef}
       onSubmit={onSubmit}
       noValidate
       className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]"
@@ -294,28 +365,35 @@ export function EventForm(props: EventFormProps) {
           <FieldGroup>
             <Field data-invalid={Boolean(errors.title)}>
               <FieldLabel htmlFor="title">{t("title")}</FieldLabel>
-              <Input id="title" placeholder={t("titlePlaceholder")} {...register("title")} />
-              <FieldError>{err(errors.title?.message)}</FieldError>
+              <Input
+                {...titleField.control}
+                placeholder={t("titlePlaceholder")}
+                {...register("title")}
+              />
+              <FieldError id={titleField.errorId}>{err(errors.title?.message)}</FieldError>
             </Field>
             <Field data-invalid={Boolean(errors.hostName)}>
               <FieldLabel htmlFor="hostName">{t("hostName")}</FieldLabel>
               <Input
-                id="hostName"
+                {...hostNameField.control}
                 placeholder={t("hostNamePlaceholder")}
                 {...register("hostName")}
               />
-              <FieldError>{err(errors.hostName?.message)}</FieldError>
+              <FieldError id={hostNameField.errorId}>{err(errors.hostName?.message)}</FieldError>
             </Field>
             <Field data-invalid={Boolean(errors.description)}>
               <FieldLabel htmlFor="description">{t("description")}</FieldLabel>
               <Textarea
-                id="description"
+                {...descriptionField.control}
                 rows={4}
                 maxLength={LIMITS.descriptionMaxLength}
                 placeholder={t("descriptionPlaceholder")}
                 {...register("description")}
               />
-              <FieldDescription className="text-end tabular-nums">
+              <FieldError id={descriptionField.errorId}>
+                {err(errors.description?.message)}
+              </FieldError>
+              <FieldDescription id={descriptionField.hintId} className="text-end tabular-nums">
                 {t("charactersLeft", { count: LIMITS.descriptionMaxLength - description.length })}
               </FieldDescription>
             </Field>
@@ -326,8 +404,8 @@ export function EventForm(props: EventFormProps) {
           <FieldGroup className="grid gap-5 sm:grid-cols-2">
             <Field data-invalid={Boolean(errors.startsAt)}>
               <FieldLabel htmlFor="startsAt">{t("startsAt")}</FieldLabel>
-              <Input id="startsAt" type="datetime-local" {...register("startsAt")} />
-              <FieldError>{err(errors.startsAt?.message)}</FieldError>
+              <Input {...startsAtField.control} type="datetime-local" {...register("startsAt")} />
+              <FieldError id={startsAtField.errorId}>{err(errors.startsAt?.message)}</FieldError>
             </Field>
             <Field data-invalid={Boolean(errors.endsAt)}>
               <FieldLabel htmlFor="endsAt">
@@ -336,12 +414,12 @@ export function EventForm(props: EventFormProps) {
                   ({tCommon("optional").toLowerCase()})
                 </span>
               </FieldLabel>
-              <Input id="endsAt" type="datetime-local" {...register("endsAt")} />
-              <FieldError>{err(errors.endsAt?.message)}</FieldError>
+              <Input {...endsAtField.control} type="datetime-local" {...register("endsAt")} />
+              <FieldError id={endsAtField.errorId}>{err(errors.endsAt?.message)}</FieldError>
             </Field>
             <Field data-invalid={Boolean(errors.timezone)} className="sm:col-span-2">
               <FieldLabel htmlFor="timezone">{t("timezone")}</FieldLabel>
-              <select id="timezone" className={selectClass} {...register("timezone")}>
+              <select {...timezoneField.control} className={selectClass} {...register("timezone")}>
                 {timezone && !timeZones.includes(timezone) ? (
                   <option value={timezone}>{timezone}</option>
                 ) : null}
@@ -352,9 +430,9 @@ export function EventForm(props: EventFormProps) {
                 ))}
               </select>
               {errors.timezone ? (
-                <FieldError>{err(errors.timezone.message)}</FieldError>
+                <FieldError id={timezoneField.errorId}>{err(errors.timezone.message)}</FieldError>
               ) : (
-                <FieldDescription>{t("timezoneHint")}</FieldDescription>
+                <FieldDescription id={timezoneField.hintId}>{t("timezoneHint")}</FieldDescription>
               )}
             </Field>
           </FieldGroup>
@@ -373,22 +451,13 @@ export function EventForm(props: EventFormProps) {
                 className="grid w-full grid-cols-3"
                 aria-label={t("locationType")}
               >
-                <ToggleGroupItem
-                  value="physical"
-                  className="data-[state=on]:border-brand-500 data-[state=on]:bg-brand-50 data-[state=on]:text-brand-800"
-                >
+                <ToggleGroupItem value="physical" className={locationOptionClass}>
                   <MapPin /> {t("locationPhysical")}
                 </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="online"
-                  className="data-[state=on]:border-brand-500 data-[state=on]:bg-brand-50 data-[state=on]:text-brand-800"
-                >
+                <ToggleGroupItem value="online" className={locationOptionClass}>
                   <Globe /> {t("locationOnline")}
                 </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="tbd"
-                  className="data-[state=on]:border-brand-500 data-[state=on]:bg-brand-50 data-[state=on]:text-brand-800"
-                >
+                <ToggleGroupItem value="tbd" className={locationOptionClass}>
                   <HelpCircle /> {t("locationTbd")}
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -399,18 +468,24 @@ export function EventForm(props: EventFormProps) {
               <Field data-invalid={Boolean(errors.locationName)}>
                 <FieldLabel htmlFor="locationName">{t("locationName")}</FieldLabel>
                 <Input
-                  id="locationName"
+                  {...locationNameField.control}
                   placeholder={t("locationNamePlaceholder")}
                   {...register("locationName")}
                 />
+                <FieldError id={locationNameField.errorId}>
+                  {err(errors.locationName?.message)}
+                </FieldError>
               </Field>
               <Field data-invalid={Boolean(errors.locationAddress)}>
                 <FieldLabel htmlFor="locationAddress">{t("locationAddress")}</FieldLabel>
                 <Input
-                  id="locationAddress"
+                  {...locationAddressField.control}
                   placeholder={t("locationAddressPlaceholder")}
                   {...register("locationAddress")}
                 />
+                <FieldError id={locationAddressField.errorId}>
+                  {err(errors.locationAddress?.message)}
+                </FieldError>
               </Field>
             </FieldGroup>
           ) : null}
@@ -418,25 +493,26 @@ export function EventForm(props: EventFormProps) {
             <Field data-invalid={Boolean(errors.onlineUrl)} className="animate-pop">
               <FieldLabel htmlFor="onlineUrl">{t("onlineUrl")}</FieldLabel>
               <Input
-                id="onlineUrl"
+                {...onlineUrlField.control}
                 type="url"
                 inputMode="url"
                 placeholder={t("onlineUrlPlaceholder")}
                 {...register("onlineUrl")}
               />
-              <FieldError>{err(errors.onlineUrl?.message)}</FieldError>
+              <FieldError id={onlineUrlField.errorId}>{err(errors.onlineUrl?.message)}</FieldError>
             </Field>
           ) : null}
         </Section>
 
         <Section step={4} title={t("sectionLook")}>
           <Field>
-            <FieldLabel>{t("theme")}</FieldLabel>
+            <FieldTitle id="theme-label">{t("theme")}</FieldTitle>
             <Controller
               control={control}
               name="theme"
               render={({ field }) => (
                 <ThemePicker
+                  labelledBy="theme-label"
                   value={field.value}
                   onChange={field.onChange}
                   previewTitle={watched.title?.trim() || undefined}
@@ -445,8 +521,9 @@ export function EventForm(props: EventFormProps) {
             />
           </Field>
           <Field>
-            <FieldLabel>{t("cover")}</FieldLabel>
+            <FieldTitle id="cover-label">{t("cover")}</FieldTitle>
             <CoverPicker
+              labelledBy="cover-label"
               currentUrl={coverUrl}
               file={coverFile}
               onFileChange={handleCoverChange}
@@ -462,12 +539,13 @@ export function EventForm(props: EventFormProps) {
           forceOpen={Boolean(errors.customQuestions || errors.maxPlusOnes)}
         >
           <Field>
-            <FieldLabel>{t("phoneMode")}</FieldLabel>
+            <FieldTitle id="phone-mode-label">{t("phoneMode")}</FieldTitle>
             <Controller
               control={control}
               name="phoneMode"
               render={({ field }) => (
                 <RadioGroup
+                  aria-labelledby="phone-mode-label"
                   value={field.value}
                   onValueChange={field.onChange}
                   className="grid gap-2 sm:grid-cols-3"
@@ -518,7 +596,7 @@ export function EventForm(props: EventFormProps) {
                     orientation="horizontal"
                     className="min-h-14 animate-pop justify-between px-4 py-2"
                   >
-                    <FieldLabel>{t("maxPlusOnes")}</FieldLabel>
+                    <FieldTitle>{t("maxPlusOnes")}</FieldTitle>
                     <Select
                       value={String(field.value)}
                       onValueChange={(value) => field.onChange(Number(value))}
@@ -552,7 +630,7 @@ export function EventForm(props: EventFormProps) {
             />
           </div>
           <Field>
-            <FieldLabel>{t("customQuestions")}</FieldLabel>
+            <FieldTitle>{t("customQuestions")}</FieldTitle>
             <FieldDescription>
               {t("customQuestionsHint", { max: LIMITS.customQuestionsPerEvent })}
             </FieldDescription>
@@ -571,12 +649,13 @@ export function EventForm(props: EventFormProps) {
           forceOpen={Boolean(errors.guestListVisibility)}
         >
           <Field>
-            <FieldLabel>{t("guestListVisibility")}</FieldLabel>
+            <FieldTitle id="guest-list-label">{t("guestListVisibility")}</FieldTitle>
             <Controller
               control={control}
               name="guestListVisibility"
               render={({ field }) => (
                 <RadioGroup
+                  aria-labelledby="guest-list-label"
                   value={field.value}
                   onValueChange={field.onChange}
                   className="grid gap-2"
@@ -606,7 +685,7 @@ export function EventForm(props: EventFormProps) {
                   <InputGroupText>{SITE.domain}/</InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
-                  id="slug"
+                  {...slugField.control}
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
@@ -615,18 +694,26 @@ export function EventForm(props: EventFormProps) {
                 />
               </InputGroup>
               {errors.slug ? (
-                <FieldError>{err(errors.slug.message)}</FieldError>
+                <FieldError id={slugField.errorId}>{err(errors.slug.message)}</FieldError>
               ) : (
-                <FieldDescription>{t("slugHint")}</FieldDescription>
+                <FieldDescription id={slugField.hintId}>{t("slugHint")}</FieldDescription>
               )}
             </Field>
             <Field data-invalid={Boolean(errors.rsvpDeadline)}>
               <FieldLabel htmlFor="rsvpDeadline">{t("rsvpDeadline")}</FieldLabel>
-              <Input id="rsvpDeadline" type="datetime-local" {...register("rsvpDeadline")} />
+              <Input
+                {...rsvpDeadlineField.control}
+                type="datetime-local"
+                {...register("rsvpDeadline")}
+              />
               {errors.rsvpDeadline ? (
-                <FieldError>{err(errors.rsvpDeadline.message)}</FieldError>
+                <FieldError id={rsvpDeadlineField.errorId}>
+                  {err(errors.rsvpDeadline.message)}
+                </FieldError>
               ) : (
-                <FieldDescription>{t("rsvpDeadlineHint")}</FieldDescription>
+                <FieldDescription id={rsvpDeadlineField.hintId}>
+                  {t("rsvpDeadlineHint")}
+                </FieldDescription>
               )}
             </Field>
           </FieldGroup>

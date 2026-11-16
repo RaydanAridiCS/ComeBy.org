@@ -3,9 +3,11 @@
 import { Check, HelpCircle, type LucideIcon, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useCallback, useId, useState, useTransition } from "react";
+import { type ReactNode, useCallback, useId, useRef, useState, useTransition } from "react";
 import { Controller, type FieldPath, type Resolver, useForm, useWatch } from "react-hook-form";
 import type { Country } from "react-phone-number-input";
+import { fieldA11y } from "@/components/forms/field-a11y";
+import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
 import { useRovingRadio } from "@/components/forms/use-roving-radio";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Spinner } from "@/components/ui/spinner";
@@ -112,9 +114,14 @@ function Label({
   );
 }
 
-function ErrorText({ children }: { children: ReactNode }) {
+/** A field's error. `role="alert"` makes a screen reader say it when it appears. */
+function ErrorText({ id, children }: { id: string; children: ReactNode }) {
   if (!children) return null;
-  return <p className={errorClass}>{children}</p>;
+  return (
+    <p id={id} role="alert" className={errorClass}>
+      {children}
+    </p>
+  );
 }
 
 /** The guest's response form: tap a status, type a name, done. */
@@ -147,9 +154,16 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
       plusOnes: 0,
       answers: {},
     },
+    // Focus is handled below, so it also works for the phone field and for server errors.
+    shouldFocusError: false,
   });
   const { control, register, formState, setError, setValue } = form;
   const { errors } = formState;
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusFirstInvalid = useFocusFirstInvalid(formRef);
+  const nameField = fieldA11y("rsvp-name", { invalid: Boolean(errors.name) });
+  const phoneField = fieldA11y("rsvp-phone", { invalid: Boolean(errors.phone) });
+  const emailField = fieldA11y("rsvp-email", { invalid: Boolean(errors.email), hint: true });
   const status = useWatch({ control, name: "status" });
   const plusOnes = useWatch({ control, name: "plusOnes" }) ?? 0;
 
@@ -180,13 +194,14 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
           setError(path.replace(/^values\./, "") as FieldPath<RsvpFormInput>, { message });
         }
         setFormError(result.error.message);
+        focusFirstInvalid();
         return;
       }
       setSubmitted({ status: result.data.status as RsvpStatusValue, emailed: result.data.emailed });
       setHasResponse(true);
       setView("done");
     });
-  });
+  }, focusFirstInvalid);
 
   const onDeleted = () => {
     form.reset({
@@ -264,7 +279,7 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
   } else {
     const going = status === "going";
     content = (
-      <form key="form" onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      <form key="form" ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
         <h2 className="invite-heading text-center text-[1.75rem] leading-tight">{t("title")}</h2>
         <div role="radiogroup" aria-label={t("title")} className="grid grid-cols-3 gap-2">
           {statusValues.map((value, index) => {
@@ -306,22 +321,21 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
           <div key="fields" className="animate-rise">
             <div className="flex flex-col gap-4 pt-1 pb-1">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="rsvp-name">{t("name")}</Label>
+                <Label htmlFor={nameField.control.id}>{t("name")}</Label>
                 <input
-                  id="rsvp-name"
+                  {...nameField.control}
                   autoComplete="name"
                   className={inputClass}
                   placeholder={t("namePlaceholder")}
-                  aria-invalid={Boolean(errors.name)}
                   {...register("name")}
                 />
-                <ErrorText>{translateError(errors.name?.message)}</ErrorText>
+                <ErrorText id={nameField.errorId}>{translateError(errors.name?.message)}</ErrorText>
               </div>
 
               {settings.phoneMode !== "hidden" ? (
                 <div className="flex flex-col gap-1.5">
                   <Label
-                    htmlFor="rsvp-phone"
+                    htmlFor={phoneField.control.id}
                     optional={
                       settings.phoneMode === "optional"
                         ? tCommon("optional").toLowerCase()
@@ -335,7 +349,7 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
                     name="phone"
                     render={({ field }) => (
                       <PhoneInput
-                        id="rsvp-phone"
+                        {...phoneField.control}
                         autoComplete="tel"
                         className={inputClass}
                         defaultCountry={country}
@@ -344,11 +358,12 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
                         value={field.value || undefined}
                         onChange={(value) => field.onChange(value ?? "")}
                         onBlur={field.onBlur}
-                        aria-invalid={Boolean(errors.phone)}
                       />
                     )}
                   />
-                  <ErrorText>{translateError(errors.phone?.message)}</ErrorText>
+                  <ErrorText id={phoneField.errorId}>
+                    {translateError(errors.phone?.message)}
+                  </ErrorText>
                 </div>
               ) : null}
 
@@ -391,21 +406,23 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
               ) : null}
 
               {settings.questions.map((question) => {
-                const id = `rsvp-q-${question.id}`;
                 const error = (
                   errors.answers as Record<string, { message?: string }> | undefined
                 )?.[question.id];
+                const answerField = fieldA11y(`rsvp-q-${question.id}`, {
+                  invalid: Boolean(error),
+                });
                 return (
                   <div key={question.id} className="flex flex-col gap-1.5">
                     <Label
-                      htmlFor={id}
+                      htmlFor={answerField.control.id}
                       optional={question.required ? undefined : tCommon("optional").toLowerCase()}
                     >
                       {question.label}
                     </Label>
                     {question.type === "choice" ? (
                       <select
-                        id={id}
+                        {...answerField.control}
                         className={cn(inputClass, "appearance-auto")}
                         {...register(`answers.${question.id}`)}
                       >
@@ -418,13 +435,13 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
                       </select>
                     ) : (
                       <input
-                        id={id}
+                        {...answerField.control}
                         className={inputClass}
                         maxLength={300}
                         {...register(`answers.${question.id}`)}
                       />
                     )}
-                    <ErrorText>{translateError(error?.message)}</ErrorText>
+                    <ErrorText id={answerField.errorId}>{translateError(error?.message)}</ErrorText>
                   </div>
                 );
               })}
@@ -446,19 +463,24 @@ export function RsvpForm({ settings, existing, turnstileSiteKey, afterSuccess }:
               ) : null}
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="rsvp-email" optional={tCommon("optional").toLowerCase()}>
+                <Label htmlFor={emailField.control.id} optional={tCommon("optional").toLowerCase()}>
                   {t("email")}
                 </Label>
                 <input
-                  id="rsvp-email"
+                  {...emailField.control}
                   type="email"
                   autoComplete="email"
                   inputMode="email"
                   className={inputClass}
                   {...register("email")}
                 />
-                <p className="text-invite-muted text-xs leading-relaxed">{t("emailHint")}</p>
-                <ErrorText>{translateError(errors.email?.message)}</ErrorText>
+                {/* The error sits right under the field; the longer hint comes after it. */}
+                <ErrorText id={emailField.errorId}>
+                  {translateError(errors.email?.message)}
+                </ErrorText>
+                <p id={emailField.hintId} className="text-invite-muted text-xs leading-relaxed">
+                  {t("emailHint")}
+                </p>
               </div>
 
               <Turnstile siteKey={turnstileSiteKey} onToken={onToken} />
