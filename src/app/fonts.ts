@@ -4,7 +4,8 @@ import localFont from "next/font/local";
 /*
  * Fonts are self-hosted by next/font (no requests to Google from visitors).
  * Only Geist is preloaded everywhere. Bricolage (app headings) lives in
- * brand-font.ts so the public invite page never downloads it. Theme and accent
+ * brand-font.ts so the public invite page never downloads it (brand-font-lazy.ts is
+ * the same face without a preload, for not-found and error screens). Theme and accent
  * fonts use `preload: false`, so a browser only downloads one when a page uses it.
  */
 

@@ -859,8 +859,21 @@
   },
   "notFound": {
     "title": "Page not found",
-    "body": "The page you're looking for doesn't exist.",
-    "home": "Go home"
+    "body": "There's nothing at this address. Check it for typos, or start from the home page.",
+    "home": "Go home",
+    "create": "Create an event",
+    "eventTitle": "We couldn't find that event",
+    "eventBody": "It may have been deleted, or it belongs to a different account.",
+    "backToEvents": "Back to your events",
+    "linkTitle": "This link doesn't work",
+    "linkBody": "It may be incomplete, or the response it belongs to was deleted. To respond again, open the invite you were sent."
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "body": "The problem is on our side, not yours. Try again in a moment.",
+    "inviteBody": "This invite couldn't load. The problem is on our side, not yours. Try again in a moment.",
+    "home": "Go home",
+    "backToEvents": "Back to your events"
   },
   "og": {
     "tapToRsvp": "Tap to RSVP",

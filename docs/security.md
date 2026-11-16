@@ -47,6 +47,7 @@ Guests never sign up ([ADR 0004](adr/0004-guests-without-accounts.md)).
 - Checks compare hashes in constant time.
 - Treat `/r/...` links as passwords. They are never logged, error reports carry the route pattern rather than the real path, and the browser error endpoint scrubs token-like strings from the route it is sent.
 - After the 90-day purge the stored hash is overwritten, so old links stop working.
+- A link that doesn't check out always lands on the same page (`/r/invalid`), whether it is malformed, names an unknown response or carries the wrong secret. It never opens the invite, so a response id alone can't be used to find out which event it belongs to.
 
 Events themselves are protected only by their link being unguessable-ish and unlisted: invites are `noindex`, excluded from the sitemap, and there is no way to browse or search them. Anyone who has the link can see the invite. Hosts choose their own link, so a short, guessable one is their choice.
 

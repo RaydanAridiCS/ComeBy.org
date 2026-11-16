@@ -57,8 +57,16 @@ test("host duplicates and then deletes an event", async ({ page }) => {
   await page.getByRole("menuitem", { name: "Delete event" }).click();
   await page.getByRole("button", { name: "Delete forever" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
+  // A deleted event: the dashboard's own message, with the header and a way back.
   await page.goto(`/dashboard/events/${eventId}`);
-  await expect(page.getByRole("heading", { name: "Invite not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "We couldn't find that event" })).toBeVisible();
+  await expect(page.getByRole("banner").getByRole("link", { name: "New event" })).toBeVisible();
+  await page.getByRole("link", { name: "Back to your events" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  // An id that isn't one at all gets the same page.
+  await page.goto("/dashboard/events/not-an-id");
+  await expect(page.getByRole("heading", { name: "We couldn't find that event" })).toBeVisible();
 });
 
 test("host changes notification settings and they stick", async ({ page }) => {

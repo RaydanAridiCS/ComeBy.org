@@ -4,11 +4,15 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ModerationQueue, type QueueItem } from "@/features/admin/components/moderation-queue";
 import { requireAdmin } from "@/server/auth/admin";
+import { isAdmin } from "@/server/auth/admin-policy";
+import { getCurrentUser } from "@/server/auth/session";
 import { adminService } from "@/server/services";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("admin");
-  return { title: t("title") };
+  const t = await getTranslations();
+  // Everyone else gets the not-found page, and the tab title must not give it away either.
+  if (!isAdmin(await getCurrentUser())) return { title: t("notFound.title") };
+  return { title: t("admin.title") };
 }
 
 async function AdminContent() {

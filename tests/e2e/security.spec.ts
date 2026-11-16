@@ -70,13 +70,15 @@ test("robots.txt and the sitemap agree: signup is not advertised", async ({ requ
 test("the moderation page looks like it doesn't exist to everyone else", async ({ page }) => {
   // Signed out.
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Invite not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
 
   // Signed in, but not an admin.
   await signUpHost(page);
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Invite not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
   await expect(page.getByText("Moderation")).toBeHidden();
+  // The tab title must not name the page either.
+  await expect(page).toHaveTitle(/Page not found/);
 });
 
 test("creating events in a burst is rate-limited with a friendly message", async ({ page }) => {

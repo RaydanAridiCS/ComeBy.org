@@ -76,5 +76,32 @@ test("dismissing the ready panel without sharing also keeps it from coming back"
 
 test("unknown invite links show a friendly not-found page", async ({ page }) => {
   await page.goto("/this-invite-does-not-exist-123");
-  await expect(page.getByText("Invite not found")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Invite not found" })).toBeVisible();
+  await expect(page.getByText("Double-check the link with whoever sent it.")).toBeVisible();
+  await expect(page).toHaveTitle(/Invite not found/);
+  // A guest with a dead link isn't pushed to sign up.
+  await expect(page.getByRole("link", { name: "Create an event" })).toHaveCount(0);
+});
+
+test("addresses that can't be an invite say the page is missing, not the invite", async ({
+  page,
+}) => {
+  // Two segments: no route at all. A reserved word and a file name: never an invite link.
+  for (const path of ["/some/unknown/path", "/about", "/wp-login.php"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    await expect(page.getByText("Invite not found")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Go home" })).toBeVisible();
+    await expect(page).toHaveTitle(/Page not found/);
+  }
+});
+
+test("a broken private link explains itself instead of opening the home page", async ({ page }) => {
+  // Malformed, and well-formed but unknown: the same answer either way.
+  for (const link of ["/r/nonsense", "/r/0198a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b.not-the-secret"]) {
+    await page.goto(link);
+    await expect(page).toHaveURL(/\/r\/invalid$/);
+    await expect(page.getByRole("heading", { name: "This link doesn't work" })).toBeVisible();
+    await expect(page.getByText("open the invite you were sent")).toBeVisible();
+  }
 });

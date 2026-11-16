@@ -31,6 +31,24 @@ test("public pages have no serious accessibility violations", async ({ page }) =
   }
 });
 
+test("not-found pages have no serious accessibility violations", async ({ page }) => {
+  const pages = [
+    ["/some/unknown/path", "Page not found"],
+    ["/no-such-invite-123", "Invite not found"],
+    ["/r/invalid", "This link doesn't work"],
+  ] as const;
+  for (const [path, heading] of pages) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    await expectNoSeriousViolations(page, path);
+  }
+
+  await signUpHost(page);
+  await page.goto("/dashboard/events/not-an-id");
+  await expect(page.getByRole("heading", { name: "We couldn't find that event" })).toBeVisible();
+  await expectNoSeriousViolations(page, "/dashboard/events/not-an-id");
+});
+
 test("the invite page and host screens have no serious accessibility violations", async ({
   page,
   browser,

@@ -12,8 +12,11 @@ import type { Messages } from "./config";
 
 type Namespace = keyof Messages;
 
-/** Every page (the root error boundary and form error translation). */
-export const ROOT_NAMESPACES: Namespace[] = ["common", "errors"];
+/**
+ * Every page (form error translation, and the error files in `src/app` and
+ * `src/app/[slug]`, which sit above any nested provider).
+ */
+export const ROOT_NAMESPACES: Namespace[] = ["common", "errors", "errorPage"];
 /** The public invite page: RSVP form, countdown, calendar menu, report dialog. */
 export const INVITE_NAMESPACES: Namespace[] = [
   "common",
@@ -40,6 +43,8 @@ export const ADMIN_NAMESPACES: Namespace[] = ["common", "errors", "admin", "repo
 export const DASHBOARD_NAMESPACES: Namespace[] = [
   "common",
   "errors",
+  // src/app/dashboard/error.tsx renders inside this provider.
+  "errorPage",
   "nav",
   // Settings reuses the password field and its messages.
   "auth",

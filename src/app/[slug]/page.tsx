@@ -23,6 +23,7 @@ import {
   formatTimeZoneLabel,
 } from "@/lib/dates";
 import { eventUrl } from "@/lib/share";
+import { validateSlug } from "@/lib/slug";
 import { fileUrl } from "@/server/adapters/storage";
 import type { EventRecord } from "@/server/repositories/types";
 import { THEME_TOKENS, themeStyle } from "@/themes";
@@ -33,7 +34,16 @@ const CHANGE_KEYS = new Set(["time", "location", "title", "details"]);
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const event = await getPublicEvent(slug.toLowerCase());
-  if (!event || event.hiddenAt) return { robots: { index: false } };
+  if (!event) {
+    // Same choice as not-found.tsx: an address that could never be an invite is just a missing page.
+    const t = await getTranslations();
+    const couldBeInvite = validateSlug(slug.toLowerCase()) === null;
+    return {
+      title: couldBeInvite ? t("eventPage.notFoundTitle") : t("notFound.title"),
+      robots: { index: false },
+    };
+  }
+  if (event.hiddenAt) return { robots: { index: false } };
   const t = await getTranslations("eventPage");
   const when = `${formatEventDay(event.startsAt, event.timezone)} · ${formatEventTime(event.startsAt, event.timezone)}`;
   const description = `${when} · ${t("hostedBy", { name: event.hostName })}`;
@@ -204,8 +214,10 @@ async function Invite({ params }: { params: Promise<{ slug: string }> }) {
           data-surface={theme.surface}
           className="invite-card flex animate-rise flex-col items-center gap-2.5 rounded-3xl px-5 py-5 text-center [--i:2]"
         >
+          {/* No prefetch: it made every guest's phone download the landing page and its heading font. */}
           <Link
             href="/"
+            prefetch={false}
             className="invite-focus group inline-flex items-center gap-2.5 rounded-full font-semibold"
           >
             <span className="flex size-8 items-center justify-center rounded-[30%] bg-invite-accent text-invite-accent-fg shadow-sm">

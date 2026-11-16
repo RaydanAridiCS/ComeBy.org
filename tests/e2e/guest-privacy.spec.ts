@@ -41,7 +41,8 @@ test("a guest downloads and deletes their own response", async ({ page, browser 
 
   // The private link and the download are dead, and the invite asks again.
   await guest.goto(editLink);
-  await expect(guest).toHaveURL(/\/$/);
+  await expect(guest).toHaveURL(/\/r\/invalid$/);
+  await expect(guest.getByRole("heading", { name: "This link doesn't work" })).toBeVisible();
   const afterDelete = await context.request.get(`/api/rsvp/export?event=${eventId}`);
   expect(afterDelete.status()).toBe(404);
   await guest.goto(inviteHref);
