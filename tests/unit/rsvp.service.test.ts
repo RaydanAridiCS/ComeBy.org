@@ -46,8 +46,24 @@ describe("RSVP rules", () => {
     expect(applyEventRules(event, answer({ answers: { day: "Sun" } })).answers).toEqual({
       day: "Sun",
     });
-    // Guests who can't come don't have to answer.
+    // Guests who can't come aren't asked, so nothing is required and nothing they send is kept.
     expect(() => applyEventRules(event, answer({ status: "not_going" }))).not.toThrow();
+    const declined = applyEventRules(
+      makeEvent({ ...event, phoneMode: "optional", allowMessage: true, allowPlusOnes: true }),
+      answer({
+        status: "not_going",
+        answers: { day: "Sun" },
+        plusOnes: 1,
+        phone: "+14155550123",
+        message: "Sorry to miss it",
+      }),
+    );
+    expect(declined).toMatchObject({
+      answers: {},
+      plusOnes: 0,
+      phone: "+14155550123",
+      message: "Sorry to miss it",
+    });
   });
 
   it("knows when an event stops accepting responses", () => {

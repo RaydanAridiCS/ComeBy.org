@@ -2,6 +2,7 @@ import { CalendarDays, ExternalLink, Globe, type LucideIcon, MapPin } from "luci
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { ThemeId } from "@/features/events/schema";
+import { keepDayTogether } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { THEME_TOKENS } from "@/themes";
 import { type HeroDate, ThemeHeroArt } from "@/themes/decorations";
@@ -33,23 +34,42 @@ type InviteCardProps = InviteCardData & {
   countdown?: ReactNode;
   /** Add-to-calendar control, shown in the "When" row. */
   calendar?: ReactNode;
+  /** A line under the date, such as the answer deadline. */
+  whenNote?: ReactNode;
   cancelled?: boolean;
+  /** False once the invite takes no answers: drops hints that ask the guest to answer. */
+  answersOpen?: boolean;
   /** The live part: guest list and RSVP form. */
   children?: ReactNode;
   className?: string;
 };
+
+/**
+ * Long titles get a smaller size, so a 70-character one stays within three lines on a phone.
+ * The steps are in globals.css (`.invite-title[data-fit]`).
+ */
+function titleFit(title: string): "m" | "l" | "xl" | "xxl" | undefined {
+  const length = [...title].length;
+  if (length > 60) return "xxl";
+  if (length > 44) return "xl";
+  if (length > 30) return "l";
+  if (length > 20) return "m";
+  return undefined;
+}
 
 function DetailRow({
   icon: Icon,
   label,
   primary,
   secondary,
+  note,
   action,
 }: {
   icon: LucideIcon;
   label: string;
   primary: ReactNode;
   secondary?: ReactNode;
+  note?: ReactNode;
   action?: ReactNode;
 }) {
   return (
@@ -65,6 +85,7 @@ function DetailRow({
         {secondary ? (
           <div className="break-words text-invite-muted text-sm">{secondary}</div>
         ) : null}
+        {note}
         {action ? <div className="mt-2">{action}</div> : null}
       </div>
     </div>
@@ -79,7 +100,9 @@ export function InviteCard({
   titleAs: Title = "h1",
   countdown,
   calendar,
+  whenNote,
   cancelled = false,
+  answersOpen = true,
   children,
   className,
   ...invite
@@ -111,7 +134,12 @@ export function InviteCard({
         }
       />
     ) : invite.locationType === "tbd" ? (
-      <DetailRow icon={MapPin} label={t("where")} primary={t("locationTbd")} />
+      <DetailRow
+        icon={MapPin}
+        label={t("where")}
+        primary={t("locationTbd")}
+        secondary={answersOpen ? t("locationTbdHint") : null}
+      />
     ) : (
       <DetailRow
         icon={MapPin}
@@ -174,7 +202,9 @@ export function InviteCard({
             </span>
             <span className="text-invite-muted">{t("hostedBy", { name: invite.hostName })}</span>
           </p>
-          <Title className="invite-heading invite-title">{invite.title}</Title>
+          <Title className="invite-heading invite-title" data-fit={titleFit(invite.title)}>
+            {invite.title}
+          </Title>
           {countdown}
         </header>
 
@@ -182,8 +212,9 @@ export function InviteCard({
           <DetailRow
             icon={CalendarDays}
             label={t("when")}
-            primary={invite.dayLabel}
+            primary={keepDayTogether(invite.dayLabel)}
             secondary={[invite.timeLabel, invite.zoneLabel].filter(Boolean).join(" · ")}
+            note={whenNote}
             action={calendar}
           />
           {where}

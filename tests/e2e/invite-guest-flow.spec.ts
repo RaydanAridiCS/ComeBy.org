@@ -1,5 +1,13 @@
 import type { Browser, Page } from "@playwright/test";
-import { createInvite, expect, respondAsGuest, signUpHost, test, tomorrowAt } from "./support";
+import {
+  createInvite,
+  expect,
+  respondAsGuest,
+  signUpHost,
+  test,
+  tomorrowAt,
+  withDatabase,
+} from "./support";
 
 const LONG_DETAILS = Array.from(
   { length: 12 },
@@ -38,6 +46,95 @@ async function createLongInvite(page: Page) {
 }
 
 const bar = (page: Page) => page.locator("[data-rsvp-bar]");
+
+test("the form asks what fits the answer, and catches an unfinished phone number", async ({
+  page: guest,
+  browser,
+}) => {
+  const host = await hostPage(browser);
+  await host.goto("/dashboard/events/new");
+  await host.getByLabel("Event name").fill("Lake picnic");
+  await host.getByLabel("Starts").fill(tomorrowAt(12));
+  await host.getByText("What guests are asked").click();
+  await host.getByRole("radio", { name: "Optional" }).first().click();
+  await host.getByLabel("Let guests bring others (+1s)").click();
+  await host.getByRole("button", { name: "Add question" }).click();
+  await host.getByLabel("Question", { exact: true }).fill("Any food allergies?");
+  await host.getByRole("switch", { name: "Required" }).click();
+  await host.getByRole("button", { name: "Create invite" }).click();
+  await expect(host).toHaveURL(/\/dashboard\/events\/[0-9a-f-]{36}/);
+  const inviteHref =
+    (await host.getByRole("link", { name: "View invite" }).first().getAttribute("href")) ?? "/";
+  await host.context().close();
+
+  await guest.goto(inviteHref);
+  const more = guest.getByText("Add a note or get updates");
+
+  // Going: what's needed is in view, the optional fields wait behind one row.
+  await guest.getByRole("radio", { name: "Going" }).click();
+  await expect(guest.getByLabel("Any food allergies?")).toBeVisible();
+  await expect(guest.getByText("Bringing anyone?")).toBeVisible();
+  await expect(guest.getByLabel(/Phone number/)).toBeHidden();
+  await more.click();
+  await expect(guest.getByLabel(/Phone number/)).toBeVisible();
+  await expect(guest.getByLabel(/Message to the host/)).toHaveAttribute(
+    "placeholder",
+    "Can't wait! 🎉",
+  );
+
+  // Half a phone number is pointed out, not dropped.
+  await guest.getByLabel("Your name").fill("Omar");
+  await guest.getByLabel("Any food allergies?").fill("None");
+  await guest.getByLabel(/Phone number/).fill("12");
+  await guest.getByRole("button", { name: "Send response" }).click();
+  await expect(guest.getByText("Please enter a valid phone number.")).toBeVisible();
+  await expect(guest.getByLabel(/Phone number/)).toBeFocused();
+  await guest.getByLabel(/Phone number/).fill("");
+
+  // Can't go: no questions, no +1s; the phone and the message stay.
+  await guest.getByRole("radio", { name: "Can't go" }).click();
+  await expect(guest.getByLabel("Any food allergies?")).toHaveCount(0);
+  await expect(guest.getByText("Bringing anyone?")).toHaveCount(0);
+  await expect(guest.getByLabel(/Phone number/)).toBeVisible();
+  await expect(guest.getByLabel(/Message to the host/)).toHaveAttribute(
+    "placeholder",
+    "Sorry to miss it",
+  );
+  await guest.getByRole("button", { name: "Send response" }).click();
+  await expect(guest.getByRole("heading", { name: /Thanks for letting .+ know/ })).toBeVisible();
+  // The only calendar button left is the one by the date.
+  await expect(guest.getByText("Add to calendar")).toHaveCount(1);
+});
+
+test("a long guest list keeps the answer buttons in place", async ({ page, browser }) => {
+  await signUpHost(page);
+  await page.goto("/dashboard/events/new");
+  await page.getByLabel("Event name").fill("Garden party");
+  await page.getByLabel("Starts").fill(tomorrowAt(15));
+  await page.getByText("Privacy", { exact: true }).click();
+  await page.getByRole("radio", { name: "Names of who's going" }).click();
+  await page.getByRole("button", { name: "Create invite" }).click();
+  await expect(page).toHaveURL(/\/dashboard\/events\/[0-9a-f-]{36}/);
+  const eventId = page.url().match(/events\/([0-9a-f-]{36})/)?.[1] ?? "";
+  const inviteHref =
+    (await page.getByRole("link", { name: "View invite" }).first().getAttribute("href")) ?? "/";
+
+  // Ten guests who said yes, two of them bringing someone.
+  await withDatabase(async (sql) => {
+    for (let index = 0; index < 10; index++) {
+      await sql`INSERT INTO rsvps (event_id, status, name, plus_ones, edit_token_hash)
+        VALUES (${eventId}, 'going', ${`Guest ${index + 1}`}, ${index < 2 ? 1 : 0}, ${`hash-${index}`})`;
+    }
+  });
+
+  const context = await browser.newContext();
+  const guest = await context.newPage();
+  await guest.goto(inviteHref);
+  await expect(guest.getByText("12 people going, counting +1s")).toBeVisible();
+  await expect(guest.getByRole("listitem").filter({ hasText: /^GGuest \d+$/ })).toHaveCount(8);
+  await expect(guest.getByText("and 2 more")).toBeVisible();
+  await context.close();
+});
 
 test("on a phone, a bar points to the form until it's on screen", async ({
   page: guest,

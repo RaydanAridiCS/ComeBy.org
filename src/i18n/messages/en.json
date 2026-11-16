@@ -441,7 +441,22 @@
     "qrAlt": "QR code for this invite",
     "linkLabel": "Invite link",
     "responsesCount": "{count, plural, =0 {No responses yet} one {# response} other {# responses}}",
-    "qrDownload": "Download"
+    "qrDownload": "Download",
+    "duplicateForNextTime": "Duplicate for next time",
+    "closedTitle": "RSVPs are closed",
+    "closedByHost": "You closed RSVPs. The link still opens the invite, but no one can answer.",
+    "closedByDeadline": "The RSVP deadline has passed. The link still opens the invite, but no one can answer.",
+    "changeDeadline": "Change the deadline",
+    "endedTitle": "This event has ended",
+    "endedBody": "Hosting again? Duplicate it: the details, the look and the questions come along, and you pick a new date.",
+    "endedPurge": "Guests' phone numbers and emails are deleted {days} days after the event. Export the list first if you want to keep them.",
+    "cancelledTitle": "Let your group know",
+    "cancelledBody": "Guests who left an email were told. Paste this in your group so everyone else hears it too.",
+    "copyMessage": "Copy message",
+    "readyToPaste": "Ready to paste",
+    "hiddenTitle": "Your invite is hidden while we take a look",
+    "hiddenBody": "Someone reported this event, so the invite isn't showing to anyone for now. We'll look at it, then either bring it back or remove it.",
+    "hiddenContact": "Think it's a mistake? Write to <link>{email}</link>."
   },
   "status": {
     "going": "Going",
@@ -468,6 +483,7 @@
     "joinOnline": "Join online",
     "online": "Online",
     "locationTbd": "Location shared soon",
+    "locationTbdHint": "The host will add it here. Leave an email with your answer and they can let you know.",
     "countdownDays": "{count, plural, one {# day} other {# days}}",
     "countdownHours": "{count, plural, one {# hour} other {# hours}}",
     "countdownMinutes": "{count, plural, one {# min} other {# mins}}",
@@ -475,14 +491,24 @@
     "happeningNow": "Happening now 🎉",
     "ended": "This event has ended",
     "endedBody": "Thanks to everyone who came.",
-    "updatedBanner": "Updated {when}: {summary}",
+    "updatedBanner": "{what} changed",
+    "changed": {
+      "time": "the time",
+      "location": "the place",
+      "title": "the name",
+      "details": "the details"
+    },
     "cancelledBanner": "This event has been cancelled",
-    "cancelledBody": "The host called it off. Keep an eye out for the next one.",
     "closedBanner": "RSVPs are closed",
     "closedBody": "The host isn't taking new responses right now.",
+    "closedByDeadline": "The deadline to respond was {date}.",
+    "yourAnswer": "You answered: {answer}",
     "deadline": "Please respond by {date}",
     "goingCount": "{count, plural, =0 {Be the first to say yes!} one {# person going} other {# people going}}",
     "andMore": "and {count} more",
+    "goingCountWithPlusOnes": "{count, plural, one {# person going} other {# people going}}, counting +1s",
+    "wentCount": "{count, plural, =0 {No one said they were going} one {# person was going} other {# people were going}}",
+    "wentCountWithPlusOnes": "{count, plural, one {# person was going} other {# people were going}}, counting +1s",
     "report": "Report this event",
     "hiddenTitle": "This event is under review",
     "hiddenBody": "It was reported and is hidden while we take a look.",
@@ -501,7 +527,10 @@
     "namePlaceholder": "Your name",
     "phone": "Phone number",
     "message": "Message to the host",
-    "messagePlaceholder": "Can't wait! 🎉",
+    "messagePlaceholderGoing": "Can't wait! 🎉",
+    "messagePlaceholderMaybe": "I'll confirm by Thursday",
+    "messagePlaceholderNotGoing": "Sorry to miss it",
+    "more": "Add a note or get updates",
     "plusOnes": "Bringing anyone?",
     "plusOnesNone": "Just me",
     "plusOnesCount": "{count, plural, one {+# person} other {+# people}}",
@@ -513,7 +542,7 @@
     "submitting": "Sending…",
     "doneGoingTitle": "You're in! 🎉",
     "doneMaybeTitle": "Got it, maybe!",
-    "doneNotGoingTitle": "Thanks for letting them know",
+    "doneNotGoingTitle": "Thanks for letting {host} know",
     "doneBody": "{host} can see your response.",
     "yourResponse": "Your response: {status}",
     "yourPlusOnes": "{count, plural, one {You're bringing # more person} other {You're bringing # more people}}",
@@ -530,6 +559,7 @@
     "answerRequired": "Please answer this question.",
     "emailInvalid": "Please enter a valid email.",
     "privacyNote": "Your phone number and message are only visible to the host.",
+    "privacyNoteNames": "Other guests see your name. Your phone number and message are only visible to the host.",
     "downloadData": "Download my data",
     "deleteResponse": "Delete my response",
     "deleteConfirmTitle": "Delete your response?",
@@ -798,7 +828,7 @@
       },
       {
         "title": "What guests give us",
-        "body": "Guests don't need an account. When you respond to an invite you give your name and, if the host asks, your phone number. A message, answers to the host's questions and an email for updates are optional. Your phone number, email and message are only visible to the host. Other guests only see names if the host chose to show who's going."
+        "body": "Guests don't need an account. When you respond to an invite you give your name and, if the host asks, your phone number. If you're going or might go, the host can also ask a few questions of their own. A message and an email for updates are optional. Your phone number, email and message are only visible to the host. Other guests only see names if the host chose to show who's going."
       },
       {
         "title": "How we use it",
@@ -920,6 +950,8 @@
   "og": {
     "tapToRsvp": "Tap to RSVP",
     "cancelled": "Cancelled",
+    "closed": "RSVPs closed",
+    "ended": "This event has ended",
     "alt": "Invitation"
   }
 }

@@ -6,14 +6,15 @@ import { domAnimation, LazyMotion, MotionConfig } from "motion/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useLayoutEffect, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SITE } from "@/config/site";
 import type { ThemeId } from "@/features/events/schema";
 import { themeStyle } from "@/themes";
 import { ThemeBackdrop } from "@/themes/decorations";
 import type { DashboardData } from "../dto";
 import { ActivityFeed } from "./activity-feed";
 import { EventActions } from "./event-actions";
+import { EventStateBadge } from "./event-status-badges";
 import { InviteReadyPanel } from "./invite-ready-panel";
 import { NudgeCard } from "./nudge-card";
 import { ResponsesTable } from "./responses-table";
@@ -72,19 +73,8 @@ export function EventDashboard({
   });
 
   const { event } = data;
-  const badges = [
-    event.hidden ? { label: t("dashboard.statusHidden"), variant: "destructive" as const } : null,
-    event.status === "cancelled"
-      ? { label: t("dashboard.statusCancelled"), variant: "destructive" as const }
-      : null,
-    event.status === "active" && event.over
-      ? { label: t("dashboard.statusEnded"), variant: "secondary" as const }
-      : null,
-    event.status === "active" && !event.over && event.blocked === "closed"
-      ? { label: t("dashboard.statusClosed"), variant: "outline" as const }
-      : null,
-  ].filter((badge) => badge !== null);
-  const live = event.status === "active" && !event.over;
+  // Only a live event can get new responses, so only it shows "Updates live" and reminders.
+  const live = event.state === "live";
 
   /** Drops `?created=1` without a round trip, so a reload or a shared link doesn't show the panel. */
   const forgetCreated = () => {
@@ -126,11 +116,7 @@ export function EventDashboard({
                 <h1 className="heading break-words text-headline">{event.title}</h1>
                 <p className="text-muted-foreground">{event.when}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  {badges.map((badge) => (
-                    <Badge key={badge.label} variant={badge.variant}>
-                      {badge.label}
-                    </Badge>
-                  ))}
+                  <EventStateBadge state={event.state} />
                   {live ? (
                     <span className="inline-flex items-center gap-2 rounded-full bg-success-soft px-2.5 py-1 font-semibold text-success-ink text-xs">
                       <span className="relative flex size-2" aria-hidden="true">
@@ -146,9 +132,18 @@ export function EventDashboard({
             </div>
           </header>
 
-          {event.hidden ? (
-            <Alert variant="destructive">
-              <AlertDescription>{t("eventPage.hiddenBody")}</AlertDescription>
+          {event.state === "hidden" ? (
+            <Alert>
+              <AlertTitle>{t("eventDashboard.hiddenTitle")}</AlertTitle>
+              <AlertDescription>
+                <p>{t("eventDashboard.hiddenBody")}</p>
+                <p>
+                  {t.rich("eventDashboard.hiddenContact", {
+                    email: SITE.contactEmail,
+                    link: (chunks) => <a href={`mailto:${SITE.contactEmail}`}>{chunks}</a>,
+                  })}
+                </p>
+              </AlertDescription>
             </Alert>
           ) : null}
 

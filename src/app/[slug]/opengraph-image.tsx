@@ -1,9 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { connection } from "next/server";
 import { LOGO_PATH } from "@/components/brand/logo";
 import { SITE } from "@/config/site";
 import { getPublicEvent } from "@/features/events/queries";
+import { eventState } from "@/features/events/state";
 import { getServerTranslator } from "@/i18n/config";
 import { formatDateParts, formatEventDay, formatEventTime } from "@/lib/dates";
 import { THEME_TOKENS, type ThemeTokens } from "@/themes";
@@ -71,7 +73,19 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     : null;
   const host = visible ? t("eventPage.hostedBy", { name: event.hostName }) : SITE.domain;
   const initial = visible ? event.hostName.trim().charAt(0).toUpperCase() : "C";
-  const cancelled = visible && event.status === "cancelled";
+  // "Ended" and "closed" depend on the clock, so the image is drawn per request.
+  await connection();
+  const state = visible ? eventState(event, new Date()) : "live";
+  const cancelled = state === "cancelled";
+  // The button only invites a tap while answers are open; otherwise it says why not.
+  const stateLabel =
+    state === "cancelled"
+      ? t("og.cancelled")
+      : state === "ended"
+        ? t("og.ended")
+        : state === "closed"
+          ? t("og.closed")
+          : null;
   const display = DISPLAY_FONT[theme.id];
   const [fredoka, fraunces, instrument, unbounded, geist500, geist650, bricolage] = await fonts;
 
@@ -176,23 +190,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
             {initial}
           </div>
           <div style={{ display: "flex", fontSize: 28, color: theme.muted }}>{host}</div>
-          {cancelled ? (
-            <div
-              style={{
-                display: "flex",
-                marginLeft: "auto",
-                background: "#d92d4b",
-                color: "#ffffff",
-                borderRadius: 999,
-                padding: "8px 20px",
-                fontSize: 22,
-                fontWeight: 600,
-                letterSpacing: 2,
-              }}
-            >
-              {t("og.cancelled").toUpperCase()}
-            </div>
-          ) : null}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -249,30 +246,50 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              background: theme.accent,
-              color: theme.accentForeground,
-              borderRadius: 999,
-              padding: "16px 34px",
-              fontSize: 30,
-              fontWeight: 600,
-            }}
-          >
-            {t("og.tapToRsvp")}
-            <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M5 12h14M13 6l6 6-6 6"
-                stroke={theme.accentForeground}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+          {!visible ? (
+            // No invite to open (missing or under review): the plain Comeby card, no button.
+            <div style={{ display: "flex" }} />
+          ) : stateLabel ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: cancelled ? "#d92d4b" : theme.accentSoft,
+                color: cancelled ? "#ffffff" : theme.foreground,
+                borderRadius: 999,
+                padding: "16px 34px",
+                fontSize: 30,
+                fontWeight: 600,
+              }}
+            >
+              {stateLabel}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                background: theme.accent,
+                color: theme.accentForeground,
+                borderRadius: 999,
+                padding: "16px 34px",
+                fontSize: 30,
+                fontWeight: 600,
+              }}
+            >
+              {t("og.tapToRsvp")}
+              <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 12h14M13 6l6 6-6 6"
+                  stroke={theme.accentForeground}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          )}
           <div
             style={{
               display: "flex",

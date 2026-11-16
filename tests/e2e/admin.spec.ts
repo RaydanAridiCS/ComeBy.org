@@ -38,8 +38,9 @@ async function reportUntilHidden(browser: Browser, inviteHref: string) {
     await visitor.getByLabel("Details (optional)").fill("Asks everyone to send money first");
     await visitor.getByRole("button", { name: "Send report" }).click();
     // The report that hides the event re-renders the page into the "under review" view.
+    // `first()`: the hidden page's title is also read out by Next's route announcer.
     await expect(
-      visitor.getByText(/Thanks\. We'll take a look\.|This event is under review/),
+      visitor.getByText(/Thanks\. We'll take a look\.|This event is under review/).first(),
     ).toBeVisible();
     await context.close();
   }
@@ -50,14 +51,25 @@ test("a reported event is hidden, the admin is told, and can restore it", async 
   browser,
 }) => {
   await signUpHost(page, { email: adminEmail ?? "" });
-  const { inviteHref } = await createInvite(page, `Totally legit giveaway ${run}`);
+  const { eventId, inviteHref } = await createInvite(page, `Totally legit giveaway ${run}`);
 
   await reportUntilHidden(browser, inviteHref);
 
   const guestContext = await browser.newContext();
   const guest = await guestContext.newPage();
   await guest.goto(inviteHref);
-  await expect(guest.getByText("This event is under review")).toBeVisible();
+  await expect(guest.getByRole("heading", { name: "This event is under review" })).toBeVisible();
+  // A proper page: its own tab title and a way out.
+  await expect(guest).toHaveTitle(/This event is under review/);
+  await expect(guest.getByRole("link", { name: "Go home" })).toBeVisible();
+
+  // The host is told what happened and who to write to, and nothing offers to share it.
+  await page.goto(`/dashboard/events/${eventId}`);
+  await expect(page.getByText("Your invite is hidden while we take a look")).toBeVisible();
+  await expect(page.getByRole("link", { name: "hello@comeby.org" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "QR code for this invite" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Share on WhatsApp" })).toHaveCount(0);
+  await expect(page.getByText("Updates live")).toHaveCount(0);
 
   // The operator gets an email about it.
   const alert = await waitForEmail(

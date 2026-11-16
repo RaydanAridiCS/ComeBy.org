@@ -28,7 +28,7 @@ test("a guest changes their response from the emailed link", async ({ page, brow
   await guest.getByRole("button", { name: "Change my response" }).click();
   await guest.getByRole("radio", { name: "Can't go" }).click();
   await guest.getByRole("button", { name: "Update response" }).click();
-  await expect(guest.getByText("Thanks for letting them know")).toBeVisible();
+  await expect(guest.getByText(/Thanks for letting .* know/)).toBeVisible();
   await second.close();
 
   await page.goto(`/dashboard/events/${eventId}`);

@@ -1,11 +1,11 @@
 import { isValidPhoneNumber } from "libphonenumber-js/min";
 import { LIMITS } from "@/config/limits";
+import { type EventState, eventState } from "@/features/events/state";
 import type { RsvpFormValues } from "@/features/rsvp/schema";
 import { AppError, LimitReachedError } from "../errors";
 import type { EventRecord, RsvpRecord } from "../repositories/types";
 import { randomToken, safeEqualHex, sha256 } from "../security/crypto";
 import { HOUR_MS, type ServiceDeps } from "./deps";
-import { isEventOver } from "./event.service";
 
 /** Why an event isn't accepting responses right now, or null when it is. */
 export function rsvpBlockReason(
@@ -14,13 +14,9 @@ export function rsvpBlockReason(
     "status" | "rsvpClosed" | "rsvpDeadline" | "startsAt" | "endsAt" | "hiddenAt"
   >,
   now: Date,
-): "hidden" | "cancelled" | "closed" | "ended" | null {
-  if (event.hiddenAt) return "hidden";
-  if (event.status === "cancelled") return "cancelled";
-  if (isEventOver(event, now)) return "ended";
-  if (event.rsvpClosed) return "closed";
-  if (event.rsvpDeadline && event.rsvpDeadline.getTime() <= now.getTime()) return "closed";
-  return null;
+): Exclude<EventState, "live"> | null {
+  const state = eventState(event, now);
+  return state === "live" ? null : state;
 }
 
 /**
@@ -35,13 +31,14 @@ export function applyEventRules(event: EventRecord, values: RsvpFormValues): Rsv
   if (phone && !isValidPhoneNumber(phone)) fieldErrors.phone = "rsvp.phoneInvalid";
   if (fieldErrors.phone) phone = "";
 
+  // Someone who can't come is asked for a name, the phone (as the host set it) and a
+  // message, never the custom questions: nothing is required of them, and nothing is kept.
+  const declining = values.status === "not_going";
   const answers: Record<string, string> = {};
-  for (const question of event.customQuestions) {
+  for (const question of declining ? [] : event.customQuestions) {
     const answer = (values.answers[question.id] ?? "").trim();
     if (!answer) {
-      if (question.required && values.status !== "not_going") {
-        fieldErrors[`answers.${question.id}`] = "rsvp.answerRequired";
-      }
+      if (question.required) fieldErrors[`answers.${question.id}`] = "rsvp.answerRequired";
       continue;
     }
     if (question.type === "choice" && !question.choices?.includes(answer)) {
@@ -285,7 +282,13 @@ export function createRsvpService(deps: ServiceDeps) {
       const stats = await repos.rsvps.statsByEvent(event.id);
       const names =
         event.guestListVisibility === "names" ? await repos.rsvps.listGoingNames(event.id, 60) : [];
-      return { going: stats.guests, names, more: Math.max(0, stats.going - names.length) };
+      // `going` counts +1s; `people` is the number of guests who said yes, one per name.
+      return {
+        going: stats.guests,
+        people: stats.going,
+        names,
+        more: Math.max(0, stats.going - names.length),
+      };
     },
   };
 }

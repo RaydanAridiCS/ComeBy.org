@@ -57,6 +57,14 @@ export function formatEventDay(date: Date, timeZone: string, locale = "en"): str
   }).format(date);
 }
 
+/**
+ * Keeps a month and its day number on one line ("November 25" with a no-break space), so a
+ * wrapped date never leaves the number alone. For display on pages, not in emails or files.
+ */
+export function keepDayTogether(label: string): string {
+  return label.replace(/(\p{L}+) (\d{1,2})\b/u, "$1 $2");
+}
+
 /** "7:30 PM" in the event's zone. */
 export function formatEventTime(date: Date, timeZone: string, locale = "en"): string {
   return new Intl.DateTimeFormat(locale, {

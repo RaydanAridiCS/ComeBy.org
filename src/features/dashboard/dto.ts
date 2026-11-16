@@ -1,6 +1,7 @@
 import "server-only";
 
 import { LIMITS } from "@/config/limits";
+import { closedBy, type EventState, eventState } from "@/features/events/state";
 import { formatEventWhen } from "@/lib/dates";
 import { eventDisplayUrl, eventUrl } from "@/lib/share";
 import type {
@@ -49,6 +50,10 @@ export type DashboardData = {
     status: EventRecord["status"];
     rsvpClosed: boolean;
     blocked: ReturnType<typeof rsvpBlockReason>;
+    /** Where the event stands; every part of the page decides what to offer from this. */
+    state: EventState;
+    /** For a closed event: whether the host closed it or the deadline passed. */
+    closedBy: ReturnType<typeof closedBy>;
     over: boolean;
     hidden: boolean;
     cancelMessage: string | null;
@@ -88,6 +93,8 @@ export function toDashboardData(
       status: event.status,
       rsvpClosed: event.rsvpClosed,
       blocked: rsvpBlockReason(event, now),
+      state: eventState(event, now),
+      closedBy: closedBy(event, now),
       over: isEventOver(event, now),
       hidden: Boolean(event.hiddenAt),
       cancelMessage: event.cancelMessage,

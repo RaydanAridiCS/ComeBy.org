@@ -29,7 +29,7 @@ Guests have no account. A response holds:
 | Phone number | If the host asks for it | The host only |
 | Email | Optional | The host only |
 | Message to the host | Optional | The host only |
-| Answers to the host's questions | If the host asks | The host only |
+| Answers to the host's questions | If the host asks, and only from guests who are going or might (someone who can't go is not asked, and nothing they send is kept) | The host only |
 
 Also stored per response: a SHA-256 hash of the secret that lets the guest edit it (never the secret), and when the reminder was sent.
 

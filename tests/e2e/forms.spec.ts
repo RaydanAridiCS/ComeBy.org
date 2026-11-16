@@ -209,6 +209,7 @@ test("RSVP form: a missing name is marked, announced and focused", async ({ page
   const guest = await context.newPage();
   await guest.goto(inviteHref);
   await guest.getByRole("radio", { name: "Going" }).click();
+  await guest.getByText("Add a note or get updates").click();
   await guest.getByLabel("Email for updates").fill("not-an-email");
   await guest.getByRole("button", { name: "Send response" }).click();
 

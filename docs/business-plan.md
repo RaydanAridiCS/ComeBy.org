@@ -174,7 +174,7 @@ When the host changes the time or place, or cancels:
 - Footer: "Make your own free invite with Comeby" (our main growth engine)
 
 #### Guest: responding
-- Pick **Going / Maybe / Can't go**, enter a name (plus phone if the host asked), add an optional message, and submit. Done in seconds.
+- Pick **Going / Maybe / Can't go**, enter a name (plus phone if the host asked, and the host's required questions if going), and submit. A message, an email for updates and any optional questions sit behind one row. Done in seconds.
 - Optionally leave an email to receive updates.
 - **Edit your response later** from the same device, or through a private link sent by email if they left one *(suggested)*.
 

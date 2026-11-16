@@ -1,8 +1,24 @@
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { type EventState, eventState } from "@/features/events/state";
 import type { EventRecord } from "@/server/repositories/types";
-import { isEventOver } from "@/server/services/event.service";
 
+const BADGES = {
+  hidden: { label: "statusHidden", variant: "outline" },
+  cancelled: { label: "statusCancelled", variant: "destructive" },
+  ended: { label: "statusEnded", variant: "secondary" },
+  closed: { label: "statusClosed", variant: "outline" },
+} as const;
+
+/** One badge for an event that isn't live: under review, cancelled, ended or RSVPs closed. */
+export function EventStateBadge({ state }: { state: EventState }) {
+  const t = useTranslations("dashboard");
+  if (state === "live") return null;
+  const badge = BADGES[state];
+  return <Badge variant={badge.variant}>{t(badge.label)}</Badge>;
+}
+
+/** The badge for an event in the host's event list. */
 export function EventStatusBadges({
   event,
   now,
@@ -13,29 +29,11 @@ export function EventStatusBadges({
   >;
   now: Date;
 }) {
-  const t = useTranslations("dashboard");
-  const badges: { key: string; label: string; variant: "destructive" | "secondary" | "outline" }[] =
-    [];
-  if (event.hiddenAt)
-    badges.push({ key: "hidden", label: t("statusHidden"), variant: "destructive" });
-  if (event.status === "cancelled") {
-    badges.push({ key: "cancelled", label: t("statusCancelled"), variant: "destructive" });
-  } else if (isEventOver(event, now)) {
-    badges.push({ key: "ended", label: t("statusEnded"), variant: "secondary" });
-  } else if (
-    event.rsvpClosed ||
-    (event.rsvpDeadline && event.rsvpDeadline.getTime() <= now.getTime())
-  ) {
-    badges.push({ key: "closed", label: t("statusClosed"), variant: "outline" });
-  }
-  if (badges.length === 0) return null;
+  const state = eventState(event, now);
+  if (state === "live") return null;
   return (
     <div className="flex flex-wrap gap-1.5">
-      {badges.map((badge) => (
-        <Badge key={badge.key} variant={badge.variant}>
-          {badge.label}
-        </Badge>
-      ))}
+      <EventStateBadge state={state} />
     </div>
   );
 }

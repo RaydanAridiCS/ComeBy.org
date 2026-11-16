@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, HelpCircle, Pencil, X } from "lucide-react";
+import { Check, HelpCircle, Pencil } from "lucide-react";
 import { domAnimation, LazyMotion, MotionConfig, m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef } from "react";
@@ -35,8 +35,9 @@ export function RsvpSuccess({
       ? t("doneGoingTitle")
       : status === "maybe"
         ? t("doneMaybeTitle")
-        : t("doneNotGoingTitle");
-  const Icon = status === "maybe" ? HelpCircle : status === "not_going" ? X : Check;
+        : t("doneNotGoingTitle", { host: hostName });
+  // A plain check for "can't go" too: they did the host a favour by saying so.
+  const Icon = status === "maybe" ? HelpCircle : Check;
   const rootRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 

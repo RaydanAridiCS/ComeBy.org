@@ -56,11 +56,13 @@ Playwright drives Chromium through real flows: signing up (reading the confirmat
 
 ### Accessibility
 
-`tests/e2e/accessibility.spec.ts` runs axe (`@axe-core/playwright`) against WCAG 2.0 A/AA and 2.2 AA rules, and fails on serious or critical violations. It covers the public pages, the not-found pages, the event list, the event page with responses, the new-event and edit forms, settings, the invite page in five themes (two of them dark), and both forms in their error state. `tests/e2e/invite-guest-flow.spec.ts` covers the guest's path on a phone: the RSVP bar, focus after answering, and changing or keeping an answer. A new screen or a new state of a screen (a dialog, an error state) should be added there.
+`tests/e2e/accessibility.spec.ts` runs axe (`@axe-core/playwright`) against WCAG 2.0 A/AA and 2.2 AA rules, and fails on serious or critical violations. It covers the public pages, the not-found pages, the event list, the event page with responses, the new-event and edit forms, settings, the invite page in five themes (two of them dark), and both forms in their error state. `tests/e2e/invite-guest-flow.spec.ts` covers the guest's path: the RSVP bar on a phone, a form that fits the answer (custom questions, +1s, an unfinished phone number), the guest list cap, focus after answering, and changing or keeping an answer. A new screen or a new state of a screen (a dialog, an error state) should be added there.
 
 `tests/e2e/forms.spec.ts` checks what axe cannot: that a failed submit marks the field, ties it to its message, and moves focus to it (also inside a collapsed section, and for an error that comes back from the server); that leaving the event form with unsaved changes asks first; and that "New event" opens blank after an event was created.
 
 `tests/e2e/confirmations.spec.ts` holds a server action back or drops it (`page.route` on POSTs with a `next-action` header) to check that a confirm stays open and busy while it works, keeps a failure inside, closes on success and returns focus; that it is a bottom sheet on the mobile project and a centred dialog on desktop; and that removing a response is immediate and undone on failure.
+
+`tests/e2e/event-states.spec.ts` closes RSVPs, moves an event into the past and cancels one, and checks that the host's page offers only what still works (no share buttons, reminders or "Cancel event" where they can't apply) and that the invite says so once, at the top. The hidden state is covered in `admin.spec.ts`, because it takes three reports. The order between the states is unit-tested in `tests/unit/event-state.test.ts`.
 
 `tests/e2e/first-run.spec.ts` follows a new host from the confirmation link to the share panel (the tip, closing it for good, nothing in between), a confirmation link that carries a `next` page, the "Nothing coming up" state for a host with only past events, and the public header for a signed-in host.
 
@@ -123,7 +125,7 @@ The running server's worker picks it up, and the emails appear in Mailpit.
 
 ## What isn't tested yet
 
-No end-to-end test covers: the calendar file and calendar links, the QR code, the CSV export, custom questions, +1s, the guest-list visibility modes, the RSVP deadline, cover image upload, Google sign-in, Turnstile with real keys, or push notifications. The accessibility spec does not yet cover the host's event dashboard, the edit form, or invites in themes other than the default.
+No end-to-end test covers: the calendar file and calendar links, the QR code, the CSV export, the RSVP deadline, cover image upload, Google sign-in, Turnstile with real keys, or push notifications. The accessibility spec does not yet cover the host's event dashboard, the edit form, or invites in themes other than the default.
 
 ## What CI runs
 

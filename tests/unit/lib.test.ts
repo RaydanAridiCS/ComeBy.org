@@ -4,6 +4,7 @@ import {
   dateToZonedInput,
   formatEventWhen,
   isValidTimeZone,
+  keepDayTogether,
   startOfUtcMonth,
   zonedInputToDate,
 } from "@/lib/dates";
@@ -60,6 +61,13 @@ describe("time zones", () => {
     expect(startOfUtcMonth(new Date("2026-10-17T12:00:00Z")).toISOString()).toBe(
       "2026-10-01T00:00:00.000Z",
     );
+  });
+});
+
+describe("keepDayTogether", () => {
+  it("joins the month and day with a no-break space and leaves the rest alone", () => {
+    expect(keepDayTogether("Wednesday, November 25")).toBe("Wednesday, November 25");
+    expect(keepDayTogether("Online")).toBe("Online");
   });
 });
 

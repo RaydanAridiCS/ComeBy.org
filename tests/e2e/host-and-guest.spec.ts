@@ -13,6 +13,7 @@ test("host creates an invite, a guest responds, the host sees it", async ({ page
   await expect(guest.getByRole("heading", { name: "Picnic in the park" })).toBeVisible();
   await guest.getByRole("radio", { name: "Going" }).click();
   await guest.getByLabel("Your name").fill("Omar");
+  await guest.getByText("Add a note or get updates").click();
   await guest.getByLabel(/Message to the host/).fill("Count me in!");
   await guest.getByRole("button", { name: "Send response" }).click();
   await expect(guest.getByText("You're in!")).toBeVisible();

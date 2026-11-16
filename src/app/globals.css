@@ -431,10 +431,27 @@
     letter-spacing: var(--invite-display-tracking, -0.02em);
   }
   .invite-title {
-    font-size: calc(clamp(2.25rem, 1.5rem + 3.6vw, 3.25rem) * var(--invite-display-scale, 1));
+    font-size: calc(
+      clamp(2.25rem, 1.5rem + 3.6vw, 3.25rem) *
+      var(--invite-display-scale, 1) *
+      var(--title-fit, 1)
+    );
     line-height: 1.02;
     text-wrap: balance;
     overflow-wrap: anywhere;
+  }
+  /* Longer titles step down (set by InviteCard from the title's length). */
+  .invite-title[data-fit="m"] {
+    --title-fit: 0.86;
+  }
+  .invite-title[data-fit="l"] {
+    --title-fit: 0.72;
+  }
+  .invite-title[data-fit="xl"] {
+    --title-fit: 0.6;
+  }
+  .invite-title[data-fit="xxl"] {
+    --title-fit: 0.5;
   }
   .invite-chip {
     background: var(--invite-accent-soft);
