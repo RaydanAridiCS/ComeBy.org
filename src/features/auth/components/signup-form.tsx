@@ -1,15 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, MailCheck } from "lucide-react";
+import { MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { fieldA11y } from "@/components/forms/field-a11y";
 import { PasswordInput } from "@/components/forms/password-input";
 import { Turnstile } from "@/components/forms/turnstile";
+import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { FIELD_LIMITS } from "@/config/limits";
 import { signUp } from "@/lib/auth-client";
 import { isBotCheckError, TURNSTILE_HEADER } from "@/lib/turnstile-header";
 import { safeNext } from "../safe-next";
+import { AuthStatus, MailHint, StatusTile } from "./auth-status";
 import { GoogleButton } from "./google-button";
 import { ResendVerification } from "./resend-verification";
 
@@ -28,7 +31,7 @@ const signupSchema = z.object({
     .string()
     .trim()
     .min(1, { message: "auth.nameRequired" })
-    .max(FIELD_LIMITS.hostNameMaxLength, { message: "errors.validation" }),
+    .max(FIELD_LIMITS.hostNameMaxLength, { message: "auth.nameTooLong" }),
   email: z.email({ message: "auth.emailInvalid" }),
   password: z.string().min(8, { message: "auth.passwordHint" }).max(128),
 });
@@ -42,10 +45,22 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const onToken = useCallback((token: string | null) => setTurnstileToken(token), []);
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusFirstInvalid = useFocusFirstInvalid(formRef);
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "" },
+    shouldFocusError: false,
   });
+
+  // Back from "Check your email" to fix the address: the form keeps what was typed.
+  const editingEmail = useRef(false);
+  useEffect(() => {
+    if (sentTo === null && editingEmail.current) {
+      editingEmail.current = false;
+      form.setFocus("email", { shouldSelect: true });
+    }
+  }, [sentTo, form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
@@ -58,39 +73,56 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
       setSentTo(values.email);
       return;
     }
-    if (error.code?.startsWith("USER_ALREADY_EXISTS")) setFormError(t("emailTaken"));
-    else if (isBotCheckError(error.code))
+    if (error.code?.startsWith("USER_ALREADY_EXISTS")) {
+      setFormError(t("emailTaken"));
+      // The button was disabled while sending, which drops focus: put it where the fix is.
+      form.setFocus("email", { shouldSelect: true });
+    } else if (isBotCheckError(error.code))
       setFormError(translateError("errors.bot_check_failed") ?? null);
     else if (error.code === "TOO_MANY_SIGNUPS") setFormError(t("tooManySignups"));
     else if (error.status === 429) setFormError(translateError("errors.rate_limited") ?? null);
     else setFormError(translateError("errors.generic") ?? null);
-  });
+  }, focusFirstInvalid);
 
   if (sentTo) {
     return (
-      <div className="flex animate-pop flex-col items-center gap-5 text-center">
-        <span className="relative flex size-20 items-center justify-center rounded-[1.75rem] bg-brand-gradient text-white shadow-brand">
-          <MailCheck className="size-9" aria-hidden="true" />
-          <span className="absolute -end-1.5 -top-1.5 flex size-7 items-center justify-center rounded-full bg-success text-white ring-4 ring-background">
-            <Check className="size-4" strokeWidth={3} aria-hidden="true" />
-          </span>
-        </span>
-        <div className="flex flex-col gap-2">
-          <h2 className="heading text-headline">{t("checkEmailTitle")}</h2>
-          <p className="text-muted-foreground">{t("checkEmailBody", { email: sentTo })}</p>
-        </div>
-        <p className="rounded-2xl bg-muted px-4 py-3 text-muted-foreground text-sm">
-          {t("checkEmailHint")}
-        </p>
+      <AuthStatus
+        art={<StatusTile icon={MailCheck} />}
+        title={t("checkEmailTitle")}
+        body={t("checkEmailBody", { email: sentTo })}
+      >
+        <MailHint>{t("checkEmailHint")}</MailHint>
         <ResendVerification email={sentTo} next={next} />
-      </div>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            editingEmail.current = true;
+            setSentTo(null);
+          }}
+        >
+          {t("useDifferentEmail")}
+        </Button>
+      </AuthStatus>
     );
   }
 
   const { errors, isSubmitting } = form.formState;
+  const name = fieldA11y("name", { invalid: Boolean(errors.name) });
+  const email = fieldA11y("email", { invalid: Boolean(errors.email) });
+  const password = fieldA11y("password", {
+    invalid: Boolean(errors.password),
+    hint: !errors.password,
+  });
 
   return (
-    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      method="post"
+      noValidate
+      className="flex flex-col gap-5"
+    >
       <GoogleButton next={next} />
       {formError ? (
         <Alert variant="destructive">
@@ -101,38 +133,36 @@ export function SignupForm({ turnstileSiteKey }: { turnstileSiteKey: string | un
         <Field data-invalid={Boolean(errors.name)}>
           <FieldLabel htmlFor="name">{t("name")}</FieldLabel>
           <Input
-            id="name"
+            {...name.control}
             autoComplete="name"
             placeholder={t("namePlaceholder")}
-            aria-invalid={Boolean(errors.name)}
             {...form.register("name")}
           />
-          <FieldError>{translateError(errors.name?.message)}</FieldError>
+          <FieldError id={name.errorId}>{translateError(errors.name?.message)}</FieldError>
         </Field>
         <Field data-invalid={Boolean(errors.email)}>
           <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
           <Input
-            id="email"
+            {...email.control}
             type="email"
             autoComplete="email"
             placeholder={t("emailPlaceholder")}
-            aria-invalid={Boolean(errors.email)}
             {...form.register("email")}
           />
-          <FieldError>{translateError(errors.email?.message)}</FieldError>
+          <FieldError id={email.errorId}>{translateError(errors.email?.message)}</FieldError>
         </Field>
         <Field data-invalid={Boolean(errors.password)}>
           <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
           <PasswordInput
-            id="password"
+            {...password.control}
             autoComplete="new-password"
-            aria-invalid={Boolean(errors.password)}
             {...form.register("password")}
           />
+          {/* The hint and the "too short" error say the same thing: show one or the other. */}
           {errors.password ? (
-            <FieldError>{translateError(errors.password.message)}</FieldError>
+            <FieldError id={password.errorId}>{translateError(errors.password.message)}</FieldError>
           ) : (
-            <FieldDescription>{t("passwordHint")}</FieldDescription>
+            <FieldDescription id={password.hintId}>{t("passwordHint")}</FieldDescription>
           )}
         </Field>
       </FieldGroup>

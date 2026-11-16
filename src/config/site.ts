@@ -6,6 +6,8 @@ export const SITE = {
   description:
     "Invite anyone in seconds and know exactly who's coming. Free, open source, no ads, no app needed.",
   repositoryUrl: "https://github.com/raydanaridics/comeby.org",
+  /** For privacy and data requests. The privacy page names it (legal.privacySections in en.json). */
+  contactEmail: "hello@comeby.org",
 } as const;
 
 /**

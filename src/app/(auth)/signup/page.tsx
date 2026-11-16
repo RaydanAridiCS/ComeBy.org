@@ -15,7 +15,7 @@ export default async function SignupPage() {
   const t = await getTranslations("auth");
   return (
     <AuthCard title={t("signUpTitle")} subtitle={t("signUpSubtitle")}>
-      <Suspense fallback={<AuthFormSkeleton fields={3} />}>
+      <Suspense fallback={<AuthFormSkeleton fields={3} hint />}>
         <SignupForm turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
       </Suspense>
     </AuthCard>

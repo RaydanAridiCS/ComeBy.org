@@ -101,7 +101,7 @@ async function SettingsContent() {
     );
   return (
     <>
-      <Card icon={UserRound} title={t("profileTitle")}>
+      <Card icon={UserRound} title={t("profileTitle")} body={t("profileBody")}>
         <ProfileSettings name={user.name} email={user.email} canChangeEmail={hasPassword} />
       </Card>
       <Card icon={KeyRound} title={t("securityTitle")} body={t("securityBody")}>

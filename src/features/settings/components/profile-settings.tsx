@@ -3,10 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { fieldA11y } from "@/components/forms/field-a11y";
+import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,19 +22,22 @@ const nameSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, { message: "rsvp.nameRequired" })
-    .max(FIELD_LIMITS.hostNameMaxLength, { message: "errors.validation" }),
+    .min(1, { message: "auth.nameRequired" })
+    .max(FIELD_LIMITS.hostNameMaxLength, { message: "auth.nameTooLong" }),
 });
 
-const emailSchema = z.object({ newEmail: z.email({ message: "rsvp.emailInvalid" }) });
+const emailSchema = z.object({ newEmail: z.email({ message: "auth.emailInvalid" }) });
 
 function NameForm({ initialName }: { initialName: string }) {
   const t = useTranslations("settings");
   const translateError = useTranslateError();
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusFirstInvalid = useFocusFirstInvalid(formRef);
   const form = useForm<z.infer<typeof nameSchema>>({
     resolver: zodResolver(nameSchema),
     defaultValues: { name: initialName },
+    shouldFocusError: false,
   });
 
   const onSubmit = form.handleSubmit(async ({ name }) => {
@@ -43,21 +48,23 @@ function NameForm({ initialName }: { initialName: string }) {
     }
     toast.success(t("nameSaved"));
     router.refresh();
-  });
+  }, focusFirstInvalid);
 
   const { errors, isSubmitting } = form.formState;
+  const name = fieldA11y("profile-name", { invalid: Boolean(errors.name), hint: true });
   return (
-    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-3">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      method="post"
+      noValidate
+      className="flex flex-col gap-3"
+    >
       <Field data-invalid={Boolean(errors.name)}>
         <FieldLabel htmlFor="profile-name">{t("name")}</FieldLabel>
-        <Input
-          id="profile-name"
-          autoComplete="name"
-          aria-invalid={Boolean(errors.name)}
-          {...form.register("name")}
-        />
-        <FieldDescription>{t("nameHint")}</FieldDescription>
-        <FieldError>{translateError(errors.name?.message)}</FieldError>
+        <Input {...name.control} autoComplete="name" {...form.register("name")} />
+        <FieldError id={name.errorId}>{translateError(errors.name?.message)}</FieldError>
+        <FieldDescription id={name.hintId}>{t("nameHint")}</FieldDescription>
       </Field>
       <Button type="submit" size="sm" className="self-start" disabled={isSubmitting}>
         {isSubmitting ? <Spinner /> : null}
@@ -72,9 +79,12 @@ function EmailForm({ currentEmail }: { currentEmail: string }) {
   const translateError = useTranslateError();
   const [sent, setSent] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusFirstInvalid = useFocusFirstInvalid(formRef);
   const form = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
     defaultValues: { newEmail: "" },
+    shouldFocusError: false,
   });
 
   const onSubmit = form.handleSubmit(async ({ newEmail }) => {
@@ -82,6 +92,7 @@ function EmailForm({ currentEmail }: { currentEmail: string }) {
     setSent(false);
     if (newEmail.trim().toLowerCase() === currentEmail.toLowerCase()) {
       form.setError("newEmail", { message: "settings.emailSame" });
+      focusFirstInvalid();
       return;
     }
     const { error } = await authClient.changeEmail({
@@ -99,23 +110,35 @@ function EmailForm({ currentEmail }: { currentEmail: string }) {
     // The same message whether or not the address is taken, so nobody can probe for accounts.
     setSent(true);
     form.reset();
-  });
+  }, focusFirstInvalid);
 
   const { errors, isSubmitting } = form.formState;
+  const newEmail = fieldA11y("profile-new-email", {
+    invalid: Boolean(errors.newEmail),
+    hint: true,
+  });
   return (
-    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-3">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      method="post"
+      noValidate
+      className="flex flex-col gap-3"
+    >
       <Field data-invalid={Boolean(errors.newEmail)}>
-        <FieldLabel htmlFor="profile-new-email">{t("changeEmail")}</FieldLabel>
+        <FieldLabel htmlFor="profile-new-email">{t("newEmail")}</FieldLabel>
         <Input
-          id="profile-new-email"
+          {...newEmail.control}
           type="email"
           autoComplete="email"
           inputMode="email"
-          aria-invalid={Boolean(errors.newEmail)}
+          placeholder={t("newEmailPlaceholder")}
           {...form.register("newEmail")}
         />
-        <FieldDescription>{t("changeEmailHint", { email: currentEmail })}</FieldDescription>
-        <FieldError>{translateError(errors.newEmail?.message)}</FieldError>
+        <FieldError id={newEmail.errorId}>{translateError(errors.newEmail?.message)}</FieldError>
+        <FieldDescription id={newEmail.hintId}>
+          {t("changeEmailHint", { email: currentEmail })}
+        </FieldDescription>
       </Field>
       {formError ? (
         <Alert variant="destructive">
@@ -123,7 +146,7 @@ function EmailForm({ currentEmail }: { currentEmail: string }) {
         </Alert>
       ) : null}
       {sent ? (
-        <Alert role="status">
+        <Alert>
           <AlertDescription>{t("changeEmailSent", { email: currentEmail })}</AlertDescription>
         </Alert>
       ) : null}

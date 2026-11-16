@@ -59,6 +59,8 @@ Playwright drives Chromium through real flows: signing up (reading the confirmat
 
 `tests/e2e/forms.spec.ts` checks what axe cannot: that a failed submit marks the field, ties it to its message, and moves focus to it (also inside a collapsed section, and for an error that comes back from the server); that leaving the event form with unsaved changes asks first; and that "New event" opens blank after an event was created.
 
+`tests/e2e/account-screens.spec.ts` walks the forgot-password flow to a new password and back to sign-in, the broken reset link, going back from "Check your email" to fix an address, and sign-in's field messages and focus.
+
 `tests/e2e/ergonomics.spec.ts` checks that the first Tab on a page shows "Skip to content" and that it moves focus into `<main>` (public pages, a not-found page, the event list, an invite), and, on the mobile project only, that every control on the main screens is at least 44 × 44 px, counting the invisible hit areas drawn with `::before`/`::after`. Text links inside a sentence are exempt, as WCAG allows.
 
 The colour contrast of every invite theme is checked separately by `pnpm run check:contrast`.

@@ -109,7 +109,7 @@ test("a host changes their email in two confirmed steps", async ({ page }) => {
 
   await page.goto("/dashboard/settings");
   await page.waitForLoadState("networkidle");
-  await page.getByLabel("Change email").fill(newEmail);
+  await page.getByLabel("New email").fill(newEmail);
   await page.getByRole("button", { name: "Send approval email" }).click();
   await expect(page.getByText(/we sent a link to approve the change/)).toBeVisible();
 

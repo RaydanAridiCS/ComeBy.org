@@ -3,8 +3,8 @@ import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { Logo } from "@/components/brand/logo";
-import { LostEnvelope } from "@/components/brand/lost-envelope";
+import { StatusMessage } from "@/components/layout/status-message";
+import { StatusPage } from "@/components/layout/status-page";
 import { Button } from "@/components/ui/button";
 import { UnsubscribeForm } from "@/features/unsubscribe/components/unsubscribe-form";
 import { clientMessages } from "@/i18n/client-messages";
@@ -25,13 +25,12 @@ async function UnsubscribeContent({
 
   if (!verified || !token) {
     return (
-      <div className="flex flex-col items-center gap-6 text-center">
-        <LostEnvelope mark="!" />
-        <h1 className="heading text-headline">{t("invalidTitle")}</h1>
-        <p className="text-muted-foreground">{t("invalidBody")}</p>
-        <Button asChild size="lg">
-          <Link href="/">{t("home")}</Link>
-        </Button>
+      <div className="flex flex-col items-center gap-6">
+        <StatusMessage mark="!" title={t("invalidTitle")} body={t("invalidBody")}>
+          <Button asChild size="lg">
+            <Link href="/">{t("home")}</Link>
+          </Button>
+        </StatusMessage>
       </div>
     );
   }
@@ -43,19 +42,15 @@ async function UnsubscribeContent({
   );
 }
 
+/** The page an email's "Unsubscribe" link opens. It asks before doing anything. */
 export default function UnsubscribePage({ searchParams }: PageProps<"/unsubscribe">) {
   return (
-    <main
-      id="main"
-      tabIndex={-1}
-      className="flex flex-1 flex-col items-center justify-center gap-8 bg-[radial-gradient(60%_50%_at_50%_30%,var(--brand-50),transparent_70%)] px-5 py-20"
-    >
-      <Logo />
+    <StatusPage>
       <div className="w-full max-w-md">
         <Suspense>
           <UnsubscribeContent searchParams={searchParams} />
         </Suspense>
       </div>
-    </main>
+    </StatusPage>
   );
 }

@@ -114,6 +114,8 @@ Nothing is shared with advertisers, and there is no code that could: no ad SDKs,
 
 ## Requests the app can't handle by itself
 
+The privacy page (section 8, "Your rights") gives **hello@comeby.org** for anything the screens don't cover. The address lives in `SITE.contactEmail` (`src/config/site.ts`), and the privacy page turns it into a mail link; change both places if it ever changes. It is on the privacy page only, not in the site footer.
+
 If someone writes in asking for something the screens don't cover:
 
 - A guest who lost their device and left no email cannot prove which response is theirs. Ask the host to remove it, or remove it by id in the database after confirming the details with the requester.

@@ -1,8 +1,9 @@
 "use client";
 
 import { MailCheck } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -22,6 +23,12 @@ export function UnsubscribeForm({
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const doneHeading = useRef<HTMLHeadingElement>(null);
+
+  // The button that was pressed is gone: move focus to the news, so it is read out.
+  useEffect(() => {
+    if (done) doneHeading.current?.focus();
+  }, [done]);
 
   if (done) {
     return (
@@ -29,10 +36,22 @@ export function UnsubscribeForm({
         <span className="flex size-16 items-center justify-center rounded-3xl bg-brand-gradient text-white shadow-brand">
           <MailCheck className="size-8" aria-hidden="true" />
         </span>
-        <h1 className="heading text-headline">{t("doneTitle")}</h1>
-        <output className="text-muted-foreground">
+        <h1 ref={doneHeading} tabIndex={-1} className="heading text-headline outline-none">
+          {t("doneTitle")}
+        </h1>
+        <p className="text-muted-foreground">
           {t(scope === "host" ? "doneHost" : "doneGuest", { email })}
-        </output>
+        </p>
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          {scope === "host" ? (
+            <Button asChild size="lg">
+              <Link href="/dashboard/settings">{t("settings")}</Link>
+            </Button>
+          ) : null}
+          <Button asChild size="lg" variant={scope === "host" ? "outline" : "default"}>
+            <Link href="/">{t("home")}</Link>
+          </Button>
+        </div>
       </div>
     );
   }

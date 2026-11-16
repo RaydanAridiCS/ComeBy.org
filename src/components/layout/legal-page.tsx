@@ -2,8 +2,27 @@ import { getTranslations } from "next-intl/server";
 import { bricolage } from "@/app/brand-font";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SITE } from "@/config/site";
 
 type Section = { title: string; body: string };
+
+/** The legal text is plain strings; the contact address in it becomes a mail link. */
+function WithContactLink({ text }: { text: string }) {
+  const [before, ...rest] = text.split(SITE.contactEmail);
+  if (rest.length === 0) return text;
+  return (
+    <>
+      {before}
+      <a
+        href={`mailto:${SITE.contactEmail}`}
+        className="font-medium text-brand-700 underline underline-offset-4"
+      >
+        {SITE.contactEmail}
+      </a>
+      {rest.join(SITE.contactEmail)}
+    </>
+  );
+}
 
 /** Shared layout for the privacy policy and terms (content lives in the message catalogue). */
 export async function LegalPage({
@@ -54,7 +73,7 @@ export async function LegalPage({
                 {section.title}
               </h2>
               <p className="mt-3 text-[1.0625rem] text-muted-foreground leading-relaxed">
-                {section.body}
+                <WithContactLink text={section.body} />
               </p>
             </section>
           ))}

@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { fieldA11y } from "@/components/forms/field-a11y";
 import { PasswordInput } from "@/components/forms/password-input";
+import { useFocusFirstInvalid } from "@/components/forms/use-focus-first-invalid";
 import { useTranslateError } from "@/components/forms/use-translate-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,7 +23,7 @@ import { ResendVerification } from "./resend-verification";
 
 const loginSchema = z.object({
   email: z.email({ message: "auth.emailInvalid" }),
-  password: z.string().min(1, { message: "errors.validation" }),
+  password: z.string().min(1, { message: "auth.passwordRequired" }),
 });
 type LoginValues = z.infer<typeof loginSchema>;
 
@@ -32,9 +34,12 @@ export function LoginForm() {
   const next = safeNext(useSearchParams().get("next"));
   const [formError, setFormError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusFirstInvalid = useFocusFirstInvalid(formRef);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
+    shouldFocusError: false,
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -49,15 +54,26 @@ export function LoginForm() {
     if (error.code === "EMAIL_NOT_VERIFIED") {
       setFormError(t("emailNotVerified"));
       setUnverifiedEmail(values.email);
-    } else if (error.code === "INVALID_EMAIL_OR_PASSWORD") setFormError(t("invalidCredentials"));
-    else if (error.status === 429) setFormError(translateError("errors.rate_limited") ?? null);
+    } else if (error.code === "INVALID_EMAIL_OR_PASSWORD") {
+      setFormError(t("invalidCredentials"));
+      // The button was disabled while sending, which drops focus: put it where the fix is.
+      form.setFocus("password", { shouldSelect: true });
+    } else if (error.status === 429) setFormError(translateError("errors.rate_limited") ?? null);
     else setFormError(translateError("errors.generic") ?? null);
-  });
+  }, focusFirstInvalid);
 
   const { errors, isSubmitting } = form.formState;
+  const email = fieldA11y("email", { invalid: Boolean(errors.email) });
+  const password = fieldA11y("password", { invalid: Boolean(errors.password) });
 
   return (
-    <form onSubmit={onSubmit} method="post" noValidate className="flex flex-col gap-5">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      method="post"
+      noValidate
+      className="flex flex-col gap-5"
+    >
       <GoogleButton next={next} />
       {formError ? (
         <Alert variant="destructive">
@@ -69,14 +85,13 @@ export function LoginForm() {
         <Field data-invalid={Boolean(errors.email)}>
           <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
           <Input
-            id="email"
+            {...email.control}
             type="email"
             autoComplete="email"
             placeholder={t("emailPlaceholder")}
-            aria-invalid={Boolean(errors.email)}
             {...form.register("email")}
           />
-          <FieldError>{translateError(errors.email?.message)}</FieldError>
+          <FieldError id={email.errorId}>{translateError(errors.email?.message)}</FieldError>
         </Field>
         <Field data-invalid={Boolean(errors.password)}>
           <div className="flex items-center justify-between">
@@ -90,12 +105,11 @@ export function LoginForm() {
             </Link>
           </div>
           <PasswordInput
-            id="password"
+            {...password.control}
             autoComplete="current-password"
-            aria-invalid={Boolean(errors.password)}
             {...form.register("password")}
           />
-          <FieldError>{translateError(errors.password?.message)}</FieldError>
+          <FieldError id={password.errorId}>{translateError(errors.password?.message)}</FieldError>
         </Field>
       </FieldGroup>
       <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">

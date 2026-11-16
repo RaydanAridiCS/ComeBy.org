@@ -14,9 +14,7 @@ export default async function ResetPasswordPage() {
   const t = await getTranslations("auth");
   return (
     <AuthCard title={t("resetTitle")}>
-      <Suspense
-        fallback={<AuthFormSkeleton fields={1} button="default" google={false} footer={false} />}
-      >
+      <Suspense fallback={<AuthFormSkeleton fields={1} hint google={false} footer={false} />}>
         <ResetPasswordForm />
       </Suspense>
     </AuthCard>
