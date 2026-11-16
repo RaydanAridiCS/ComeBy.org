@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { domAnimation, LazyMotion, MotionConfig } from "motion/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import type { ThemeId } from "@/features/events/schema";
@@ -14,6 +14,7 @@ import { ThemeBackdrop } from "@/themes/decorations";
 import type { DashboardData } from "../dto";
 import { ActivityFeed } from "./activity-feed";
 import { EventActions } from "./event-actions";
+import { InviteReadyPanel } from "./invite-ready-panel";
 import { NudgeCard } from "./nudge-card";
 import { ResponsesTable } from "./responses-table";
 import { ShareCard } from "./share-card";
@@ -34,11 +35,24 @@ async function fetchDashboard(eventId: string): Promise<DashboardData> {
 export function EventDashboard({
   initialData,
   theme,
+  justCreated = false,
 }: {
   initialData: DashboardData;
   theme: ThemeId;
+  /** The host arrived straight from creating this event (`?created=1`). */
+  justCreated?: boolean;
 }) {
   const t = useTranslations();
+  // Decided once, on arrival: the panel stays until dismissed, even after a response comes in.
+  const [showReady, setShowReady] = useState(
+    justCreated && initialData.responses.length === 0 && !initialData.event.hidden,
+  );
+  // The host submitted from far down the form, and the browser keeps that scroll offset when
+  // this page replaces it. Start at the top, where the panel is.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on arrival only
+  useLayoutEffect(() => {
+    if (showReady) window.scrollTo(0, 0);
+  }, []);
   const queryClient = useQueryClient();
   const queryKey = ["event-dashboard", initialData.event.id];
 
@@ -72,6 +86,13 @@ export function EventDashboard({
   ].filter((badge) => badge !== null);
   const live = event.status === "active" && !event.over;
 
+  /** Drops `?created=1` without a round trip, so a reload or a shared link doesn't show the panel. */
+  const forgetCreated = () => {
+    if (new URLSearchParams(window.location.search).has("created")) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  };
+
   return (
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">
@@ -83,6 +104,18 @@ export function EventDashboard({
             <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
             {t("eventDashboard.backToEvents")}
           </Link>
+
+          {showReady && live ? (
+            <InviteReadyPanel
+              event={event}
+              theme={theme}
+              onShare={forgetCreated}
+              onDismiss={() => {
+                setShowReady(false);
+                forgetCreated();
+              }}
+            />
+          ) : null}
 
           <header className="animate-rise overflow-hidden rounded-[2rem] border bg-card shadow-sm [--i:1]">
             <div className="relative h-24 w-full overflow-hidden sm:h-32" style={themeStyle(theme)}>

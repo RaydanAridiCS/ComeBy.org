@@ -29,6 +29,51 @@ test("host creates an invite, a guest responds, the host sees it", async ({ page
   await expect(page.getByText("Omar responded Going")).toBeVisible();
 });
 
+test("after creating, the host is offered the link to share, once", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await signUpHost(page);
+  const { inviteHref } = await createInvite(page);
+  await expect(page).toHaveURL(/created=1/);
+
+  const panel = page.getByRole("region", { name: "Your invite is ready" });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole("link", { name: "Share on WhatsApp" })).toHaveAttribute(
+    "href",
+    /^https:\/\/wa\.me\/\?text=/,
+  );
+  await expect(panel.getByRole("link", { name: "View invite" })).toHaveAttribute(
+    "href",
+    inviteHref,
+  );
+
+  // Copying works, and sharing forgets the marker: the panel stays for now but won't come back.
+  await panel.getByRole("button", { name: "Copy link" }).click();
+  await expect(panel.getByText("Copied")).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(inviteHref);
+  await expect(page).not.toHaveURL(/created/);
+  await expect(panel).toBeVisible();
+
+  await panel.getByRole("button", { name: "Close" }).click();
+  await expect(panel).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Picnic in the park" })).toBeVisible();
+  await expect(panel).toBeHidden();
+});
+
+test("dismissing the ready panel without sharing also keeps it from coming back", async ({
+  page,
+}) => {
+  await signUpHost(page);
+  await createInvite(page);
+  const panel = page.getByRole("region", { name: "Your invite is ready" });
+  await panel.getByRole("button", { name: "Close" }).click();
+  await expect(panel).toBeHidden();
+  await expect(page).not.toHaveURL(/created/);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Picnic in the park" })).toBeVisible();
+  await expect(panel).toBeHidden();
+});
+
 test("unknown invite links show a friendly not-found page", async ({ page }) => {
   await page.goto("/this-invite-does-not-exist-123");
   await expect(page.getByText("Invite not found")).toBeVisible();

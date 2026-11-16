@@ -68,7 +68,11 @@ export async function createInvite(page: Page, title = "Picnic in the park") {
   await page.getByRole("button", { name: "Create invite" }).click();
   await expect(page).toHaveURL(/\/dashboard\/events\/[0-9a-f-]{36}/);
   const eventId = page.url().match(/events\/([0-9a-f-]{36})/)?.[1] ?? "";
-  const inviteHref = await page.getByRole("link", { name: "View invite" }).getAttribute("href");
+  // Right after creating, both the "ready" panel and the page header link to the invite.
+  const inviteHref = await page
+    .getByRole("link", { name: "View invite" })
+    .first()
+    .getAttribute("href");
   return { eventId, inviteHref: inviteHref ?? "/" };
 }
 

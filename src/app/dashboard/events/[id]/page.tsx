@@ -17,8 +17,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("dashboard") };
 }
 
-async function EventDashboardLoader({ params }: { params: Promise<{ id: string }> }) {
+async function EventDashboardLoader({
+  params,
+  searchParams,
+}: Pick<PageProps<"/dashboard/events/[id]">, "params" | "searchParams">) {
   const { id } = await params;
+  // The event form sends the host here with ?created=1 right after creating.
+  const justCreated = (await searchParams).created === "1";
   const user = await requireUser(`/dashboard/events/${id}`);
   if (!z.uuid().safeParse(id).success) notFound();
   await connection();
@@ -27,7 +32,11 @@ async function EventDashboardLoader({ params }: { params: Promise<{ id: string }
     throw error;
   });
   return (
-    <EventDashboard initialData={toDashboardData(data, new Date())} theme={data.event.theme} />
+    <EventDashboard
+      initialData={toDashboardData(data, new Date())}
+      theme={data.event.theme}
+      justCreated={justCreated}
+    />
   );
 }
 
@@ -55,11 +64,14 @@ function DashboardSkeleton() {
   );
 }
 
-export default function EventDashboardPage({ params }: PageProps<"/dashboard/events/[id]">) {
+export default function EventDashboardPage({
+  params,
+  searchParams,
+}: PageProps<"/dashboard/events/[id]">) {
   return (
     <PageTransition>
       <Suspense fallback={<DashboardSkeleton />}>
-        <EventDashboardLoader params={params} />
+        <EventDashboardLoader params={params} searchParams={searchParams} />
       </Suspense>
     </PageTransition>
   );

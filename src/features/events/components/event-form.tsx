@@ -240,7 +240,7 @@ export function EventForm(props: EventFormProps) {
         const result = await createEventAction(values);
         if (!result.ok) return applyServerErrors(result);
         if (coverFile) await uploadCover(result.data.id, coverFile);
-        toast.success(t("created"));
+        // No toast: the event page greets the host with the "your invite is ready" panel.
         router.push(`/dashboard/events/${result.data.id}?created=1`);
         return;
       }

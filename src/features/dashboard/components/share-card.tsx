@@ -1,14 +1,12 @@
 "use client";
 
-import { BellRing, Check, Copy, Download, Megaphone, MessageCircle } from "lucide-react";
-import { AnimatePresence, m } from "motion/react";
+import { BellRing, Copy, Download, Megaphone, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useCopy } from "@/components/use-copy";
 import { whatsappShareUrl } from "@/lib/share";
 import type { DashboardData } from "../dto";
+import { CopyLinkLabel, useInviteShare, WhatsAppButton } from "./share-actions";
 
 const CHANGE_KEYS = ["time", "location", "title", "details"] as const;
 type ChangeKey = (typeof CHANGE_KEYS)[number];
@@ -17,26 +15,9 @@ type ChangeKey = (typeof CHANGE_KEYS)[number];
 export function ShareCard({ event }: { event: DashboardData["event"] }) {
   const t = useTranslations("eventDashboard");
   const tChanges = useTranslations("changes");
-  const tCommon = useTranslations("common");
   const copy = useCopy();
-  const [copied, setCopied] = useState(false);
+  const { copied, copyLink, whatsappUrl } = useInviteShare(event);
 
-  useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(timer);
-  }, [copied]);
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(event.url);
-      setCopied(true);
-    } catch {
-      toast.error(tCommon("somethingWentWrong"));
-    }
-  }
-
-  const inviteMessage = t("shareMessage", { title: event.title, when: event.when, url: event.url });
   const nudgeMessage = t("nudgeMessage", { title: event.title, url: event.url });
 
   const changes = (event.lastNotableUpdateSummary ?? "")
@@ -77,44 +58,12 @@ export function ShareCard({ event }: { event: DashboardData["event"] }) {
             className="relative flex h-9 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl bg-card px-3 font-semibold text-sm shadow-xs"
             aria-live="polite"
           >
-            <AnimatePresence initial={false} mode="popLayout">
-              {copied ? (
-                <m.span
-                  key="copied"
-                  initial={{ y: 14, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -14, opacity: 0 }}
-                  className="flex items-center gap-1.5 text-success-ink"
-                >
-                  <Check className="size-4" strokeWidth={3} aria-hidden="true" />
-                  {t("copied")}
-                </m.span>
-              ) : (
-                <m.span
-                  key="copy"
-                  initial={{ y: 14, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -14, opacity: 0 }}
-                  className="flex items-center gap-1.5"
-                >
-                  <Copy className="size-4" aria-hidden="true" />
-                  {t("copyLink")}
-                </m.span>
-              )}
-            </AnimatePresence>
+            <CopyLinkLabel copied={copied} />
           </span>
         </button>
       </div>
 
-      <Button
-        asChild
-        className="bg-[#1fae55] text-white shadow-[0_6px_16px_-6px_#1fae55] hover:bg-[#178f45]"
-      >
-        <a href={whatsappShareUrl(inviteMessage)} target="_blank" rel="noopener noreferrer">
-          <MessageCircle />
-          {t("shareWhatsApp")}
-        </a>
-      </Button>
+      <WhatsAppButton href={whatsappUrl} />
 
       <div className="flex items-center gap-4 rounded-2xl border p-3">
         {/* biome-ignore lint/performance/noImgElement: the QR code is a small generated PNG */}
